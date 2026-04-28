@@ -24,19 +24,19 @@ The full value narrative (problem framing, value propositions, references, and d
 ```
 ChatCHW/
 ├── README.md              ← You are here (map of the umbrella repo)
-├── workflow.md            End-to-end information flow (manual → logic → tests)
-├── value_added.md         Stakeholder value narrative (Markdown)
-├── handoff.md             Engineering handoff, risks, checklist
+├── workflow.md            End-to-end information flow from manual → DMN clinical logic → CHT → tests)
+├── value_added.md         Explain value added to stakeholders 
+├── handoff.md             Process of handing off the project to new engineers
 ├── STATUS.md              Current vs planned capabilities
-├── RUNBOOK.md             First successful run + triage path
+├── RUNBOOK.md             April 25 2026 successful run + triage path
 ├── ARTIFACTS.md           Artifact contracts (producer/consumer/checks)
-├── QUALITY_AND_VERIFICATION.md  Quality model and red-team framing
+├── QUALITY_AND_VERIFICATION.md  List of quality standards for intermediate artifacts and final DMN and XLSForm
 ├── PLATFORM_INTEGRATION.md Deployment-facing integration checklist
 ├── PROVENANCE_TRACE.md    How to trace decisions across artifacts
-├── Guidelines/            Source policy PDFs (WHO / national manuals)
-├── Medical/               Clinical reference DMNs (spreadsheets) + verification deck
+├── Guidelines/            Training manuals or clinical guidelines (WHO / national manuals)
+├── Medical/               Hand-created reference DMNs (spreadsheets) and example patient data
 ├── Product/               Git submodule → CHW_RLM (FastAPI + Next.js pipeline)
-├── Testing/               Cross-check harnesses (DMN runner, CHT prototype, etc.)
+├── Testing/               Cross-check harnesses to run patients through DMN & CHT 
 └── old/                   Legacy code — do not use for current work
 ```
 
@@ -68,7 +68,7 @@ Authoritative **clinical inputs** in PDF form (versioned here so deployments can
 
 ## `Medical/`
 
-**Human-facing clinical collateral** (not consumed directly by the Gen 7 compiler today):
+**Human-facing clinical collateral** 
 
 | Content | Role |
 |---------|------|
