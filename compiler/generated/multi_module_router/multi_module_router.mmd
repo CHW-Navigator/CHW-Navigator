@@ -1,0 +1,238 @@
+flowchart TD
+  v_age_months["v_age_months"]
+  v_has_danger_sign["v_has_danger_sign"]
+  v_has_fever["v_has_fever"]
+  v_has_cough["v_has_cough"]
+  v_has_diarrhea["v_has_diarrhea"]
+  v_fever_days["v_fever_days"]
+  v_cough_days["v_cough_days"]
+  v_diarrhea_days["v_diarrhea_days"]
+  p_danger_sign{"p_danger_sign"}
+  p_has_fever{"p_has_fever"}
+  p_has_cough{"p_has_cough"}
+  p_has_diarrhea{"p_has_diarrhea"}
+  p_any_symptom{"p_any_symptom"}
+  p_fever_needs_treatment{"p_fever_needs_treatment"}
+  p_cough_needs_treatment{"p_cough_needs_treatment"}
+  p_diarrhea_needs_treatment{"p_diarrhea_needs_treatment"}
+  p_low_age_band{"p_low_age_band"}
+  p_high_age_band{"p_high_age_band"}
+  d_starting_danger_signs{{"d_starting_danger_signs"}}
+  d_traffic_cop{{"d_traffic_cop"}}
+  d_urgent_referral{{"d_urgent_referral"}}
+  d_fever_module{{"d_fever_module"}}
+  d_fever_treatment{{"d_fever_treatment"}}
+  d_fever_dosing{{"d_fever_dosing"}}
+  d_cough_module{{"d_cough_module"}}
+  d_cough_treatment{{"d_cough_treatment"}}
+  d_cough_dosing{{"d_cough_dosing"}}
+  d_diarrhea_module{{"d_diarrhea_module"}}
+  d_diarrhea_treatment{{"d_diarrhea_treatment"}}
+  d_diarrhea_dosing{{"d_diarrhea_dosing"}}
+  d_closing{{"d_closing"}}
+  o_visit_started["o_visit_started"]
+  o_danger_sign_case["o_danger_sign_case"]
+  o_route_urgent_referral["o_route_urgent_referral"]
+  o_route_fever["o_route_fever"]
+  o_route_cough["o_route_cough"]
+  o_route_diarrhea["o_route_diarrhea"]
+  o_route_closing["o_route_closing"]
+  o_urgent_referral["o_urgent_referral"]
+  o_fever_module_complete["o_fever_module_complete"]
+  o_fever_treat["o_fever_treat"]
+  o_fever_dose_low["o_fever_dose_low"]
+  o_fever_dose_high["o_fever_dose_high"]
+  o_cough_module_complete["o_cough_module_complete"]
+  o_cough_treat["o_cough_treat"]
+  o_cough_dose_low["o_cough_dose_low"]
+  o_cough_dose_high["o_cough_dose_high"]
+  o_diarrhea_module_complete["o_diarrhea_module_complete"]
+  o_diarrhea_treat["o_diarrhea_treat"]
+  o_diarrhea_dose_low["o_diarrhea_dose_low"]
+  o_diarrhea_dose_high["o_diarrhea_dose_high"]
+  o_closing_module_complete["o_closing_module_complete"]
+  o_close_visit["o_close_visit"]
+  v_has_danger_sign --> p_danger_sign
+  v_has_fever --> p_has_fever
+  v_has_cough --> p_has_cough
+  v_has_diarrhea --> p_has_diarrhea
+  v_has_fever --> p_any_symptom
+  v_has_cough --> p_any_symptom
+  v_has_diarrhea --> p_any_symptom
+  v_has_fever --> p_fever_needs_treatment
+  v_fever_days --> p_fever_needs_treatment
+  v_has_cough --> p_cough_needs_treatment
+  v_cough_days --> p_cough_needs_treatment
+  v_has_diarrhea --> p_diarrhea_needs_treatment
+  v_diarrhea_days --> p_diarrhea_needs_treatment
+  v_age_months --> p_low_age_band
+  v_age_months --> p_high_age_band
+  d_starting_danger_signs__r_start_danger["r_start_danger: p_danger_sign"]
+  d_starting_danger_signs -->|priority 1| d_starting_danger_signs__r_start_danger
+  p_danger_sign -.-> d_starting_danger_signs__r_start_danger
+  d_starting_danger_signs__r_start_danger -->|o_visit_started=true| o_visit_started
+  d_starting_danger_signs__r_start_danger -->|o_danger_sign_case=true| o_danger_sign_case
+  d_starting_danger_signs__r_start_else["r_start_else: else"]
+  d_starting_danger_signs__r_start_danger -->|else next| d_starting_danger_signs__r_start_else
+  d_starting_danger_signs__r_start_else -->|o_visit_started=true| o_visit_started
+  d_starting_danger_signs__r_start_else -->|o_danger_sign_case=false| o_danger_sign_case
+  d_traffic_cop__r_route_urgent["r_route_urgent: o_danger_sign_case"]
+  d_traffic_cop -->|priority 1| d_traffic_cop__r_route_urgent
+  o_danger_sign_case -.-> d_traffic_cop__r_route_urgent
+  d_traffic_cop__r_route_urgent -->|o_route_urgent_referral=true| o_route_urgent_referral
+  d_traffic_cop__r_route_urgent -->|o_route_fever=false| o_route_fever
+  d_traffic_cop__r_route_urgent -->|o_route_cough=false| o_route_cough
+  d_traffic_cop__r_route_urgent -->|o_route_diarrhea=false| o_route_diarrhea
+  d_traffic_cop__r_route_urgent -->|o_route_closing=false| o_route_closing
+  d_traffic_cop__r_route_fever["r_route_fever: not(o_danger_sign_case) and p_has_fever"]
+  d_traffic_cop__r_route_urgent -->|else next| d_traffic_cop__r_route_fever
+  o_danger_sign_case -.-> d_traffic_cop__r_route_fever
+  p_has_fever -.-> d_traffic_cop__r_route_fever
+  d_traffic_cop__r_route_fever -->|o_route_urgent_referral=false| o_route_urgent_referral
+  d_traffic_cop__r_route_fever -->|o_route_fever=true| o_route_fever
+  d_traffic_cop__r_route_fever -->|o_route_cough=false| o_route_cough
+  d_traffic_cop__r_route_fever -->|o_route_diarrhea=false| o_route_diarrhea
+  d_traffic_cop__r_route_fever -->|o_route_closing=false| o_route_closing
+  d_traffic_cop__r_route_cough["r_route_cough: not(o_danger_sign_case) and not(p_has_fever) and p_has_cough"]
+  d_traffic_cop__r_route_fever -->|else next| d_traffic_cop__r_route_cough
+  o_danger_sign_case -.-> d_traffic_cop__r_route_cough
+  p_has_cough -.-> d_traffic_cop__r_route_cough
+  p_has_fever -.-> d_traffic_cop__r_route_cough
+  d_traffic_cop__r_route_cough -->|o_route_urgent_referral=false| o_route_urgent_referral
+  d_traffic_cop__r_route_cough -->|o_route_fever=false| o_route_fever
+  d_traffic_cop__r_route_cough -->|o_route_cough=true| o_route_cough
+  d_traffic_cop__r_route_cough -->|o_route_diarrhea=false| o_route_diarrhea
+  d_traffic_cop__r_route_cough -->|o_route_closing=false| o_route_closing
+  d_traffic_cop__r_route_diarrhea["r_route_diarrhea: not(o_danger_sign_case) and not(p_has_fever) and not(p_has_cough) and p_has_diarrhea"]
+  d_traffic_cop__r_route_cough -->|else next| d_traffic_cop__r_route_diarrhea
+  o_danger_sign_case -.-> d_traffic_cop__r_route_diarrhea
+  p_has_cough -.-> d_traffic_cop__r_route_diarrhea
+  p_has_diarrhea -.-> d_traffic_cop__r_route_diarrhea
+  p_has_fever -.-> d_traffic_cop__r_route_diarrhea
+  d_traffic_cop__r_route_diarrhea -->|o_route_urgent_referral=false| o_route_urgent_referral
+  d_traffic_cop__r_route_diarrhea -->|o_route_fever=false| o_route_fever
+  d_traffic_cop__r_route_diarrhea -->|o_route_cough=false| o_route_cough
+  d_traffic_cop__r_route_diarrhea -->|o_route_diarrhea=true| o_route_diarrhea
+  d_traffic_cop__r_route_diarrhea -->|o_route_closing=false| o_route_closing
+  d_traffic_cop__r_route_closing["r_route_closing: else"]
+  d_traffic_cop__r_route_diarrhea -->|else next| d_traffic_cop__r_route_closing
+  d_traffic_cop__r_route_closing -->|o_route_urgent_referral=false| o_route_urgent_referral
+  d_traffic_cop__r_route_closing -->|o_route_fever=false| o_route_fever
+  d_traffic_cop__r_route_closing -->|o_route_cough=false| o_route_cough
+  d_traffic_cop__r_route_closing -->|o_route_diarrhea=false| o_route_diarrhea
+  d_traffic_cop__r_route_closing -->|o_route_closing=true| o_route_closing
+  d_urgent_referral__r_urgent_yes["r_urgent_yes: o_route_urgent_referral"]
+  d_urgent_referral -->|priority 1| d_urgent_referral__r_urgent_yes
+  o_route_urgent_referral -.-> d_urgent_referral__r_urgent_yes
+  d_urgent_referral__r_urgent_yes -->|o_urgent_referral=true| o_urgent_referral
+  d_urgent_referral__r_urgent_yes -->|o_close_visit=true| o_close_visit
+  d_urgent_referral__r_urgent_else["r_urgent_else: else"]
+  d_urgent_referral__r_urgent_yes -->|else next| d_urgent_referral__r_urgent_else
+  d_urgent_referral__r_urgent_else -->|o_urgent_referral=false| o_urgent_referral
+  d_fever_module__r_fever_module_yes["r_fever_module_yes: o_route_fever and p_has_fever"]
+  d_fever_module -->|priority 1| d_fever_module__r_fever_module_yes
+  o_route_fever -.-> d_fever_module__r_fever_module_yes
+  p_has_fever -.-> d_fever_module__r_fever_module_yes
+  d_fever_module__r_fever_module_yes -->|o_fever_module_complete=true| o_fever_module_complete
+  d_fever_module__r_fever_module_else["r_fever_module_else: else"]
+  d_fever_module__r_fever_module_yes -->|else next| d_fever_module__r_fever_module_else
+  d_fever_module__r_fever_module_else -->|o_fever_module_complete=false| o_fever_module_complete
+  d_fever_treatment__r_fever_treat_yes["r_fever_treat_yes: o_route_fever and p_fever_needs_treatment"]
+  d_fever_treatment -->|priority 1| d_fever_treatment__r_fever_treat_yes
+  o_route_fever -.-> d_fever_treatment__r_fever_treat_yes
+  p_fever_needs_treatment -.-> d_fever_treatment__r_fever_treat_yes
+  d_fever_treatment__r_fever_treat_yes -->|o_fever_treat=true| o_fever_treat
+  d_fever_treatment__r_fever_treat_else["r_fever_treat_else: else"]
+  d_fever_treatment__r_fever_treat_yes -->|else next| d_fever_treatment__r_fever_treat_else
+  d_fever_treatment__r_fever_treat_else -->|o_fever_treat=false| o_fever_treat
+  d_fever_dosing__r_fever_dose_low["r_fever_dose_low: o_fever_treat and p_low_age_band"]
+  d_fever_dosing -->|priority 1| d_fever_dosing__r_fever_dose_low
+  o_fever_treat -.-> d_fever_dosing__r_fever_dose_low
+  p_low_age_band -.-> d_fever_dosing__r_fever_dose_low
+  d_fever_dosing__r_fever_dose_low -->|o_fever_dose_low=true| o_fever_dose_low
+  d_fever_dosing__r_fever_dose_low -->|o_fever_dose_high=false| o_fever_dose_high
+  d_fever_dosing__r_fever_dose_high["r_fever_dose_high: o_fever_treat and not(p_low_age_band) and p_high_age_band"]
+  d_fever_dosing__r_fever_dose_low -->|else next| d_fever_dosing__r_fever_dose_high
+  o_fever_treat -.-> d_fever_dosing__r_fever_dose_high
+  p_high_age_band -.-> d_fever_dosing__r_fever_dose_high
+  p_low_age_band -.-> d_fever_dosing__r_fever_dose_high
+  d_fever_dosing__r_fever_dose_high -->|o_fever_dose_low=false| o_fever_dose_low
+  d_fever_dosing__r_fever_dose_high -->|o_fever_dose_high=true| o_fever_dose_high
+  d_fever_dosing__r_fever_dose_else["r_fever_dose_else: else"]
+  d_fever_dosing__r_fever_dose_high -->|else next| d_fever_dosing__r_fever_dose_else
+  d_fever_dosing__r_fever_dose_else -->|o_fever_dose_low=false| o_fever_dose_low
+  d_fever_dosing__r_fever_dose_else -->|o_fever_dose_high=false| o_fever_dose_high
+  d_cough_module__r_cough_module_yes["r_cough_module_yes: o_route_cough and p_has_cough"]
+  d_cough_module -->|priority 1| d_cough_module__r_cough_module_yes
+  o_route_cough -.-> d_cough_module__r_cough_module_yes
+  p_has_cough -.-> d_cough_module__r_cough_module_yes
+  d_cough_module__r_cough_module_yes -->|o_cough_module_complete=true| o_cough_module_complete
+  d_cough_module__r_cough_module_else["r_cough_module_else: else"]
+  d_cough_module__r_cough_module_yes -->|else next| d_cough_module__r_cough_module_else
+  d_cough_module__r_cough_module_else -->|o_cough_module_complete=false| o_cough_module_complete
+  d_cough_treatment__r_cough_treat_yes["r_cough_treat_yes: o_route_cough and p_cough_needs_treatment"]
+  d_cough_treatment -->|priority 1| d_cough_treatment__r_cough_treat_yes
+  o_route_cough -.-> d_cough_treatment__r_cough_treat_yes
+  p_cough_needs_treatment -.-> d_cough_treatment__r_cough_treat_yes
+  d_cough_treatment__r_cough_treat_yes -->|o_cough_treat=true| o_cough_treat
+  d_cough_treatment__r_cough_treat_else["r_cough_treat_else: else"]
+  d_cough_treatment__r_cough_treat_yes -->|else next| d_cough_treatment__r_cough_treat_else
+  d_cough_treatment__r_cough_treat_else -->|o_cough_treat=false| o_cough_treat
+  d_cough_dosing__r_cough_dose_low["r_cough_dose_low: o_cough_treat and p_low_age_band"]
+  d_cough_dosing -->|priority 1| d_cough_dosing__r_cough_dose_low
+  o_cough_treat -.-> d_cough_dosing__r_cough_dose_low
+  p_low_age_band -.-> d_cough_dosing__r_cough_dose_low
+  d_cough_dosing__r_cough_dose_low -->|o_cough_dose_low=true| o_cough_dose_low
+  d_cough_dosing__r_cough_dose_low -->|o_cough_dose_high=false| o_cough_dose_high
+  d_cough_dosing__r_cough_dose_high["r_cough_dose_high: o_cough_treat and not(p_low_age_band) and p_high_age_band"]
+  d_cough_dosing__r_cough_dose_low -->|else next| d_cough_dosing__r_cough_dose_high
+  o_cough_treat -.-> d_cough_dosing__r_cough_dose_high
+  p_high_age_band -.-> d_cough_dosing__r_cough_dose_high
+  p_low_age_band -.-> d_cough_dosing__r_cough_dose_high
+  d_cough_dosing__r_cough_dose_high -->|o_cough_dose_low=false| o_cough_dose_low
+  d_cough_dosing__r_cough_dose_high -->|o_cough_dose_high=true| o_cough_dose_high
+  d_cough_dosing__r_cough_dose_else["r_cough_dose_else: else"]
+  d_cough_dosing__r_cough_dose_high -->|else next| d_cough_dosing__r_cough_dose_else
+  d_cough_dosing__r_cough_dose_else -->|o_cough_dose_low=false| o_cough_dose_low
+  d_cough_dosing__r_cough_dose_else -->|o_cough_dose_high=false| o_cough_dose_high
+  d_diarrhea_module__r_diarrhea_module_yes["r_diarrhea_module_yes: o_route_diarrhea and p_has_diarrhea"]
+  d_diarrhea_module -->|priority 1| d_diarrhea_module__r_diarrhea_module_yes
+  o_route_diarrhea -.-> d_diarrhea_module__r_diarrhea_module_yes
+  p_has_diarrhea -.-> d_diarrhea_module__r_diarrhea_module_yes
+  d_diarrhea_module__r_diarrhea_module_yes -->|o_diarrhea_module_complete=true| o_diarrhea_module_complete
+  d_diarrhea_module__r_diarrhea_module_else["r_diarrhea_module_else: else"]
+  d_diarrhea_module__r_diarrhea_module_yes -->|else next| d_diarrhea_module__r_diarrhea_module_else
+  d_diarrhea_module__r_diarrhea_module_else -->|o_diarrhea_module_complete=false| o_diarrhea_module_complete
+  d_diarrhea_treatment__r_diarrhea_treat_yes["r_diarrhea_treat_yes: o_route_diarrhea and p_diarrhea_needs_treatment"]
+  d_diarrhea_treatment -->|priority 1| d_diarrhea_treatment__r_diarrhea_treat_yes
+  o_route_diarrhea -.-> d_diarrhea_treatment__r_diarrhea_treat_yes
+  p_diarrhea_needs_treatment -.-> d_diarrhea_treatment__r_diarrhea_treat_yes
+  d_diarrhea_treatment__r_diarrhea_treat_yes -->|o_diarrhea_treat=true| o_diarrhea_treat
+  d_diarrhea_treatment__r_diarrhea_treat_else["r_diarrhea_treat_else: else"]
+  d_diarrhea_treatment__r_diarrhea_treat_yes -->|else next| d_diarrhea_treatment__r_diarrhea_treat_else
+  d_diarrhea_treatment__r_diarrhea_treat_else -->|o_diarrhea_treat=false| o_diarrhea_treat
+  d_diarrhea_dosing__r_diarrhea_dose_low["r_diarrhea_dose_low: o_diarrhea_treat and p_low_age_band"]
+  d_diarrhea_dosing -->|priority 1| d_diarrhea_dosing__r_diarrhea_dose_low
+  o_diarrhea_treat -.-> d_diarrhea_dosing__r_diarrhea_dose_low
+  p_low_age_band -.-> d_diarrhea_dosing__r_diarrhea_dose_low
+  d_diarrhea_dosing__r_diarrhea_dose_low -->|o_diarrhea_dose_low=true| o_diarrhea_dose_low
+  d_diarrhea_dosing__r_diarrhea_dose_low -->|o_diarrhea_dose_high=false| o_diarrhea_dose_high
+  d_diarrhea_dosing__r_diarrhea_dose_high["r_diarrhea_dose_high: o_diarrhea_treat and not(p_low_age_band) and p_high_age_band"]
+  d_diarrhea_dosing__r_diarrhea_dose_low -->|else next| d_diarrhea_dosing__r_diarrhea_dose_high
+  o_diarrhea_treat -.-> d_diarrhea_dosing__r_diarrhea_dose_high
+  p_high_age_band -.-> d_diarrhea_dosing__r_diarrhea_dose_high
+  p_low_age_band -.-> d_diarrhea_dosing__r_diarrhea_dose_high
+  d_diarrhea_dosing__r_diarrhea_dose_high -->|o_diarrhea_dose_low=false| o_diarrhea_dose_low
+  d_diarrhea_dosing__r_diarrhea_dose_high -->|o_diarrhea_dose_high=true| o_diarrhea_dose_high
+  d_diarrhea_dosing__r_diarrhea_dose_else["r_diarrhea_dose_else: else"]
+  d_diarrhea_dosing__r_diarrhea_dose_high -->|else next| d_diarrhea_dosing__r_diarrhea_dose_else
+  d_diarrhea_dosing__r_diarrhea_dose_else -->|o_diarrhea_dose_low=false| o_diarrhea_dose_low
+  d_diarrhea_dosing__r_diarrhea_dose_else -->|o_diarrhea_dose_high=false| o_diarrhea_dose_high
+  d_closing__r_closing_yes["r_closing_yes: o_route_closing"]
+  d_closing -->|priority 1| d_closing__r_closing_yes
+  o_route_closing -.-> d_closing__r_closing_yes
+  d_closing__r_closing_yes -->|o_closing_module_complete=true| o_closing_module_complete
+  d_closing__r_closing_yes -->|o_close_visit=true| o_close_visit
+  d_closing__r_closing_else["r_closing_else: else"]
+  d_closing__r_closing_yes -->|else next| d_closing__r_closing_else
+  d_closing__r_closing_else -->|o_closing_module_complete=false| o_closing_module_complete

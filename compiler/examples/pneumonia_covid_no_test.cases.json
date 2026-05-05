@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "name": "danger_sign_still_refers",
+      "values": {
+        "v_age_months": 10,
+        "v_resp_rate": 48,
+        "v_danger_sign": true,
+        "v_has_cough": true
+      }
+    },
+    {
+      "name": "fast_breathing_keeps_pneumonia_treatment_priority",
+      "values": {
+        "v_age_months": 10,
+        "v_resp_rate": 55,
+        "v_danger_sign": false,
+        "v_has_cough": true
+      }
+    },
+    {
+      "name": "cough_without_fast_breathing_now_gets_isolation_advice",
+      "values": {
+        "v_age_months": 10,
+        "v_resp_rate": 30,
+        "v_danger_sign": false,
+        "v_has_cough": true
+      }
+    },
+    {
+      "name": "no_cough_remains_no_action",
+      "values": {
+        "v_age_months": 10,
+        "v_resp_rate": 30,
+        "v_danger_sign": false,
+        "v_has_cough": false
+      }
+    }
+  ]
+}

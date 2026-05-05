@@ -1,0 +1,674 @@
+{
+  "node_sources": {
+    "d_closing": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "closing"
+      }
+    ],
+    "d_closing__r_closing_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "closing"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "closing"
+      }
+    ],
+    "d_closing__r_closing_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "closing"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "closing"
+      }
+    ],
+    "d_cough_dosing": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_dosing"
+      }
+    ],
+    "d_cough_dosing__r_cough_dose_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_dosing"
+      },
+      {
+        "row": 3,
+        "source_id": "manual_decision_tables",
+        "table": "cough_dosing"
+      }
+    ],
+    "d_cough_dosing__r_cough_dose_high": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_dosing"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "cough_dosing"
+      }
+    ],
+    "d_cough_dosing__r_cough_dose_low": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_dosing"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "cough_dosing"
+      }
+    ],
+    "d_cough_module": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_module"
+      }
+    ],
+    "d_cough_module__r_cough_module_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_module"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "cough_module"
+      }
+    ],
+    "d_cough_module__r_cough_module_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_module"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "cough_module"
+      }
+    ],
+    "d_cough_treatment": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_treatment"
+      }
+    ],
+    "d_cough_treatment__r_cough_treat_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_treatment"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "cough_treatment"
+      }
+    ],
+    "d_cough_treatment__r_cough_treat_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "cough_treatment"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "cough_treatment"
+      }
+    ],
+    "d_diarrhea_dosing": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_dosing"
+      }
+    ],
+    "d_diarrhea_dosing__r_diarrhea_dose_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_dosing"
+      },
+      {
+        "row": 3,
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_dosing"
+      }
+    ],
+    "d_diarrhea_dosing__r_diarrhea_dose_high": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_dosing"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_dosing"
+      }
+    ],
+    "d_diarrhea_dosing__r_diarrhea_dose_low": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_dosing"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_dosing"
+      }
+    ],
+    "d_diarrhea_module": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_module"
+      }
+    ],
+    "d_diarrhea_module__r_diarrhea_module_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_module"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_module"
+      }
+    ],
+    "d_diarrhea_module__r_diarrhea_module_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_module"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_module"
+      }
+    ],
+    "d_diarrhea_treatment": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_treatment"
+      }
+    ],
+    "d_diarrhea_treatment__r_diarrhea_treat_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_treatment"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_treatment"
+      }
+    ],
+    "d_diarrhea_treatment__r_diarrhea_treat_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_treatment"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "diarrhea_treatment"
+      }
+    ],
+    "d_fever_dosing": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_dosing"
+      }
+    ],
+    "d_fever_dosing__r_fever_dose_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_dosing"
+      },
+      {
+        "row": 3,
+        "source_id": "manual_decision_tables",
+        "table": "fever_dosing"
+      }
+    ],
+    "d_fever_dosing__r_fever_dose_high": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_dosing"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "fever_dosing"
+      }
+    ],
+    "d_fever_dosing__r_fever_dose_low": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_dosing"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "fever_dosing"
+      }
+    ],
+    "d_fever_module": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_module"
+      }
+    ],
+    "d_fever_module__r_fever_module_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_module"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "fever_module"
+      }
+    ],
+    "d_fever_module__r_fever_module_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_module"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "fever_module"
+      }
+    ],
+    "d_fever_treatment": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_treatment"
+      }
+    ],
+    "d_fever_treatment__r_fever_treat_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_treatment"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "fever_treatment"
+      }
+    ],
+    "d_fever_treatment__r_fever_treat_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "fever_treatment"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "fever_treatment"
+      }
+    ],
+    "d_starting_danger_signs": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "starting_danger_signs"
+      }
+    ],
+    "d_starting_danger_signs__r_start_danger": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "starting_danger_signs"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "starting_danger_signs"
+      }
+    ],
+    "d_starting_danger_signs__r_start_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "starting_danger_signs"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "starting_danger_signs"
+      }
+    ],
+    "d_traffic_cop": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      }
+    ],
+    "d_traffic_cop__r_route_closing": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      },
+      {
+        "row": 5,
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      }
+    ],
+    "d_traffic_cop__r_route_cough": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      },
+      {
+        "row": 3,
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      }
+    ],
+    "d_traffic_cop__r_route_diarrhea": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      },
+      {
+        "row": 4,
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      }
+    ],
+    "d_traffic_cop__r_route_fever": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      }
+    ],
+    "d_traffic_cop__r_route_urgent": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "traffic_cop"
+      }
+    ],
+    "d_urgent_referral": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "urgent_referral"
+      }
+    ],
+    "d_urgent_referral__r_urgent_else": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "urgent_referral"
+      },
+      {
+        "row": 2,
+        "source_id": "manual_decision_tables",
+        "table": "urgent_referral"
+      }
+    ],
+    "d_urgent_referral__r_urgent_yes": [
+      {
+        "source_id": "manual_decision_tables",
+        "table": "urgent_referral"
+      },
+      {
+        "row": 1,
+        "source_id": "manual_decision_tables",
+        "table": "urgent_referral"
+      }
+    ],
+    "o_close_visit": [
+      {
+        "column": "o_close_visit",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_closing_module_complete": [
+      {
+        "column": "o_closing_module_complete",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_cough_dose_high": [
+      {
+        "column": "o_cough_dose_high",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_cough_dose_low": [
+      {
+        "column": "o_cough_dose_low",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_cough_module_complete": [
+      {
+        "column": "o_cough_module_complete",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_cough_treat": [
+      {
+        "column": "o_cough_treat",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_danger_sign_case": [
+      {
+        "column": "o_danger_sign_case",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_diarrhea_dose_high": [
+      {
+        "column": "o_diarrhea_dose_high",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_diarrhea_dose_low": [
+      {
+        "column": "o_diarrhea_dose_low",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_diarrhea_module_complete": [
+      {
+        "column": "o_diarrhea_module_complete",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_diarrhea_treat": [
+      {
+        "column": "o_diarrhea_treat",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_fever_dose_high": [
+      {
+        "column": "o_fever_dose_high",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_fever_dose_low": [
+      {
+        "column": "o_fever_dose_low",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_fever_module_complete": [
+      {
+        "column": "o_fever_module_complete",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_fever_treat": [
+      {
+        "column": "o_fever_treat",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_route_closing": [
+      {
+        "column": "o_route_closing",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_route_cough": [
+      {
+        "column": "o_route_cough",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_route_diarrhea": [
+      {
+        "column": "o_route_diarrhea",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_route_fever": [
+      {
+        "column": "o_route_fever",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_route_urgent_referral": [
+      {
+        "column": "o_route_urgent_referral",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_urgent_referral": [
+      {
+        "column": "o_urgent_referral",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "o_visit_started": [
+      {
+        "column": "o_visit_started",
+        "source_id": "workflow_outputs"
+      }
+    ],
+    "p_any_symptom": [
+      {
+        "row": 5,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_cough_needs_treatment": [
+      {
+        "row": 7,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_danger_sign": [
+      {
+        "row": 1,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_diarrhea_needs_treatment": [
+      {
+        "row": 8,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_fever_needs_treatment": [
+      {
+        "row": 6,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_has_cough": [
+      {
+        "row": 3,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_has_diarrhea": [
+      {
+        "row": 4,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_has_fever": [
+      {
+        "row": 2,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_high_age_band": [
+      {
+        "row": 10,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_low_age_band": [
+      {
+        "row": 9,
+        "source_id": "predicate_table"
+      }
+    ],
+    "v_age_months": [
+      {
+        "row": 1,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_cough_days": [
+      {
+        "row": 7,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_diarrhea_days": [
+      {
+        "row": 8,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_fever_days": [
+      {
+        "row": 6,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_has_cough": [
+      {
+        "row": 4,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_has_danger_sign": [
+      {
+        "row": 2,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_has_diarrhea": [
+      {
+        "row": 5,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_has_fever": [
+      {
+        "row": 3,
+        "source_id": "variable_catalog"
+      }
+    ]
+  }
+}
