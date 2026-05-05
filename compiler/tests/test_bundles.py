@@ -1,26 +1,32 @@
 from __future__ import annotations
 
 import json
-import shutil
 import unittest
 from pathlib import Path
 
 from chw_navigator.bundles import create_bundle
 from chw_navigator.clinical_ir import ClinicalIRDocument
+from test_support import create_test_run, reset_suite_runs
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES_DIR = PROJECT_ROOT / "examples"
-ARTIFACT_ROOT = PROJECT_ROOT / "generated" / "test_artifacts" / "bundle_tests"
 
 
 class BundleTests(unittest.TestCase):
-    def setUp(self) -> None:
-        shutil.rmtree(ARTIFACT_ROOT, ignore_errors=True)
-        ARTIFACT_ROOT.mkdir(parents=True, exist_ok=True)
+    @classmethod
+    def setUpClass(cls) -> None:
+        reset_suite_runs("bundles")
 
-    def tearDown(self) -> None:
-        shutil.rmtree(ARTIFACT_ROOT, ignore_errors=True)
+    def setUp(self) -> None:
+        self.test_run = create_test_run(
+            suite_name="bundles",
+            test_name=self.id().split(".")[-1],
+            purpose="Bundle creation tests that verify one-run-per-folder audit packaging for DMN compiles.",
+            input_paths=(EXAMPLES_DIR / "pneumonia.ir.json", EXAMPLES_DIR / "pneumonia.dmn", EXAMPLES_DIR / "pneumonia.cases.json"),
+        )
+        self.artifact_root = self.test_run.scratch_dir / "bundle_runs"
+        self.artifact_root.mkdir(parents=True, exist_ok=True)
 
     def test_create_bundle_writes_expected_structure_and_metadata(self) -> None:
         document = self._load_document(EXAMPLES_DIR / "pneumonia.ir.json")
@@ -30,7 +36,7 @@ class BundleTests(unittest.TestCase):
             base_ir_path=EXAMPLES_DIR / "pneumonia.ir.json",
             dmn_path=EXAMPLES_DIR / "pneumonia.dmn",
             patient_cases_path=EXAMPLES_DIR / "pneumonia.cases.json",
-            bundle_root=ARTIFACT_ROOT,
+            bundle_root=self.artifact_root,
             source_label="pneumonia-demo",
         )
 
@@ -72,13 +78,13 @@ class BundleTests(unittest.TestCase):
             base_document=document,
             base_ir_path=EXAMPLES_DIR / "pneumonia.ir.json",
             dmn_path=EXAMPLES_DIR / "pneumonia.dmn",
-            bundle_root=ARTIFACT_ROOT,
+            bundle_root=self.artifact_root,
         )
         second = create_bundle(
             base_document=document,
             base_ir_path=EXAMPLES_DIR / "pneumonia.ir.json",
             dmn_path=EXAMPLES_DIR / "pneumonia.dmn",
-            bundle_root=ARTIFACT_ROOT,
+            bundle_root=self.artifact_root,
         )
 
         self.assertNotEqual(first.bundle_dir, second.bundle_dir)

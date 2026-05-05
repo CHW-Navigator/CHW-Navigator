@@ -9,8 +9,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 EXAMPLES = ROOT / "examples"
-TEST_ROOT = ROOT / "generated" / "test_artifacts" / "change_control"
-TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
@@ -19,10 +17,26 @@ from chw_navigator.change_control import create_change_review_package, load_chan
 from chw_navigator.clinical_ir import ClinicalIRDocument
 from chw_navigator.lint import lint_document
 from chw_navigator.validator import validate_document
+from test_support import create_test_run, reset_suite_runs
 
 
 class ChangeControlTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        reset_suite_runs("change_control")
+
     def test_change_review_package_builds_for_example_delta(self) -> None:
+        test_run = create_test_run(
+            suite_name="change_control",
+            test_name=self.id().split(".")[-1],
+            purpose="Change-control review package generation for a guideline delta with explicit case impacts.",
+            input_paths=(
+                EXAMPLES / "change_memos" / "pneumonia_covid_no_test.memo.json",
+                EXAMPLES / "pneumonia.ir.json",
+                EXAMPLES / "pneumonia_covid_no_test.ir.json",
+                EXAMPLES / "pneumonia_covid_no_test.cases.json",
+            ),
+        )
         memo = load_change_memo(EXAMPLES / "change_memos" / "pneumonia_covid_no_test.memo.json")
         baseline = _load_document(EXAMPLES / "pneumonia.ir.json")
         updated = _load_document(EXAMPLES / "pneumonia_covid_no_test.ir.json")
@@ -34,7 +48,7 @@ class ChangeControlTests(unittest.TestCase):
             memo=memo,
             baseline_document=baseline,
             updated_document=updated,
-            review_root=TEST_ROOT,
+            review_root=test_run.scratch_dir,
             baseline_ir_path=EXAMPLES / "pneumonia.ir.json",
             updated_ir_path=EXAMPLES / "pneumonia_covid_no_test.ir.json",
             patient_cases_path=EXAMPLES / "pneumonia_covid_no_test.cases.json",

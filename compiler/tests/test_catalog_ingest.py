@@ -16,19 +16,28 @@ from chw_navigator.clinical_ir import ClinicalIRDocument
 from chw_navigator.dmn import import_dmn_decisions
 from chw_navigator.validator import validate_document
 from chw_navigator.xlsform_backend import build_xlsform
+from test_support import create_test_run, reset_suite_runs
 
 
 EXAMPLES = ROOT / "examples"
-TEST_ROOT = ROOT / "generated" / "test_artifacts" / "catalogs"
-TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 class CatalogIngestTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        reset_suite_runs("catalog_ingest")
+
     def setUp(self) -> None:
-        self.metadata_path = TEST_ROOT / "metadata.json"
-        self.variable_catalog_path = TEST_ROOT / "variables.csv"
-        self.predicate_catalog_path = TEST_ROOT / "predicates.json"
-        self.phrase_bank_path = TEST_ROOT / "phrases.csv"
+        self.test_run = create_test_run(
+            suite_name="catalog_ingest",
+            test_name=self.id().split(".")[-1],
+            purpose="Catalog ingest tests that synthesize standalone variable, predicate, phrase, and metadata inputs.",
+            input_paths=(EXAMPLES / "pneumonia.dmn",),
+        )
+        self.metadata_path = self.test_run.inputs_dir / "metadata.json"
+        self.variable_catalog_path = self.test_run.inputs_dir / "variables.csv"
+        self.predicate_catalog_path = self.test_run.inputs_dir / "predicates.json"
+        self.phrase_bank_path = self.test_run.inputs_dir / "phrases.csv"
 
         self.metadata_path.write_text(
             json.dumps(
@@ -148,7 +157,7 @@ class CatalogIngestTests(unittest.TestCase):
         self.assertEqual("Refer urgently to facility.", message_row.label)
 
     def test_rejects_invalid_predicate_expression_json(self) -> None:
-        bad_path = TEST_ROOT / "bad_predicates.csv"
+        bad_path = self.test_run.inputs_dir / "bad_predicates.csv"
         bad_path.write_text(
             "\n".join(
                 [
@@ -168,9 +177,9 @@ class CatalogIngestTests(unittest.TestCase):
             )
 
     def test_supports_json_variable_and_phrase_catalogs(self) -> None:
-        variable_json = TEST_ROOT / "variables.json"
-        phrase_json = TEST_ROOT / "phrases.json"
-        predicate_csv = TEST_ROOT / "predicates.csv"
+        variable_json = self.test_run.inputs_dir / "variables.json"
+        phrase_json = self.test_run.inputs_dir / "phrases.json"
+        predicate_csv = self.test_run.inputs_dir / "predicates.csv"
 
         variable_json.write_text(
             json.dumps(
@@ -227,9 +236,9 @@ class CatalogIngestTests(unittest.TestCase):
         self.assertIsInstance(document, ClinicalIRDocument)
 
     def test_accepts_ehr_history_suffix_variables(self) -> None:
-        variable_json = TEST_ROOT / "variables_ehr.json"
-        predicate_json = TEST_ROOT / "predicates_ehr.json"
-        phrase_json = TEST_ROOT / "phrases_ehr.json"
+        variable_json = self.test_run.inputs_dir / "variables_ehr.json"
+        predicate_json = self.test_run.inputs_dir / "predicates_ehr.json"
+        phrase_json = self.test_run.inputs_dir / "phrases_ehr.json"
 
         variable_json.write_text(
             json.dumps(

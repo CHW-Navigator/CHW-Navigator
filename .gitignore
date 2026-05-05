@@ -66,3 +66,7 @@ ml_assessment.log
 matrix_medical.egg-info/
 **/comparison.png
 **/tuned_decoder_test*
+
+# Compiler local test run scratch outputs
+compiler/generated/t/
+compiler/generated/test_runs/

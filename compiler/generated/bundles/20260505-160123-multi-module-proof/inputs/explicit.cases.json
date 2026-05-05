@@ -1,0 +1,82 @@
+{
+  "cases": [
+    {
+      "name": "urgent_referral_case",
+      "values": {
+        "v_age_months": 24,
+        "v_has_danger_sign": true,
+        "v_has_fever": true,
+        "v_has_cough": true,
+        "v_has_diarrhea": true,
+        "v_fever_days": 4,
+        "v_cough_days": 5,
+        "v_diarrhea_days": 2
+      }
+    },
+    {
+      "name": "fever_priority_low_dose_case",
+      "values": {
+        "v_age_months": 10,
+        "v_has_danger_sign": false,
+        "v_has_fever": true,
+        "v_has_cough": true,
+        "v_has_diarrhea": true,
+        "v_fever_days": 4,
+        "v_cough_days": 6,
+        "v_diarrhea_days": 3
+      }
+    },
+    {
+      "name": "fever_priority_high_dose_case",
+      "values": {
+        "v_age_months": 24,
+        "v_has_danger_sign": false,
+        "v_has_fever": true,
+        "v_has_cough": false,
+        "v_has_diarrhea": false,
+        "v_fever_days": 5,
+        "v_cough_days": 0,
+        "v_diarrhea_days": 0
+      }
+    },
+    {
+      "name": "cough_priority_case",
+      "values": {
+        "v_age_months": 30,
+        "v_has_danger_sign": false,
+        "v_has_fever": false,
+        "v_has_cough": true,
+        "v_has_diarrhea": true,
+        "v_fever_days": 0,
+        "v_cough_days": 5,
+        "v_diarrhea_days": 2
+      }
+    },
+    {
+      "name": "diarrhea_case",
+      "values": {
+        "v_age_months": 8,
+        "v_has_danger_sign": false,
+        "v_has_fever": false,
+        "v_has_cough": false,
+        "v_has_diarrhea": true,
+        "v_fever_days": 0,
+        "v_cough_days": 0,
+        "v_diarrhea_days": 2
+      }
+    },
+    {
+      "name": "closing_case",
+      "values": {
+        "v_age_months": 18,
+        "v_has_danger_sign": false,
+        "v_has_fever": false,
+        "v_has_cough": false,
+        "v_has_diarrhea": false,
+        "v_fever_days": 0,
+        "v_cough_days": 0,
+        "v_diarrhea_days": 0
+      }
+    }
+  ]
+}

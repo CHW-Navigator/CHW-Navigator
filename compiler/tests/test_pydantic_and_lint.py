@@ -16,9 +16,22 @@ from chw_navigator.clinical_ir import ClinicalIRDocument
 from chw_navigator.cht_backend import build_cht_lowering_plan, write_cht_adapter_stub
 from chw_navigator.lint import lint_document
 from chw_navigator.validator import validate_document
+from test_support import create_test_run, reset_suite_runs
 
 
 class PydanticAndLintTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        reset_suite_runs("pydantic_and_lint")
+
+    def setUp(self) -> None:
+        self.test_run = create_test_run(
+            suite_name="pydantic_and_lint",
+            test_name=self.id().split(".")[-1],
+            purpose="Schema, lint, and CHT-lowering tests for the richer Clinical IR contract.",
+            input_paths=(EXAMPLES / "pneumonia.ir.json",),
+        )
+
     def test_example_pneumonia_is_validation_clean(self) -> None:
         payload = json.loads((EXAMPLES / "pneumonia.ir.json").read_text(encoding="utf-8"))
         document = ClinicalIRDocument.from_dict(payload)
@@ -337,7 +350,7 @@ class PydanticAndLintTests(unittest.TestCase):
         payload = json.loads((EXAMPLES / "pneumonia.ir.json").read_text(encoding="utf-8"))
         document = ClinicalIRDocument.from_dict(payload)
         plan = build_cht_lowering_plan(document)
-        target_dir = ROOT / "generated" / "test_artifacts" / "cht_stub"
+        target_dir = self.test_run.outputs_dir / "cht_stub"
         target_dir.mkdir(parents=True, exist_ok=True)
         artifacts = write_cht_adapter_stub(plan, target_dir)
         self.assertTrue(artifacts.plan_json_path.exists())

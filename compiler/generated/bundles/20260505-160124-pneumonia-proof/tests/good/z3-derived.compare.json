@@ -1,0 +1,1446 @@
+{
+  "compiler_version": null,
+  "contract_version": 1,
+  "generated_at": "2026-05-05T23:01:25Z",
+  "guideline_id": "pneumonia",
+  "log_type": "comparison_report",
+  "provenance": [],
+  "results": [
+    {
+      "category": "endpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": false,
+        "o_referral": true
+      },
+      "dmn_predicates": {
+        "p_danger_sign": true,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": true,
+        "r2": false,
+        "r3": false
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": true,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": false,
+        "o_referral": true
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": true,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": true,
+        "r2": false,
+        "r3": false
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r1",
+        "o_referral"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "endpoint_o_referral",
+      "ok": true,
+      "tags": [
+        "endpoint",
+        "o_referral"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": false,
+        "o_referral": true
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": true,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": true,
+        "r2": false,
+        "r3": false
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": false,
+        "o_referral": true
+      },
+      "z3_predicates": {
+        "p_danger_sign": true,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": true,
+        "r2": false,
+        "r3": false
+      }
+    },
+    {
+      "category": "endpoint",
+      "dmn_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "inputs": {
+        "v_age_months": 12,
+        "v_danger_sign": false,
+        "v_resp_rate": 40
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r2",
+        "o_home_treatment"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "endpoint_o_home_treatment",
+      "ok": true,
+      "tags": [
+        "endpoint",
+        "o_home_treatment"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "z3_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      }
+    },
+    {
+      "category": "endpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "endpoint_o_no_action",
+      "ok": true,
+      "tags": [
+        "endpoint",
+        "o_no_action"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 11,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_age_months_11",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_age_months",
+        "12"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 12,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_age_months_12",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_age_months",
+        "12"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 13,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_age_months_13",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_age_months",
+        "12"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 49
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_resp_rate_49",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_resp_rate",
+        "50"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 50
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r2",
+        "o_home_treatment"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_resp_rate_50",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_resp_rate",
+        "50"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "z3_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 51
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r2",
+        "o_home_treatment"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_resp_rate_51",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_resp_rate",
+        "50"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      },
+      "z3_outputs": {
+        "o_home_treatment": true,
+        "o_no_action": false,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": true
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": true,
+        "r3": false
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 39
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_resp_rate_39",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_resp_rate",
+        "40"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 40
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_resp_rate_40",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_resp_rate",
+        "40"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "cutpoint",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 41
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "cutpoint_v_resp_rate_41",
+      "ok": true,
+      "tags": [
+        "cutpoint",
+        "v_resp_rate",
+        "40"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "no_problems",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "no_problems",
+      "ok": true,
+      "tags": [
+        "no_problems",
+        "baseline"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "repeatability",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "repeatability_01",
+      "ok": true,
+      "tags": [
+        "repeatability",
+        "seed:no_problems"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "repeatability",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "repeatability_02",
+      "ok": true,
+      "tags": [
+        "repeatability",
+        "seed:no_problems"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "repeatability",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "repeatability_03",
+      "ok": true,
+      "tags": [
+        "repeatability",
+        "seed:no_problems"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "repeatability",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "repeatability_04",
+      "ok": true,
+      "tags": [
+        "repeatability",
+        "seed:no_problems"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    },
+    {
+      "category": "repeatability",
+      "dmn_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "dmn_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "dmn_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "inputs": {
+        "v_age_months": 0,
+        "v_danger_sign": false,
+        "v_resp_rate": 0
+      },
+      "interpreter_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "interpreter_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "interpreter_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "mermaid_missing_nodes": [],
+      "mermaid_ok": true,
+      "mermaid_trace_nodes": [
+        "d_triage",
+        "d_triage__r3",
+        "o_no_action"
+      ],
+      "mismatches": [],
+      "missing": [],
+      "name": "repeatability_05",
+      "ok": true,
+      "tags": [
+        "repeatability",
+        "seed:no_problems"
+      ],
+      "xlsform_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "xlsform_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "xlsform_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      },
+      "z3_outputs": {
+        "o_home_treatment": false,
+        "o_no_action": true,
+        "o_referral": false
+      },
+      "z3_predicates": {
+        "p_danger_sign": false,
+        "p_fast_breathing": false
+      },
+      "z3_rule_hits": {
+        "r1": false,
+        "r2": false,
+        "r3": true
+      }
+    }
+  ],
+  "source_artifacts": {
+    "dmn_path": "inputs/source.dmn",
+    "ir_path": "outputs/merged.ir.json",
+    "patient_path": "outputs/z3/derived.cases.json"
+  }
+}

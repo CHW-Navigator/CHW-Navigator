@@ -1,0 +1,38 @@
+{
+  "bundle_id": "20260505-160124-pneumonia-proof",
+  "compiler": {
+    "git_commit": "e1fe111b3b898723cb811d175fe2228dbf37f312",
+    "package": "chw-navigator",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "python": "3.12.10",
+    "version": "0.1.0"
+  },
+  "copied_inputs": {
+    "base_ir": "inputs/base.ir.json",
+    "dmn": "inputs/source.dmn",
+    "patient_cases": "inputs/explicit.cases.json"
+  },
+  "created_at": "2026-05-05T16:01:25",
+  "outputs": {
+    "derived_cases": "outputs/z3/derived.cases.json",
+    "merged_ir": "outputs/merged.ir.json",
+    "mermaid": "outputs/mermaid/pneumonia-proof.mmd",
+    "mermaid_source_map": "outputs/mermaid/pneumonia-proof.mmd.source-map.json",
+    "smt2": "outputs/z3/pneumonia-proof.smt2",
+    "xlsform_choices": "outputs/xlsform/choices.csv",
+    "xlsform_source_map": "outputs/xlsform/source-map.json",
+    "xlsform_survey": "outputs/xlsform/survey.csv",
+    "z3_checks": "outputs/z3/z3-checks.json"
+  },
+  "source": {
+    "base_ir_path": "C:\\Users\\levine\\Dropbox\\PC (2)\\Documents\\GitHub\\CHW-Navigator\\compiler\\examples\\pneumonia.ir.json",
+    "dmn_path": "C:\\Users\\levine\\Dropbox\\PC (2)\\Documents\\GitHub\\CHW-Navigator\\compiler\\examples\\pneumonia.dmn",
+    "label": "pneumonia-proof",
+    "patient_cases_path": "C:\\Users\\levine\\Dropbox\\PC (2)\\Documents\\GitHub\\CHW-Navigator\\compiler\\examples\\pneumonia.cases.json",
+    "source_label": "pneumonia-proof"
+  },
+  "tests": {
+    "derived_compare": "tests/good/z3-derived.compare.json",
+    "explicit_compare": "tests/good/explicit.compare.json"
+  }
+}
