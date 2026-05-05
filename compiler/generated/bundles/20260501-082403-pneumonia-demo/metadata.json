@@ -1,0 +1,38 @@
+{
+  "bundle_id": "20260501-082403-pneumonia-demo",
+  "compiler": {
+    "git_commit": null,
+    "package": "chw-navigator",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "python": "3.12.10",
+    "version": "0.1.0"
+  },
+  "copied_inputs": {
+    "base_ir": "inputs/base.ir.json",
+    "dmn": "inputs/source.dmn",
+    "patient_cases": "inputs/explicit.cases.json"
+  },
+  "created_at": "2026-05-01T08:24:03",
+  "outputs": {
+    "derived_cases": "outputs/z3/derived.cases.json",
+    "merged_ir": "outputs/merged.ir.json",
+    "mermaid": "outputs/mermaid/pneumonia-demo.mmd",
+    "mermaid_source_map": "outputs/mermaid/pneumonia-demo.mmd.source-map.json",
+    "smt2": "outputs/z3/pneumonia-demo.smt2",
+    "xlsform_choices": "outputs/xlsform/choices.csv",
+    "xlsform_source_map": "outputs/xlsform/source-map.json",
+    "xlsform_survey": "outputs/xlsform/survey.csv",
+    "z3_checks": "outputs/z3/z3-checks.json"
+  },
+  "source": {
+    "base_ir_path": "C:\\Users\\levine\\Dropbox\\PC (2)\\Documents\\Codex\\CHW Navigator\\examples\\pneumonia.ir.json",
+    "dmn_path": "C:\\Users\\levine\\Dropbox\\PC (2)\\Documents\\Codex\\CHW Navigator\\examples\\pneumonia.dmn",
+    "label": "pneumonia-demo",
+    "patient_cases_path": "C:\\Users\\levine\\Dropbox\\PC (2)\\Documents\\Codex\\CHW Navigator\\examples\\pneumonia.cases.json",
+    "source_label": "pneumonia-demo"
+  },
+  "tests": {
+    "derived_compare": "tests/good/z3-derived.compare.json",
+    "explicit_compare": "tests/good/explicit.compare.json"
+  }
+}

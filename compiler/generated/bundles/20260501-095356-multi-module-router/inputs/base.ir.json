@@ -1,0 +1,812 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "multi_module_router",
+    "compiler_version": "0.1.0",
+    "generated_at": "2026-05-01T09:00:00Z",
+    "sources": [
+      {
+        "id": "chw_manual_multi_module_v1",
+        "kind": "manual",
+        "ref": "Illustrative starting, fever, cough, diarrhea, urgent referral workflow"
+      }
+    ]
+  },
+  "variables": {
+    "v_age_months": {
+      "type": "int",
+      "domain": { "min": 0, "max": 120 },
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 1 }]
+    },
+    "v_has_danger_sign": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 2 }]
+    },
+    "v_has_fever": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 3 }]
+    },
+    "v_has_cough": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 4 }]
+    },
+    "v_has_diarrhea": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 5 }]
+    },
+    "v_fever_days": {
+      "type": "int",
+      "domain": { "min": 0, "max": 14 },
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 6 }]
+    },
+    "v_cough_days": {
+      "type": "int",
+      "domain": { "min": 0, "max": 30 },
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 7 }]
+    },
+    "v_diarrhea_days": {
+      "type": "int",
+      "domain": { "min": 0, "max": 14 },
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 8 }]
+    }
+  },
+  "predicates": {
+    "p_danger_sign": {
+      "inputs_used": ["v_has_danger_sign"],
+      "expression": { "kind": "var", "id": "v_has_danger_sign" },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 1 }]
+    },
+    "p_has_fever": {
+      "inputs_used": ["v_has_fever"],
+      "expression": { "kind": "var", "id": "v_has_fever" },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 2 }]
+    },
+    "p_has_cough": {
+      "inputs_used": ["v_has_cough"],
+      "expression": { "kind": "var", "id": "v_has_cough" },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 3 }]
+    },
+    "p_has_diarrhea": {
+      "inputs_used": ["v_has_diarrhea"],
+      "expression": { "kind": "var", "id": "v_has_diarrhea" },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 4 }]
+    },
+    "p_any_symptom": {
+      "inputs_used": ["v_has_fever", "v_has_cough", "v_has_diarrhea"],
+      "expression": {
+        "kind": "or",
+        "args": [
+          { "kind": "pred", "id": "p_has_fever" },
+          { "kind": "pred", "id": "p_has_cough" },
+          { "kind": "pred", "id": "p_has_diarrhea" }
+        ]
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 5 }]
+    },
+    "p_fever_needs_treatment": {
+      "inputs_used": ["v_has_fever", "v_fever_days"],
+      "expression": {
+        "kind": "and",
+        "args": [
+          { "kind": "pred", "id": "p_has_fever" },
+          {
+            "kind": ">=",
+            "left": { "kind": "var", "id": "v_fever_days" },
+            "right": { "kind": "literal", "type": "int", "value": 3 }
+          }
+        ]
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 6 }]
+    },
+    "p_cough_needs_treatment": {
+      "inputs_used": ["v_has_cough", "v_cough_days"],
+      "expression": {
+        "kind": "and",
+        "args": [
+          { "kind": "pred", "id": "p_has_cough" },
+          {
+            "kind": ">=",
+            "left": { "kind": "var", "id": "v_cough_days" },
+            "right": { "kind": "literal", "type": "int", "value": 1 }
+          }
+        ]
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 7 }]
+    },
+    "p_diarrhea_needs_treatment": {
+      "inputs_used": ["v_has_diarrhea", "v_diarrhea_days"],
+      "expression": {
+        "kind": "and",
+        "args": [
+          { "kind": "pred", "id": "p_has_diarrhea" },
+          {
+            "kind": ">=",
+            "left": { "kind": "var", "id": "v_diarrhea_days" },
+            "right": { "kind": "literal", "type": "int", "value": 1 }
+          }
+        ]
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 8 }]
+    },
+    "p_low_age_band": {
+      "inputs_used": ["v_age_months"],
+      "expression": {
+        "kind": "<",
+        "left": { "kind": "var", "id": "v_age_months" },
+        "right": { "kind": "literal", "type": "int", "value": 12 }
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 9 }]
+    },
+    "p_high_age_band": {
+      "inputs_used": ["v_age_months"],
+      "expression": {
+        "kind": ">=",
+        "left": { "kind": "var", "id": "v_age_months" },
+        "right": { "kind": "literal", "type": "int", "value": 12 }
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 10 }]
+    }
+  },
+  "outputs": {
+    "o_visit_started": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_visit_started" }]
+    },
+    "o_danger_sign_case": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_danger_sign_case" }]
+    },
+    "o_route_urgent_referral": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_route_urgent_referral" }]
+    },
+    "o_route_fever": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_route_fever" }]
+    },
+    "o_route_cough": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_route_cough" }]
+    },
+    "o_route_diarrhea": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_route_diarrhea" }]
+    },
+    "o_route_closing": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_route_closing" }]
+    },
+    "o_urgent_referral": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_urgent_referral" }]
+    },
+    "o_fever_module_complete": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_fever_module_complete" }]
+    },
+    "o_fever_treat": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_fever_treat" }]
+    },
+    "o_fever_dose_low": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_fever_dose_low" }]
+    },
+    "o_fever_dose_high": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_fever_dose_high" }]
+    },
+    "o_cough_module_complete": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_cough_module_complete" }]
+    },
+    "o_cough_treat": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_cough_treat" }]
+    },
+    "o_cough_dose_low": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_cough_dose_low" }]
+    },
+    "o_cough_dose_high": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_cough_dose_high" }]
+    },
+    "o_diarrhea_module_complete": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_diarrhea_module_complete" }]
+    },
+    "o_diarrhea_treat": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_diarrhea_treat" }]
+    },
+    "o_diarrhea_dose_low": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_diarrhea_dose_low" }]
+    },
+    "o_diarrhea_dose_high": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_diarrhea_dose_high" }]
+    },
+    "o_closing_module_complete": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_closing_module_complete" }]
+    },
+    "o_close_visit": {
+      "type": "bool",
+      "provenance": [{ "source_id": "workflow_outputs", "column": "o_close_visit" }]
+    }
+  },
+  "decisions": {
+    "d_starting_danger_signs": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "starting_danger_signs" }],
+      "rules": [
+        {
+          "id": "r_start_danger",
+          "when": { "kind": "pred", "id": "p_danger_sign" },
+          "then": {
+            "o_visit_started": true,
+            "o_danger_sign_case": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "starting_danger_signs", "row": 1 }]
+        },
+        {
+          "id": "r_start_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_visit_started": true,
+            "o_danger_sign_case": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "starting_danger_signs", "row": 2 }]
+        }
+      ]
+    },
+    "d_traffic_cop": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "traffic_cop" }],
+      "rules": [
+        {
+          "id": "r_route_urgent",
+          "when": { "kind": "output", "id": "o_danger_sign_case" },
+          "then": {
+            "o_route_urgent_referral": true,
+            "o_route_fever": false,
+            "o_route_cough": false,
+            "o_route_diarrhea": false,
+            "o_route_closing": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "traffic_cop", "row": 1 }]
+        },
+        {
+          "id": "r_route_fever",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "not", "arg": { "kind": "output", "id": "o_danger_sign_case" } },
+              { "kind": "pred", "id": "p_has_fever" }
+            ]
+          },
+          "then": {
+            "o_route_urgent_referral": false,
+            "o_route_fever": true,
+            "o_route_cough": false,
+            "o_route_diarrhea": false,
+            "o_route_closing": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "traffic_cop", "row": 2 }]
+        },
+        {
+          "id": "r_route_cough",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "not", "arg": { "kind": "output", "id": "o_danger_sign_case" } },
+              { "kind": "not", "arg": { "kind": "pred", "id": "p_has_fever" } },
+              { "kind": "pred", "id": "p_has_cough" }
+            ]
+          },
+          "then": {
+            "o_route_urgent_referral": false,
+            "o_route_fever": false,
+            "o_route_cough": true,
+            "o_route_diarrhea": false,
+            "o_route_closing": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "traffic_cop", "row": 3 }]
+        },
+        {
+          "id": "r_route_diarrhea",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "not", "arg": { "kind": "output", "id": "o_danger_sign_case" } },
+              { "kind": "not", "arg": { "kind": "pred", "id": "p_has_fever" } },
+              { "kind": "not", "arg": { "kind": "pred", "id": "p_has_cough" } },
+              { "kind": "pred", "id": "p_has_diarrhea" }
+            ]
+          },
+          "then": {
+            "o_route_urgent_referral": false,
+            "o_route_fever": false,
+            "o_route_cough": false,
+            "o_route_diarrhea": true,
+            "o_route_closing": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "traffic_cop", "row": 4 }]
+        },
+        {
+          "id": "r_route_closing",
+          "when": { "kind": "else" },
+          "then": {
+            "o_route_urgent_referral": false,
+            "o_route_fever": false,
+            "o_route_cough": false,
+            "o_route_diarrhea": false,
+            "o_route_closing": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "traffic_cop", "row": 5 }]
+        }
+      ]
+    },
+    "d_urgent_referral": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "urgent_referral" }],
+      "rules": [
+        {
+          "id": "r_urgent_yes",
+          "when": { "kind": "output", "id": "o_route_urgent_referral" },
+          "then": {
+            "o_urgent_referral": true,
+            "o_close_visit": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "urgent_referral", "row": 1 }]
+        },
+        {
+          "id": "r_urgent_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_urgent_referral": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "urgent_referral", "row": 2 }]
+        }
+      ]
+    },
+    "d_fever_module": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_module" }],
+      "rules": [
+        {
+          "id": "r_fever_module_yes",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_route_fever" },
+              { "kind": "pred", "id": "p_has_fever" }
+            ]
+          },
+          "then": {
+            "o_fever_module_complete": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_module", "row": 1 }]
+        },
+        {
+          "id": "r_fever_module_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_fever_module_complete": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_module", "row": 2 }]
+        }
+      ]
+    },
+    "d_fever_treatment": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_treatment" }],
+      "rules": [
+        {
+          "id": "r_fever_treat_yes",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_route_fever" },
+              { "kind": "pred", "id": "p_fever_needs_treatment" }
+            ]
+          },
+          "then": {
+            "o_fever_treat": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_treatment", "row": 1 }]
+        },
+        {
+          "id": "r_fever_treat_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_fever_treat": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_treatment", "row": 2 }]
+        }
+      ]
+    },
+    "d_fever_dosing": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_dosing" }],
+      "rules": [
+        {
+          "id": "r_fever_dose_low",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_fever_treat" },
+              { "kind": "pred", "id": "p_low_age_band" }
+            ]
+          },
+          "then": {
+            "o_fever_dose_low": true,
+            "o_fever_dose_high": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_dosing", "row": 1 }]
+        },
+        {
+          "id": "r_fever_dose_high",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_fever_treat" },
+              { "kind": "not", "arg": { "kind": "pred", "id": "p_low_age_band" } },
+              { "kind": "pred", "id": "p_high_age_band" }
+            ]
+          },
+          "then": {
+            "o_fever_dose_low": false,
+            "o_fever_dose_high": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_dosing", "row": 2 }]
+        },
+        {
+          "id": "r_fever_dose_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_fever_dose_low": false,
+            "o_fever_dose_high": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "fever_dosing", "row": 3 }]
+        }
+      ]
+    },
+    "d_cough_module": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_module" }],
+      "rules": [
+        {
+          "id": "r_cough_module_yes",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_route_cough" },
+              { "kind": "pred", "id": "p_has_cough" }
+            ]
+          },
+          "then": {
+            "o_cough_module_complete": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_module", "row": 1 }]
+        },
+        {
+          "id": "r_cough_module_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_cough_module_complete": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_module", "row": 2 }]
+        }
+      ]
+    },
+    "d_cough_treatment": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_treatment" }],
+      "rules": [
+        {
+          "id": "r_cough_treat_yes",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_route_cough" },
+              { "kind": "pred", "id": "p_cough_needs_treatment" }
+            ]
+          },
+          "then": {
+            "o_cough_treat": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_treatment", "row": 1 }]
+        },
+        {
+          "id": "r_cough_treat_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_cough_treat": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_treatment", "row": 2 }]
+        }
+      ]
+    },
+    "d_cough_dosing": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_dosing" }],
+      "rules": [
+        {
+          "id": "r_cough_dose_low",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_cough_treat" },
+              { "kind": "pred", "id": "p_low_age_band" }
+            ]
+          },
+          "then": {
+            "o_cough_dose_low": true,
+            "o_cough_dose_high": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_dosing", "row": 1 }]
+        },
+        {
+          "id": "r_cough_dose_high",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_cough_treat" },
+              { "kind": "not", "arg": { "kind": "pred", "id": "p_low_age_band" } },
+              { "kind": "pred", "id": "p_high_age_band" }
+            ]
+          },
+          "then": {
+            "o_cough_dose_low": false,
+            "o_cough_dose_high": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_dosing", "row": 2 }]
+        },
+        {
+          "id": "r_cough_dose_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_cough_dose_low": false,
+            "o_cough_dose_high": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "cough_dosing", "row": 3 }]
+        }
+      ]
+    },
+    "d_diarrhea_module": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_module" }],
+      "rules": [
+        {
+          "id": "r_diarrhea_module_yes",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_route_diarrhea" },
+              { "kind": "pred", "id": "p_has_diarrhea" }
+            ]
+          },
+          "then": {
+            "o_diarrhea_module_complete": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_module", "row": 1 }]
+        },
+        {
+          "id": "r_diarrhea_module_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_diarrhea_module_complete": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_module", "row": 2 }]
+        }
+      ]
+    },
+    "d_diarrhea_treatment": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_treatment" }],
+      "rules": [
+        {
+          "id": "r_diarrhea_treat_yes",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_route_diarrhea" },
+              { "kind": "pred", "id": "p_diarrhea_needs_treatment" }
+            ]
+          },
+          "then": {
+            "o_diarrhea_treat": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_treatment", "row": 1 }]
+        },
+        {
+          "id": "r_diarrhea_treat_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_diarrhea_treat": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_treatment", "row": 2 }]
+        }
+      ]
+    },
+    "d_diarrhea_dosing": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_dosing" }],
+      "rules": [
+        {
+          "id": "r_diarrhea_dose_low",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_diarrhea_treat" },
+              { "kind": "pred", "id": "p_low_age_band" }
+            ]
+          },
+          "then": {
+            "o_diarrhea_dose_low": true,
+            "o_diarrhea_dose_high": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_dosing", "row": 1 }]
+        },
+        {
+          "id": "r_diarrhea_dose_high",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "output", "id": "o_diarrhea_treat" },
+              { "kind": "not", "arg": { "kind": "pred", "id": "p_low_age_band" } },
+              { "kind": "pred", "id": "p_high_age_band" }
+            ]
+          },
+          "then": {
+            "o_diarrhea_dose_low": false,
+            "o_diarrhea_dose_high": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_dosing", "row": 2 }]
+        },
+        {
+          "id": "r_diarrhea_dose_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_diarrhea_dose_low": false,
+            "o_diarrhea_dose_high": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "diarrhea_dosing", "row": 3 }]
+        }
+      ]
+    },
+    "d_closing": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "manual_decision_tables", "table": "closing" }],
+      "rules": [
+        {
+          "id": "r_closing_yes",
+          "when": { "kind": "output", "id": "o_route_closing" },
+          "then": {
+            "o_closing_module_complete": true,
+            "o_close_visit": true
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "closing", "row": 1 }]
+        },
+        {
+          "id": "r_closing_else",
+          "when": { "kind": "else" },
+          "then": {
+            "o_closing_module_complete": false
+          },
+          "provenance": [{ "source_id": "manual_decision_tables", "table": "closing", "row": 2 }]
+        }
+      ]
+    }
+  },
+  "invariants": {
+    "i_route_singleton": {
+      "severity": "error",
+      "expression": {
+        "kind": "exactly_one",
+        "args": [
+          { "kind": "output", "id": "o_route_urgent_referral" },
+          { "kind": "output", "id": "o_route_fever" },
+          { "kind": "output", "id": "o_route_cough" },
+          { "kind": "output", "id": "o_route_diarrhea" },
+          { "kind": "output", "id": "o_route_closing" }
+        ]
+      },
+      "provenance": [{ "source_id": "qa_policy", "row": 1 }]
+    },
+    "i_fever_dose_gate": {
+      "severity": "error",
+      "expression": {
+        "kind": "if",
+        "cond": { "kind": "output", "id": "o_fever_treat" },
+        "then": {
+          "kind": "exactly_one",
+          "args": [
+            { "kind": "output", "id": "o_fever_dose_low" },
+            { "kind": "output", "id": "o_fever_dose_high" }
+          ]
+        },
+        "else": {
+          "kind": "and",
+          "args": [
+            { "kind": "not", "arg": { "kind": "output", "id": "o_fever_dose_low" } },
+            { "kind": "not", "arg": { "kind": "output", "id": "o_fever_dose_high" } }
+          ]
+        }
+      },
+      "provenance": [{ "source_id": "qa_policy", "row": 2 }]
+    },
+    "i_cough_dose_gate": {
+      "severity": "error",
+      "expression": {
+        "kind": "if",
+        "cond": { "kind": "output", "id": "o_cough_treat" },
+        "then": {
+          "kind": "exactly_one",
+          "args": [
+            { "kind": "output", "id": "o_cough_dose_low" },
+            { "kind": "output", "id": "o_cough_dose_high" }
+          ]
+        },
+        "else": {
+          "kind": "and",
+          "args": [
+            { "kind": "not", "arg": { "kind": "output", "id": "o_cough_dose_low" } },
+            { "kind": "not", "arg": { "kind": "output", "id": "o_cough_dose_high" } }
+          ]
+        }
+      },
+      "provenance": [{ "source_id": "qa_policy", "row": 3 }]
+    },
+    "i_diarrhea_dose_gate": {
+      "severity": "error",
+      "expression": {
+        "kind": "if",
+        "cond": { "kind": "output", "id": "o_diarrhea_treat" },
+        "then": {
+          "kind": "exactly_one",
+          "args": [
+            { "kind": "output", "id": "o_diarrhea_dose_low" },
+            { "kind": "output", "id": "o_diarrhea_dose_high" }
+          ]
+        },
+        "else": {
+          "kind": "and",
+          "args": [
+            { "kind": "not", "arg": { "kind": "output", "id": "o_diarrhea_dose_low" } },
+            { "kind": "not", "arg": { "kind": "output", "id": "o_diarrhea_dose_high" } }
+          ]
+        }
+      },
+      "provenance": [{ "source_id": "qa_policy", "row": 4 }]
+    }
+  },
+  "phrase_bindings": {
+    "o_urgent_referral": { "message_key": "m_urgent_referral" },
+    "o_fever_treat": { "message_key": "m_fever_treat" },
+    "o_cough_treat": { "message_key": "m_cough_treat" },
+    "o_diarrhea_treat": { "message_key": "m_diarrhea_treat" },
+    "o_close_visit": { "message_key": "m_close_visit" }
+  }
+}
