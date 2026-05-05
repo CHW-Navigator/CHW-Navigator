@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "name": "zero_meal",
+      "values": {
+        "v_amount": 0
+      },
+      "missing": []
+    },
+    {
+      "name": "fifty_meal",
+      "values": {
+        "v_amount": 50
+      },
+      "missing": []
+    },
+    {
+      "name": "hundred_meal",
+      "values": {
+        "v_amount": 100
+      },
+      "missing": []
+    }
+  ]
+}

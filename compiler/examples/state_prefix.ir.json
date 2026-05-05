@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "state_prefix_demo",
+    "compiler_version": "0.1.0",
+    "generated_at": "2026-05-01T10:10:00Z",
+    "sources": [
+      {
+        "id": "state_prefix_demo_source",
+        "kind": "manual",
+        "ref": "State prefix acceptance demo"
+      }
+    ]
+  },
+  "variables": {
+    "st_fever_done": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "state_catalog", "row": 1 }]
+    }
+  },
+  "predicates": {},
+  "outputs": {
+    "o_seen_before": {
+      "type": "bool",
+      "provenance": [{ "source_id": "state_outputs", "column": "o_seen_before" }]
+    }
+  },
+  "decisions": {
+    "d_state_router": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "state_decision", "table": "state_router" }],
+      "rules": [
+        {
+          "id": "r_seen_yes",
+          "when": { "kind": "var", "id": "st_fever_done" },
+          "then": { "o_seen_before": true },
+          "provenance": [{ "source_id": "state_decision", "row": 1 }]
+        },
+        {
+          "id": "r_seen_else",
+          "when": { "kind": "else" },
+          "then": { "o_seen_before": false },
+          "provenance": [{ "source_id": "state_decision", "row": 2 }]
+        }
+      ]
+    }
+  },
+  "invariants": {},
+  "phrase_bindings": {}
+}

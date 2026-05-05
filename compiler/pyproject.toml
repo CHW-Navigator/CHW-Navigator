@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chw-navigator"
+version = "0.1.0"
+description = "Compiler toolkit for clinical logic to DMN, XLSForm, Z3, and Mermaid"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "David Levine" }
+]
+dependencies = [
+  "z3-solver>=4.16,<5",
+  "defusedxml>=0.7.1"
+]
+
+[project.scripts]
+chw-nav = "chw_navigator.cli:main"
+chw-nav-validate = "chw_navigator.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

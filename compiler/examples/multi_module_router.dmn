@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="defs_multi_module_router" name="multi_module_router">
+  <decision id="d_starting_danger_signs" name="Starting And Danger Signs">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_start_danger">
+        <inputExpression id="ie_start_danger" typeRef="boolean">
+          <text>p_danger_sign</text>
+        </inputExpression>
+      </input>
+      <output id="out_visit_started" name="o_visit_started" typeRef="boolean" />
+      <output id="out_danger_case" name="o_danger_sign_case" typeRef="boolean" />
+      <rule id="r_start_danger">
+        <inputEntry id="r_start_danger_i1"><text>true</text></inputEntry>
+        <outputEntry id="r_start_danger_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_start_danger_o2"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_start_else">
+        <inputEntry id="r_start_else_i1"><text>-</text></inputEntry>
+        <outputEntry id="r_start_else_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_start_else_o2"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_traffic_cop" name="Traffic Cop">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_route_danger_case">
+        <inputExpression id="ie_route_danger_case" typeRef="boolean">
+          <text>o_danger_sign_case</text>
+        </inputExpression>
+      </input>
+      <input id="input_route_fever">
+        <inputExpression id="ie_route_fever" typeRef="boolean">
+          <text>p_has_fever</text>
+        </inputExpression>
+      </input>
+      <input id="input_route_cough">
+        <inputExpression id="ie_route_cough" typeRef="boolean">
+          <text>p_has_cough</text>
+        </inputExpression>
+      </input>
+      <input id="input_route_diarrhea">
+        <inputExpression id="ie_route_diarrhea" typeRef="boolean">
+          <text>p_has_diarrhea</text>
+        </inputExpression>
+      </input>
+      <output id="out_route_urgent_referral" name="o_route_urgent_referral" typeRef="boolean" />
+      <output id="out_route_fever" name="o_route_fever" typeRef="boolean" />
+      <output id="out_route_cough" name="o_route_cough" typeRef="boolean" />
+      <output id="out_route_diarrhea" name="o_route_diarrhea" typeRef="boolean" />
+      <output id="out_route_closing" name="o_route_closing" typeRef="boolean" />
+      <rule id="r_route_urgent">
+        <inputEntry id="r_route_urgent_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_route_urgent_i2"><text>-</text></inputEntry>
+        <inputEntry id="r_route_urgent_i3"><text>-</text></inputEntry>
+        <inputEntry id="r_route_urgent_i4"><text>-</text></inputEntry>
+        <outputEntry id="r_route_urgent_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_route_urgent_o2"><text>false</text></outputEntry>
+        <outputEntry id="r_route_urgent_o3"><text>false</text></outputEntry>
+        <outputEntry id="r_route_urgent_o4"><text>false</text></outputEntry>
+        <outputEntry id="r_route_urgent_o5"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_route_fever">
+        <inputEntry id="r_route_fever_i1"><text>false</text></inputEntry>
+        <inputEntry id="r_route_fever_i2"><text>true</text></inputEntry>
+        <inputEntry id="r_route_fever_i3"><text>-</text></inputEntry>
+        <inputEntry id="r_route_fever_i4"><text>-</text></inputEntry>
+        <outputEntry id="r_route_fever_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_route_fever_o2"><text>true</text></outputEntry>
+        <outputEntry id="r_route_fever_o3"><text>false</text></outputEntry>
+        <outputEntry id="r_route_fever_o4"><text>false</text></outputEntry>
+        <outputEntry id="r_route_fever_o5"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_route_cough">
+        <inputEntry id="r_route_cough_i1"><text>false</text></inputEntry>
+        <inputEntry id="r_route_cough_i2"><text>false</text></inputEntry>
+        <inputEntry id="r_route_cough_i3"><text>true</text></inputEntry>
+        <inputEntry id="r_route_cough_i4"><text>-</text></inputEntry>
+        <outputEntry id="r_route_cough_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_route_cough_o2"><text>false</text></outputEntry>
+        <outputEntry id="r_route_cough_o3"><text>true</text></outputEntry>
+        <outputEntry id="r_route_cough_o4"><text>false</text></outputEntry>
+        <outputEntry id="r_route_cough_o5"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_route_diarrhea">
+        <inputEntry id="r_route_diarrhea_i1"><text>false</text></inputEntry>
+        <inputEntry id="r_route_diarrhea_i2"><text>false</text></inputEntry>
+        <inputEntry id="r_route_diarrhea_i3"><text>false</text></inputEntry>
+        <inputEntry id="r_route_diarrhea_i4"><text>true</text></inputEntry>
+        <outputEntry id="r_route_diarrhea_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_route_diarrhea_o2"><text>false</text></outputEntry>
+        <outputEntry id="r_route_diarrhea_o3"><text>false</text></outputEntry>
+        <outputEntry id="r_route_diarrhea_o4"><text>true</text></outputEntry>
+        <outputEntry id="r_route_diarrhea_o5"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_route_closing">
+        <inputEntry id="r_route_closing_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_route_closing_i2"><text>-</text></inputEntry>
+        <inputEntry id="r_route_closing_i3"><text>-</text></inputEntry>
+        <inputEntry id="r_route_closing_i4"><text>-</text></inputEntry>
+        <outputEntry id="r_route_closing_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_route_closing_o2"><text>false</text></outputEntry>
+        <outputEntry id="r_route_closing_o3"><text>false</text></outputEntry>
+        <outputEntry id="r_route_closing_o4"><text>false</text></outputEntry>
+        <outputEntry id="r_route_closing_o5"><text>true</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_urgent_referral" name="Urgent Referral">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_urgent_referral_route">
+        <inputExpression id="ie_urgent_referral_route" typeRef="boolean">
+          <text>o_route_urgent_referral</text>
+        </inputExpression>
+      </input>
+      <output id="out_urgent_referral" name="o_urgent_referral" typeRef="boolean" />
+      <output id="out_close_visit_urgent" name="o_close_visit" typeRef="boolean" />
+      <rule id="r_urgent_yes">
+        <inputEntry id="r_urgent_yes_i1"><text>true</text></inputEntry>
+        <outputEntry id="r_urgent_yes_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_urgent_yes_o2"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_urgent_else">
+        <inputEntry id="r_urgent_else_i1"><text>-</text></inputEntry>
+        <outputEntry id="r_urgent_else_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_urgent_else_o2"><text>-</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_fever_module" name="Fever Module">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_fever_route">
+        <inputExpression id="ie_fever_route" typeRef="boolean">
+          <text>o_route_fever</text>
+        </inputExpression>
+      </input>
+      <input id="input_fever_symptom">
+        <inputExpression id="ie_fever_symptom" typeRef="boolean">
+          <text>p_has_fever</text>
+        </inputExpression>
+      </input>
+      <output id="out_fever_module_complete" name="o_fever_module_complete" typeRef="boolean" />
+      <rule id="r_fever_module_yes">
+        <inputEntry id="r_fever_module_yes_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_fever_module_yes_i2"><text>true</text></inputEntry>
+        <outputEntry id="r_fever_module_yes_o1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_fever_module_else">
+        <inputEntry id="r_fever_module_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_fever_module_else_i2"><text>-</text></inputEntry>
+        <outputEntry id="r_fever_module_else_o1"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_fever_treatment" name="Fever Treatment">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_fever_treat_route">
+        <inputExpression id="ie_fever_treat_route" typeRef="boolean">
+          <text>o_route_fever</text>
+        </inputExpression>
+      </input>
+      <input id="input_fever_treat_need">
+        <inputExpression id="ie_fever_treat_need" typeRef="boolean">
+          <text>p_fever_needs_treatment</text>
+        </inputExpression>
+      </input>
+      <output id="out_fever_treat" name="o_fever_treat" typeRef="boolean" />
+      <rule id="r_fever_treat_yes">
+        <inputEntry id="r_fever_treat_yes_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_fever_treat_yes_i2"><text>true</text></inputEntry>
+        <outputEntry id="r_fever_treat_yes_o1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_fever_treat_else">
+        <inputEntry id="r_fever_treat_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_fever_treat_else_i2"><text>-</text></inputEntry>
+        <outputEntry id="r_fever_treat_else_o1"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_fever_dosing" name="Fever Dosing">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_fever_dose_treat">
+        <inputExpression id="ie_fever_dose_treat" typeRef="boolean">
+          <text>o_fever_treat</text>
+        </inputExpression>
+      </input>
+      <input id="input_fever_dose_low">
+        <inputExpression id="ie_fever_dose_low" typeRef="boolean">
+          <text>p_low_age_band</text>
+        </inputExpression>
+      </input>
+      <input id="input_fever_dose_high">
+        <inputExpression id="ie_fever_dose_high" typeRef="boolean">
+          <text>p_high_age_band</text>
+        </inputExpression>
+      </input>
+      <output id="out_fever_dose_low" name="o_fever_dose_low" typeRef="boolean" />
+      <output id="out_fever_dose_high" name="o_fever_dose_high" typeRef="boolean" />
+      <rule id="r_fever_dose_low">
+        <inputEntry id="r_fever_dose_low_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_fever_dose_low_i2"><text>true</text></inputEntry>
+        <inputEntry id="r_fever_dose_low_i3"><text>-</text></inputEntry>
+        <outputEntry id="r_fever_dose_low_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_fever_dose_low_o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_fever_dose_high">
+        <inputEntry id="r_fever_dose_high_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_fever_dose_high_i2"><text>false</text></inputEntry>
+        <inputEntry id="r_fever_dose_high_i3"><text>true</text></inputEntry>
+        <outputEntry id="r_fever_dose_high_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_fever_dose_high_o2"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_fever_dose_else">
+        <inputEntry id="r_fever_dose_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_fever_dose_else_i2"><text>-</text></inputEntry>
+        <inputEntry id="r_fever_dose_else_i3"><text>-</text></inputEntry>
+        <outputEntry id="r_fever_dose_else_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_fever_dose_else_o2"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_cough_module" name="Cough Module">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_cough_route">
+        <inputExpression id="ie_cough_route" typeRef="boolean">
+          <text>o_route_cough</text>
+        </inputExpression>
+      </input>
+      <input id="input_cough_symptom">
+        <inputExpression id="ie_cough_symptom" typeRef="boolean">
+          <text>p_has_cough</text>
+        </inputExpression>
+      </input>
+      <output id="out_cough_module_complete" name="o_cough_module_complete" typeRef="boolean" />
+      <rule id="r_cough_module_yes">
+        <inputEntry id="r_cough_module_yes_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_cough_module_yes_i2"><text>true</text></inputEntry>
+        <outputEntry id="r_cough_module_yes_o1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_cough_module_else">
+        <inputEntry id="r_cough_module_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_cough_module_else_i2"><text>-</text></inputEntry>
+        <outputEntry id="r_cough_module_else_o1"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_cough_treatment" name="Cough Treatment">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_cough_treat_route">
+        <inputExpression id="ie_cough_treat_route" typeRef="boolean">
+          <text>o_route_cough</text>
+        </inputExpression>
+      </input>
+      <input id="input_cough_treat_need">
+        <inputExpression id="ie_cough_treat_need" typeRef="boolean">
+          <text>p_cough_needs_treatment</text>
+        </inputExpression>
+      </input>
+      <output id="out_cough_treat" name="o_cough_treat" typeRef="boolean" />
+      <rule id="r_cough_treat_yes">
+        <inputEntry id="r_cough_treat_yes_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_cough_treat_yes_i2"><text>true</text></inputEntry>
+        <outputEntry id="r_cough_treat_yes_o1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_cough_treat_else">
+        <inputEntry id="r_cough_treat_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_cough_treat_else_i2"><text>-</text></inputEntry>
+        <outputEntry id="r_cough_treat_else_o1"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_cough_dosing" name="Cough Dosing">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_cough_dose_treat">
+        <inputExpression id="ie_cough_dose_treat" typeRef="boolean">
+          <text>o_cough_treat</text>
+        </inputExpression>
+      </input>
+      <input id="input_cough_dose_low">
+        <inputExpression id="ie_cough_dose_low" typeRef="boolean">
+          <text>p_low_age_band</text>
+        </inputExpression>
+      </input>
+      <input id="input_cough_dose_high">
+        <inputExpression id="ie_cough_dose_high" typeRef="boolean">
+          <text>p_high_age_band</text>
+        </inputExpression>
+      </input>
+      <output id="out_cough_dose_low" name="o_cough_dose_low" typeRef="boolean" />
+      <output id="out_cough_dose_high" name="o_cough_dose_high" typeRef="boolean" />
+      <rule id="r_cough_dose_low">
+        <inputEntry id="r_cough_dose_low_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_cough_dose_low_i2"><text>true</text></inputEntry>
+        <inputEntry id="r_cough_dose_low_i3"><text>-</text></inputEntry>
+        <outputEntry id="r_cough_dose_low_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_cough_dose_low_o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_cough_dose_high">
+        <inputEntry id="r_cough_dose_high_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_cough_dose_high_i2"><text>false</text></inputEntry>
+        <inputEntry id="r_cough_dose_high_i3"><text>true</text></inputEntry>
+        <outputEntry id="r_cough_dose_high_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_cough_dose_high_o2"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_cough_dose_else">
+        <inputEntry id="r_cough_dose_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_cough_dose_else_i2"><text>-</text></inputEntry>
+        <inputEntry id="r_cough_dose_else_i3"><text>-</text></inputEntry>
+        <outputEntry id="r_cough_dose_else_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_cough_dose_else_o2"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_diarrhea_module" name="Diarrhea Module">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_diarrhea_route">
+        <inputExpression id="ie_diarrhea_route" typeRef="boolean">
+          <text>o_route_diarrhea</text>
+        </inputExpression>
+      </input>
+      <input id="input_diarrhea_symptom">
+        <inputExpression id="ie_diarrhea_symptom" typeRef="boolean">
+          <text>p_has_diarrhea</text>
+        </inputExpression>
+      </input>
+      <output id="out_diarrhea_module_complete" name="o_diarrhea_module_complete" typeRef="boolean" />
+      <rule id="r_diarrhea_module_yes">
+        <inputEntry id="r_diarrhea_module_yes_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_diarrhea_module_yes_i2"><text>true</text></inputEntry>
+        <outputEntry id="r_diarrhea_module_yes_o1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_diarrhea_module_else">
+        <inputEntry id="r_diarrhea_module_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_diarrhea_module_else_i2"><text>-</text></inputEntry>
+        <outputEntry id="r_diarrhea_module_else_o1"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_diarrhea_treatment" name="Diarrhea Treatment">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_diarrhea_treat_route">
+        <inputExpression id="ie_diarrhea_treat_route" typeRef="boolean">
+          <text>o_route_diarrhea</text>
+        </inputExpression>
+      </input>
+      <input id="input_diarrhea_treat_need">
+        <inputExpression id="ie_diarrhea_treat_need" typeRef="boolean">
+          <text>p_diarrhea_needs_treatment</text>
+        </inputExpression>
+      </input>
+      <output id="out_diarrhea_treat" name="o_diarrhea_treat" typeRef="boolean" />
+      <rule id="r_diarrhea_treat_yes">
+        <inputEntry id="r_diarrhea_treat_yes_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_diarrhea_treat_yes_i2"><text>true</text></inputEntry>
+        <outputEntry id="r_diarrhea_treat_yes_o1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_diarrhea_treat_else">
+        <inputEntry id="r_diarrhea_treat_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_diarrhea_treat_else_i2"><text>-</text></inputEntry>
+        <outputEntry id="r_diarrhea_treat_else_o1"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_diarrhea_dosing" name="Diarrhea Dosing">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_diarrhea_dose_treat">
+        <inputExpression id="ie_diarrhea_dose_treat" typeRef="boolean">
+          <text>o_diarrhea_treat</text>
+        </inputExpression>
+      </input>
+      <input id="input_diarrhea_dose_low">
+        <inputExpression id="ie_diarrhea_dose_low" typeRef="boolean">
+          <text>p_low_age_band</text>
+        </inputExpression>
+      </input>
+      <input id="input_diarrhea_dose_high">
+        <inputExpression id="ie_diarrhea_dose_high" typeRef="boolean">
+          <text>p_high_age_band</text>
+        </inputExpression>
+      </input>
+      <output id="out_diarrhea_dose_low" name="o_diarrhea_dose_low" typeRef="boolean" />
+      <output id="out_diarrhea_dose_high" name="o_diarrhea_dose_high" typeRef="boolean" />
+      <rule id="r_diarrhea_dose_low">
+        <inputEntry id="r_diarrhea_dose_low_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_diarrhea_dose_low_i2"><text>true</text></inputEntry>
+        <inputEntry id="r_diarrhea_dose_low_i3"><text>-</text></inputEntry>
+        <outputEntry id="r_diarrhea_dose_low_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_diarrhea_dose_low_o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_diarrhea_dose_high">
+        <inputEntry id="r_diarrhea_dose_high_i1"><text>true</text></inputEntry>
+        <inputEntry id="r_diarrhea_dose_high_i2"><text>false</text></inputEntry>
+        <inputEntry id="r_diarrhea_dose_high_i3"><text>true</text></inputEntry>
+        <outputEntry id="r_diarrhea_dose_high_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_diarrhea_dose_high_o2"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_diarrhea_dose_else">
+        <inputEntry id="r_diarrhea_dose_else_i1"><text>-</text></inputEntry>
+        <inputEntry id="r_diarrhea_dose_else_i2"><text>-</text></inputEntry>
+        <inputEntry id="r_diarrhea_dose_else_i3"><text>-</text></inputEntry>
+        <outputEntry id="r_diarrhea_dose_else_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_diarrhea_dose_else_o2"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <decision id="d_closing" name="Closing">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_closing_route">
+        <inputExpression id="ie_closing_route" typeRef="boolean">
+          <text>o_route_closing</text>
+        </inputExpression>
+      </input>
+      <output id="out_closing_complete" name="o_closing_module_complete" typeRef="boolean" />
+      <output id="out_close_visit_closing" name="o_close_visit" typeRef="boolean" />
+      <rule id="r_closing_yes">
+        <inputEntry id="r_closing_yes_i1"><text>true</text></inputEntry>
+        <outputEntry id="r_closing_yes_o1"><text>true</text></outputEntry>
+        <outputEntry id="r_closing_yes_o2"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_closing_else">
+        <inputEntry id="r_closing_else_i1"><text>-</text></inputEntry>
+        <outputEntry id="r_closing_else_o1"><text>false</text></outputEntry>
+        <outputEntry id="r_closing_else_o2"><text>-</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

@@ -1,0 +1,9 @@
+{
+  "ir_version": 1,
+  "guideline_id": "pneumonia_catalog_demo",
+  "sources": [
+    {
+      "source_id": "EXAMPLE_CATALOG"
+    }
+  ]
+}
