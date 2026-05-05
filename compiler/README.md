@@ -1,0 +1,308 @@
+# CHW Navigator
+
+CHW Navigator is the start of a compiler toolkit for translating structured clinical logic into:
+
+- DMN-oriented execution inputs
+- XLSForm
+- Z3 models
+- Mermaid audit views
+
+The authored clinical source of truth is:
+
+- variable catalog
+- predicate catalog
+- DMN decision tables
+- phrase bank
+
+Clinical IR is the canonical compiled representation used for execution, QA, and backend generation. Everything else in the toolchain compiles through that shared semantic layer after ingest from those authored sources.
+
+## Current scope
+
+- typed Clinical IR data model
+- normalized expression AST model
+- semantic validator
+- reference interpreter
+- subset DMN import for decisions
+- initial Z3 lowering
+- Z3 QA checks with witness patients
+- minimal Form IR and XLSForm CSV backend
+- generated XLSForm runtime for comparison
+- Mermaid audit graph generation
+- provenance validation and backend source maps
+- example IR document
+- hardened DMN XML parsing via `defusedxml`
+
+## Project layout
+
+- `src/chw_navigator/clinical_ir.py`: canonical compiled data model
+- `src/chw_navigator/catalogs.py`: standalone variable/predicate/phrase catalog ingest
+- `src/chw_navigator/validator.py`: semantic checks
+- `src/chw_navigator/evaluator.py`: Clinical IR reference interpreter
+- `src/chw_navigator/dmn.py`: DMN decision-table import for the supported subset
+- `src/chw_navigator/z3_backend.py`: initial Z3 lowering
+- `src/chw_navigator/form_ir.py`: lightweight workbook model for generated forms
+- `src/chw_navigator/xlsform_backend.py`: Clinical IR to XLSForm CSV backend
+- `src/chw_navigator/xlsform_expr.py`: parser for the supported XLSForm expression subset
+- `src/chw_navigator/xlsform_import.py`: supported XLSForm survey/choices import back into Clinical IR
+- `src/chw_navigator/xlsform_runtime.py`: evaluator for the generated XLSForm subset
+- `src/chw_navigator/compare.py`: cross-engine comparison harness
+- `src/chw_navigator/mermaid_backend.py`: Mermaid flowchart generation from canonical logic
+- `src/chw_navigator/bundles.py`: immutable intake bundle creation for inputs, outputs, and test evidence
+- `src/chw_navigator/cli.py`: command-line entry points
+- `tests/test_dmn_fail_loud.py`: fail-loud coverage for unsupported DMN inputs
+- `tests/test_artifact_drift.py`: mutated artifact drift detection across DMN, XLSForm, Mermaid, and IR
+- `tests/test_multi_module_router.py`: multi-table traffic-cop example with module priority and follow-on treatment/dosing tables
+- `examples/pneumonia.ir.json`: minimal working Clinical IR example
+- `examples/catalogs/`: standalone catalog examples for `compose-ir`
+- `examples/pneumonia.cases.json`: explicit comparison cases
+- `examples/pneumonia.missing.ir.json`: missingness-aware Clinical IR example
+- `examples/pneumonia.missing.cases.json`: explicit comparison cases with allowed-missing inputs
+- `examples/multi_module_router.ir.json`: multi-table module-routing example with treatment/dosing follow-on decisions
+- `examples/multi_module_router.dmn`: DMN counterpart for the multi-table module-routing example
+- `examples/multi_module_router.cases.json`: explicit comparison cases for the multi-table module-routing example
+- `examples/state_prefix.ir.json`: minimal example showing supported `st_` state-variable prefix usage
+
+## Run the validator
+
+```bash
+$env:PYTHONPATH='src'; python -m chw_navigator.cli validate examples/pneumonia.ir.json
+```
+
+Or install the package in editable mode and use the console script:
+
+```bash
+pip install -e .
+chw-nav validate examples/pneumonia.ir.json
+```
+
+## Compose a base IR from standalone catalogs
+
+```bash
+$env:PYTHONPATH='src'; python -m chw_navigator.cli compose-ir examples/catalogs/pneumonia.metadata.json examples/catalogs/pneumonia.variables.csv examples/catalogs/pneumonia.predicates.json examples/catalogs/pneumonia.phrases.csv --output generated\catalog_demo\pneumonia.base.ir.json
+```
+
+This command accepts:
+
+- variable catalog as `.csv` or `.json`
+- predicate catalog as `.csv` or `.json`
+- phrase bank as `.csv` or `.json`
+
+Phrase bank rows should use `text_<language>` columns such as `text_en` and `text_fr`. Use `entity_id` to point at the variable, predicate, or output the phrase belongs to. For convenience, `variable_name` is also accepted as an alias for `entity_id`.
+
+Structured provenance is required throughout the authored inputs. The variable catalog contract shows the baseline pattern, and the same structured provenance shape should be used across predicate catalogs, phrase banks, DMN-derived artifacts, patient suites, and QA logs.
+
+EHR/history-fed fields should stay in the same identifier families and use an `_h` suffix when helpful, for example:
+
+- `v_weight_kg_h`
+- `v_last_hb_h`
+- `st_prev_referral_h`
+
+For isolated local work, you can also use the project virtual environment:
+
+```bash
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -e .
+```
+
+## Evaluate one patient
+
+```bash
+$env:PYTHONPATH='src'; python -m chw_navigator.cli evaluate examples/pneumonia.ir.json examples/patient.home-treatment.json
+```
+
+## Import decisions from DMN
+
+```bash
+$env:PYTHONPATH='src'; python -m chw_navigator.cli import-dmn examples/pneumonia.ir.json examples/pneumonia.dmn
+```
+
+If the base IR came from standalone catalogs, `import-dmn` now infers missing output declarations from the DMN output columns before validating the merged document.
+
+## Import a supported XLSForm back into Clinical IR
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli import-xlsform generated\pneumonia\survey.csv generated\pneumonia\choices.csv --guideline-id pneumonia_imported --output generated\test_artifacts\imported_pneumonia.ir.json
+```
+
+This importer currently supports:
+
+- generated CHW Navigator XLSForm workbooks
+- simple hand-authored rows using:
+  - `integer`
+  - `decimal`
+  - `text`
+  - `select_one yes_no`
+  - simple `select_one <list>`
+  - `calculate`
+  - `note`
+
+It reconstructs:
+
+- variables
+- predicates
+- decisions and rule order
+- outputs
+- note-backed phrases for output messages/guidance
+
+For XLSForms written outside CHW Navigator, the importer is permissive about naming and then normalizes into canonical IR identifiers:
+
+- question rows are normalized to canonical variable IDs such as `v_amount`
+- calculate rows are normalized to canonical predicate/output IDs such as `p_eligible` or `o_tip`
+- embedded `${...}` references in calculations, `relevant`, and labels are rewritten to follow those canonical IDs
+- the importer emits a structured report with `normalized`, `warning`, and `error` findings
+
+If you pass `--output`, the CLI writes the imported IR and a sidecar report at `*.import-report.json`.
+
+and then the imported IR can go directly into:
+
+- `z3-summary`
+- `z3-checks`
+- `build-mermaid`
+- `build-xlsform`
+- `compare`
+
+## Check Z3 lowering
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli z3-summary examples/pneumonia.ir.json
+```
+
+## Run formal Z3 checks
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli z3-checks examples/pneumonia.ir.json
+```
+
+`z3-checks` now emits the structured `engine-log` contract envelope with `log_type: "z3_checks"`.
+
+## Generate one witness patient for a rule
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli z3-rule-patient examples/pneumonia.ir.json r2
+```
+
+## Export SMT-LIB
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli export-smt2 examples/pneumonia.ir.json --output generated\test_artifacts\pneumonia.smt2
+```
+
+## Compare an SMT-LIB candidate
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compare-smt2 examples/pneumonia.ir.json generated\test_artifacts\pneumonia.smt2 --patients examples/pneumonia.cases.json
+```
+
+## Build XLSForm CSV sheets
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-xlsform examples/pneumonia.ir.json generated\pneumonia
+```
+
+This writes:
+
+- `survey.csv`
+- `choices.csv`
+- `source-map.json`
+
+## Build Mermaid audit graph
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-mermaid examples/pneumonia.ir.json --output generated\pneumonia\pneumonia.mmd
+```
+
+This also writes a companion Mermaid source map at `pneumonia.mmd.source-map.json`.
+
+## Create an immutable intake bundle
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli create-bundle examples/pneumonia.ir.json examples/pneumonia.dmn --patients examples/pneumonia.cases.json --bundle-root generated\bundles --label pneumonia-demo
+```
+
+Each bundle gets a fresh timestamped folder and is never overwritten. The bundle includes:
+
+- copied source inputs under `inputs/`
+- generated IR, XLSForm, Mermaid, and SMT-LIB outputs under `outputs/`
+- baseline comparison reports under `tests/good/`
+- a mutation workspace plus manifest under `mutations/`
+- `metadata.json` and `README.md` with compiler version, source paths, and provenance
+
+## Compare engines on explicit cases
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compare examples/pneumonia.ir.json --dmn examples/pneumonia.dmn --patients examples/pneumonia.cases.json
+```
+
+`compare` now emits the structured `engine-log` contract envelope with `log_type: "comparison_report"`.
+
+Missingness-aware comparison is also supported when the IR allows the input to be missing and the logic handles or defaults it before decision time:
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compare examples/pneumonia.missing.ir.json --patients examples/pneumonia.missing.cases.json
+```
+
+If `--patients` is omitted, `compare` derives a richer Z3-driven comparison suite that includes:
+
+- endpoint-reaching patients for non-default clinical outputs
+- pairwise module patients when two module-presence predicates can both be true
+- cutpoint neighbors on both sides of numeric thresholds such as `n-1 / n / n+1` or `x-0.1 / x / x+0.1`
+- a no-problems baseline patient
+- five repeated deterministic copies of one seed patient to catch any accidental stochastic behavior
+
+The comparison log now also records the generated case category, tags, and the Mermaid trace nodes checked for that case.
+
+The toolkit also supports sequential multi-table workflows where later decisions read outputs produced by earlier decisions. For example:
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compare examples/multi_module_router.ir.json --dmn examples/multi_module_router.dmn --patients examples/multi_module_router.cases.json
+```
+
+## Why this comes first
+
+The validator and canonical IR are the semantic core of the project. DMN ingest, XLSForm generation, Mermaid output, and Z3 lowering will all be safer and simpler if they target the same explicit typed representation from the beginning.
+
+## Supported subset today
+
+- Clinical IR expressions in the documented core subset
+- `FIRST` hit policy
+- DMN inputs and outputs that must use explicit `v_` or `st_` for variables, `p_` for predicates, and `o_` for outputs
+- DMN cells that compile to Boolean predicate or variable checks using `true`, `false`, and `-`
+- standalone authoring ingest for variable catalogs, predicate catalogs, and multilingual phrase banks
+- XLSForm subset import back into Clinical IR for generated forms and a narrow hand-authored subset
+- Z3 checks for predicate satisfiability, rule reachability, output reachability, decision overlap, fallback reachability, and invariant violations
+- Z3 witnesses now include explicit input and predicate missingness flags
+- XLSForm generation to `survey.csv` and `choices.csv` for typed variables, predicates, rule-hit calculations, outputs, and note rows
+- generated-form runtime for the emitted XPath subset, including omitted optional inputs
+- Mermaid flowchart generation for clinician audit
+- validator-enforced provenance on core clinical entities
+- backend source maps for generated XLSForm and Mermaid artifacts
+- comparison output with per-engine predicate, output, and rule-hit mismatches
+- immutable intake bundles so new DMN deliveries accumulate instead of replacing older audit evidence
+
+## Current limitations
+
+- The current implementation is a stateless point-in-time engine. It does not yet model prior visits, longitudinal trends, or historical variables.
+- Scalar carry-forward state can be represented today with `st_` variables such as `st_fever_done`, but list-valued or longitudinal state is not yet first-class.
+- `FIRST` is enforced per decision, not globally. Multiple decisions may coexist, but the toolkit does not yet model a first-class action or task schedule layer for aggregated care plans.
+- Form structure is intentionally minimal today. Groups, repeats, and multivalue variables are not yet supported by the current validator/runtime path.
+- The XLSForm importer is intentionally narrow. It does not yet support general question `relevant`, general `constraint`, repeats, groups, or arbitrary legacy production forms.
+- External lookup tables and nonlinear or lookup-backed math are not supported in the current Z3 boundary. Unsupported constructs should be rejected rather than approximated.
+- Legacy XLSForm ingest remains a narrow planned subset, not a general importer for arbitrary production forms.
+
+## Important assumptions
+
+- Clinical IR examples are expected to include provenance on variables, predicates, decisions, rules, outputs, and invariants.
+- `compare` accepts missing inputs when the variable is allowed to be missing and the logic resolves or safely handles missingness before any decision depends on it.
+- Predicate missingness policy is part of XLSForm lowering: `treat_missing_as_false` is compiled explicitly, while `require_inputs` and `propagate_unknown` preserve unknown values in the generated runtime.
+- Phrase bindings currently map `message_key` and optional `guidance_key` into output-gated XLSForm `note` rows.
+- Phrase bank rows with `role=label` are used as XLSForm labels when present. Phrase rows with `role=message` or `role=guidance` attached to outputs are used as note text when those outputs exist.
+- Unsupported constructs are rejected intentionally rather than approximated.
+- DMN parsing uses `defusedxml` rather than the standard library XML parser so uploaded decision tables are not processed with unsafe entity expansion.
+- If a fail-safe fallback rule is added by the system, it should carry explicit provenance such as `source_id: SYSTEM_DEFAULT` instead of being silently merged into authored clinical logic.
+
+Unsupported constructs should fail loudly rather than being approximated silently.
+
+## Test coverage notes
+
+- The test suite includes malformed DMN fixtures for each currently supported DMN failure class.
+- The test suite also includes mutated DMN, XLSForm, Mermaid, and IR artifacts to confirm the comparison layer catches semantic or structural drift instead of silently accepting it.

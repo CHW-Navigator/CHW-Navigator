@@ -1,0 +1,4 @@
+key,entity_id,role,text_en,text_fr,provenance_source_id,provenance_kind,provenance_location
+m_v_age_months,v_age_months,label,Child age (months),Age de l'enfant (mois),EXAMPLE_CATALOG,phrase_bank,row:1
+m_v_resp_rate,v_resp_rate,label,Respiratory rate,Frequence respiratoire,EXAMPLE_CATALOG,phrase_bank,row:2
+m_o_referral,o_referral,message,Refer urgently to facility.,Referer en urgence a l'etablissement.,EXAMPLE_CATALOG,phrase_bank,row:3

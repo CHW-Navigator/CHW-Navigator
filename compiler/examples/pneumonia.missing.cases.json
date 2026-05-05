@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "missing_resp_rate_defaults_to_else",
+      "values": {
+        "v_age_months": 12,
+        "v_danger_sign": false
+      },
+      "missing": ["v_resp_rate"]
+    },
+    {
+      "name": "home_treatment_when_resp_rate_present",
+      "values": {
+        "v_age_months": 12,
+        "v_resp_rate": 40,
+        "v_danger_sign": false
+      }
+    },
+    {
+      "name": "referral_overrides_missing_fast_breathing",
+      "values": {
+        "v_age_months": 12,
+        "v_danger_sign": true
+      },
+      "missing": ["v_resp_rate"]
+    }
+  ]
+}

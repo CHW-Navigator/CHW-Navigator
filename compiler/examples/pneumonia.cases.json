@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "referral_case",
+      "values": {
+        "v_age_months": 0,
+        "v_resp_rate": 0,
+        "v_danger_sign": true
+      }
+    },
+    {
+      "name": "home_treatment_case",
+      "values": {
+        "v_age_months": 12,
+        "v_resp_rate": 40,
+        "v_danger_sign": false
+      }
+    },
+    {
+      "name": "no_action_case",
+      "values": {
+        "v_age_months": 0,
+        "v_resp_rate": 0,
+        "v_danger_sign": false
+      }
+    }
+  ]
+}

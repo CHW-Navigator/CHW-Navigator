@@ -1,0 +1,4 @@
+type,name,label,relevant,calculation,required,constraint
+"decimal","v_amount","What was the price of the meal?","","","true()",""
+"calculate","o_tip","","","${v_amount} * 0.18","",""
+"note","display","18% tip for your meal is: ${o_tip}","","","",""

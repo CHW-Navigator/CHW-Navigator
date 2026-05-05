@@ -1,0 +1,4 @@
+id,type,domain_min,domain_max,unit,allowed_missingness,multivalue,provenance_source_id,provenance_kind,provenance_location
+v_age_months,int,0,120,months,false,false,EXAMPLE_CATALOG,variable_catalog,row:1
+v_resp_rate,int,0,120,breaths_per_minute,false,false,EXAMPLE_CATALOG,variable_catalog,row:2
+v_danger_sign,bool,,,,false,false,EXAMPLE_CATALOG,variable_catalog,row:3
