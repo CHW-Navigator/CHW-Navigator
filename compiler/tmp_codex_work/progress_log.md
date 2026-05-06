@@ -116,3 +116,19 @@
   - `python -m chw_navigator.cli preflight-source variable_catalog compiler/examples/catalogs/pneumonia.variables.csv`
   - `python -m chw_navigator.cli preflight-source phrase_bank compiler/examples/catalogs/pneumonia.phrases.csv`
   - all passed; the current pneumonia phrase bank correctly emits a warning that `o_referral` has no `guidance` role yet
+- Reworked DMN source preflight from a simple subset-parse smoke test into a structured authoring linter:
+  - preserve decision/rule/output counts on good files
+  - report row-level authoring findings without stopping at the first unsupported construct
+  - flag non-`FIRST` hit policy
+  - flag `AND` / `OR` / `NOT` / parentheses in DMN input expressions and input/output cells
+  - flag duplicate rule ids
+  - flag rules with no output assignments
+  - flag fully empty rule rows
+- Wired those DMN authoring findings into `preflight-source dmn` so the source-lint report now carries real issues instead of only counts.
+- Added staged-lint regression coverage for:
+  - unsupported hit policy plus compound-cell logic
+  - duplicate rule ids plus empty rule rows
+- Ran focused DMN regression with:
+  - `python -m unittest compiler.tests.test_staged_lint -v`
+  - `python -m chw_navigator.cli preflight-source dmn compiler/examples/pneumonia.dmn`
+  - both passed

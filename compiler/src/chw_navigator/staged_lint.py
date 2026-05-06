@@ -96,12 +96,21 @@ def preflight_source_artifact(kind: str, path: str | Path) -> StageLintReport:
             )
         if kind == "dmn":
             summary = lint_dmn_file(str(active_path))
+            issues = [
+                StageLintIssue(item["level"], item["path"], item["message"])
+                for item in summary.get("issues", [])
+            ]
             return StageLintReport(
                 stage="source_preflight",
                 artifact_type=kind,
-                ok=True,
-                issues=[],
-                metadata={**summary, "path": str(active_path)},
+                ok=bool(summary.get("ok", True)),
+                issues=issues,
+                metadata={
+                    "decision_count": summary.get("decision_count", 0),
+                    "rule_count": summary.get("rule_count", 0),
+                    "output_count": summary.get("output_count", 0),
+                    "path": str(active_path),
+                },
             )
         if kind == "patient_cases":
             cases = load_patient_cases(str(active_path))

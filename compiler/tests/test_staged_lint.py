@@ -100,6 +100,59 @@ class StagedLintTests(unittest.TestCase):
         self.assertTrue(report.ok)
         self.assertGreaterEqual(report.metadata.get("decision_count", 0), 1)
 
+    def test_preflight_dmn_reports_hit_policy_and_compound_cell_violations(self) -> None:
+        path = self.test_run.inputs_dir / "bad_logic.dmn"
+        path.write_text(
+            (EXAMPLES / "pneumonia.dmn")
+            .read_text(encoding="utf-8")
+            .replace('hitPolicy="FIRST"', 'hitPolicy="COLLECT"', 1)
+            .replace("<text>true</text>", "<text>true and false</text>", 1),
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("dmn", path)
+        self.assertFalse(report.ok)
+        messages = [item.message for item in report.issues]
+        self.assertTrue(any("supports FIRST only" in message for message in messages))
+        self.assertTrue(any("compound logic to live in predicates" in message for message in messages))
+
+    def test_preflight_dmn_reports_duplicate_rule_ids_and_empty_rows(self) -> None:
+        path = self.test_run.inputs_dir / "bad_rules.dmn"
+        path.write_text(
+            """<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="defs_test" name="test">
+  <decision id="d_triage" name="Triage">
+    <decisionTable hitPolicy="FIRST">
+      <input id="input_danger">
+        <inputExpression id="ie_danger" typeRef="boolean">
+          <text>p_danger_sign</text>
+        </inputExpression>
+      </input>
+      <output id="out_referral" name="o_referral" typeRef="boolean" />
+      <rule id="r_dup">
+        <inputEntry id="r1_i1"><text>true</text></inputEntry>
+        <outputEntry id="r1_o1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="r_dup">
+        <inputEntry id="r2_i1"><text>-</text></inputEntry>
+        <outputEntry id="r2_o1"><text>false</text></outputEntry>
+      </rule>
+      <rule id="r_empty">
+        <inputEntry id="r3_i1"><text>-</text></inputEntry>
+        <outputEntry id="r3_o1"><text>-</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
+""",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("dmn", path)
+        self.assertFalse(report.ok)
+        messages = [item.message for item in report.issues]
+        self.assertTrue(any("duplicate rule id" in message for message in messages))
+        self.assertTrue(any("does not assign any outputs" in message for message in messages))
+        self.assertTrue(any("rule row is empty" in message for message in messages))
+
     def test_preflight_predicate_catalog_detects_input_expression_mismatch(self) -> None:
         path = self.test_run.inputs_dir / "predicates.json"
         path.write_text(

@@ -20,17 +20,27 @@ def lint_dmn_file(dmn_path: str) -> dict[str, Any]:
     decision_count = 0
     rule_count = 0
     output_count = 0
+    issues: list[dict[str, str]] = []
     for decision_elem in _children_by_name(root, "decision"):
-        decision, inferred_outputs = _parse_decision(decision_elem, dmn_path)
         decision_count += 1
-        rule_count += len(decision.rules)
-        output_count += len(inferred_outputs)
+        decision_summary = _lint_decision(decision_elem, dmn_path)
+        rule_count += int(decision_summary["rule_count"])
+        output_count += int(decision_summary["output_count"])
+        issues.extend(decision_summary["issues"])
     if decision_count == 0:
-        raise DMNImportError(f"DMN file '{dmn_path}' does not contain any supported decision elements")
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": "dmn",
+                "message": "DMN file does not contain any supported decision elements",
+            }
+        )
     return {
+        "ok": not any(item["level"] == "ERROR" for item in issues),
         "decision_count": decision_count,
         "rule_count": rule_count,
         "output_count": output_count,
+        "issues": issues,
     }
 
 
@@ -72,6 +82,146 @@ def _parse_dmn_root(dmn_path: str) -> ET.Element:
         raise DMNImportError(f"DMN file not found: {dmn_path}") from exc
     except (OSError, ET.ParseError, DefusedXmlException) as exc:
         raise DMNImportError(f"unsafe or invalid DMN XML in '{dmn_path}': {exc}") from exc
+
+
+def _lint_decision(decision_elem: ET.Element, source_id: str) -> dict[str, Any]:
+    decision_id = decision_elem.attrib.get("id") or _slug_to_identifier(
+        decision_elem.attrib.get("name", "decision"), "d"
+    )
+    issues: list[dict[str, str]] = []
+    table = _first_child_by_name(decision_elem, "decisionTable")
+    if table is None:
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}",
+                "message": "decision is missing a decisionTable",
+            }
+        )
+        return {"rule_count": 0, "output_count": 0, "issues": issues}
+
+    hit_policy = table.attrib.get("hitPolicy", "FIRST")
+    if hit_policy != "FIRST":
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.hitPolicy",
+                "message": f"unsupported hit policy '{hit_policy}'; DMN v1 supports FIRST only",
+            }
+        )
+
+    inputs = _children_by_name(table, "input")
+    outputs = _children_by_name(table, "output")
+    rules = _children_by_name(table, "rule")
+
+    if not inputs:
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.inputs",
+                "message": "decision must define at least one input",
+            }
+        )
+    if not outputs:
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.outputs",
+                "message": "decision must define at least one output",
+            }
+        )
+    if not rules:
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.rules",
+                "message": "decision must define at least one rule",
+            }
+        )
+
+    input_refs = [_lint_input_ref(decision_id, item, issues) for item in inputs]
+    output_refs = [_lint_output_ref(decision_id, item, issues) for item in outputs]
+
+    seen_rule_ids: set[str] = set()
+    seen_patterns: dict[tuple[str, ...], str] = {}
+    for index, rule_elem in enumerate(rules, start=1):
+        rule_id = rule_elem.attrib.get("id") or f"{decision_id}_r{index}"
+        if rule_id in seen_rule_ids:
+            issues.append(
+                {
+                    "level": "ERROR",
+                    "path": f"dmn.decision.{decision_id}.rule.{rule_id}",
+                    "message": f"duplicate rule id '{rule_id}'",
+                }
+            )
+        seen_rule_ids.add(rule_id)
+
+        input_entries = _children_by_name(rule_elem, "inputEntry")
+        output_entries = _children_by_name(rule_elem, "outputEntry")
+        if input_refs and len(input_entries) != len(input_refs):
+            issues.append(
+                {
+                    "level": "ERROR",
+                    "path": f"dmn.decision.{decision_id}.rule.{rule_id}.inputs",
+                    "message": f"rule has {len(input_entries)} input entries but expected {len(input_refs)}",
+                }
+            )
+        if output_refs and len(output_entries) != len(output_refs):
+            issues.append(
+                {
+                    "level": "ERROR",
+                    "path": f"dmn.decision.{decision_id}.rule.{rule_id}.outputs",
+                    "message": f"rule has {len(output_entries)} output entries but expected {len(output_refs)}",
+                }
+            )
+
+        input_pattern = tuple(_text_from_cell(entry) for entry in input_entries)
+        if input_pattern in seen_patterns:
+            issues.append(
+                {
+                    "level": "WARNING",
+                    "path": f"dmn.decision.{decision_id}.rule.{rule_id}",
+                    "message": f"rule repeats the same input pattern as '{seen_patterns[input_pattern]}'",
+                }
+            )
+        else:
+            seen_patterns[input_pattern] = rule_id
+
+        all_inputs_blank = True
+        for ref, entry in zip(input_refs, input_entries, strict=False):
+            cell_text = _text_from_cell(entry)
+            all_inputs_blank = all_inputs_blank and cell_text in {"", "-"}
+            _lint_input_cell(decision_id, rule_id, ref or "<missing_input>", cell_text, issues)
+
+        has_output_assignment = False
+        for ref, entry in zip(output_refs, output_entries, strict=False):
+            cell_text = _text_from_cell(entry)
+            if cell_text not in {"", "-", "\"\""}:
+                has_output_assignment = True
+            _lint_output_cell(decision_id, rule_id, ref or "<missing_output>", cell_text, issues)
+
+        if not has_output_assignment:
+            issues.append(
+                {
+                    "level": "ERROR",
+                    "path": f"dmn.decision.{decision_id}.rule.{rule_id}",
+                    "message": "rule row does not assign any outputs",
+                }
+            )
+        if all_inputs_blank and not has_output_assignment:
+            issues.append(
+                {
+                    "level": "ERROR",
+                    "path": f"dmn.decision.{decision_id}.rule.{rule_id}",
+                    "message": "rule row is empty; provide conditions, outputs, or remove the row",
+                }
+            )
+
+    return {
+        "rule_count": len(rules),
+        "output_count": len(outputs),
+        "issues": issues,
+    }
 
 
 def _parse_decision(decision_elem: ET.Element, source_id: str) -> tuple[DecisionDef, dict[str, OutputDef]]:
@@ -175,6 +325,138 @@ def _parse_rule(
     )
 
 
+def _lint_input_ref(decision_id: str, input_elem: ET.Element, issues: list[dict[str, str]]) -> str | None:
+    input_id = input_elem.attrib.get("id") or "input"
+    input_expression = _first_child_by_name(input_elem, "inputExpression")
+    if input_expression is None:
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.input.{input_id}",
+                "message": "input is missing inputExpression",
+            }
+        )
+        return None
+    text = _text_from_cell(input_expression)
+    if not text:
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.input.{input_id}",
+                "message": "inputExpression is empty",
+            }
+        )
+        return None
+    if _contains_boolean_composition(text):
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.input.{input_id}",
+                "message": f"compound DMN input expression '{text}' is not allowed in DMN v1; move AND/OR/NOT logic into predicates",
+            }
+        )
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", text):
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.input.{input_id}",
+                "message": f"unsupported DMN input expression '{text}'",
+            }
+        )
+        return None
+    if not text.startswith(("v_", "st_", "p_", "o_")):
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.input.{input_id}",
+                "message": f"DMN input expression '{text}' must use an explicit v_/st_/p_/o_ prefix",
+            }
+        )
+    return text
+
+
+def _lint_output_ref(decision_id: str, output_elem: ET.Element, issues: list[dict[str, str]]) -> str | None:
+    output_id = output_elem.attrib.get("id") or "output"
+    for key in ("name", "label", "id"):
+        text = output_elem.attrib.get(key)
+        if not text:
+            continue
+        if not text.startswith("o_"):
+            issues.append(
+                {
+                    "level": "ERROR",
+                    "path": f"dmn.decision.{decision_id}.output.{output_id}",
+                    "message": f"DMN output identifier '{text}' must use an explicit o_ prefix",
+                }
+            )
+        return text
+    issues.append(
+        {
+            "level": "ERROR",
+            "path": f"dmn.decision.{decision_id}.output.{output_id}",
+            "message": "output is missing a usable identifier",
+        }
+    )
+    return None
+
+
+def _lint_input_cell(
+    decision_id: str,
+    rule_id: str,
+    input_ref: str,
+    cell_text: str,
+    issues: list[dict[str, str]],
+) -> None:
+    if cell_text in {"", "-", "true", "false"}:
+        return
+    if _contains_boolean_composition(cell_text):
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.rule.{rule_id}.input.{input_ref}",
+                "message": f"input cell '{cell_text}' uses AND/OR/NOT or parentheses; DMN v1 requires compound logic to live in predicates",
+            }
+        )
+        return
+    issues.append(
+        {
+            "level": "ERROR",
+            "path": f"dmn.decision.{decision_id}.rule.{rule_id}.input.{input_ref}",
+            "message": f"unsupported DMN input cell '{cell_text}'; supported values are true, false, and -",
+        }
+    )
+
+
+def _lint_output_cell(
+    decision_id: str,
+    rule_id: str,
+    output_ref: str,
+    cell_text: str,
+    issues: list[dict[str, str]],
+) -> None:
+    if cell_text in {"", "-", "\"\""}:
+        return
+    if _contains_boolean_composition(cell_text):
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.rule.{rule_id}.output.{output_ref}",
+                "message": f"output cell '{cell_text}' uses AND/OR/NOT or parentheses; DMN v1 supports only scalar assignments",
+            }
+        )
+        return
+    try:
+        _parse_scalar_text(cell_text)
+    except DMNImportError as exc:
+        issues.append(
+            {
+                "level": "ERROR",
+                "path": f"dmn.decision.{decision_id}.rule.{rule_id}.output.{output_ref}",
+                "message": str(exc),
+            }
+        )
+
+
 def _parse_input_ref(input_elem: ET.Element) -> str:
     input_expression = _first_child_by_name(input_elem, "inputExpression")
     if input_expression is None:
@@ -245,6 +527,13 @@ def _parse_scalar_text(text: str) -> Any:
     raise DMNImportError(
         f"unsupported DMN output cell '{text}'; supported values are booleans, numbers, quoted strings, identifiers, and -"
     )
+
+
+def _contains_boolean_composition(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped:
+        return False
+    return bool(re.search(r"\b(and|or|not)\b|[()]", stripped, flags=re.IGNORECASE))
 
 
 def _infer_output_def(
