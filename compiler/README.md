@@ -213,6 +213,18 @@ $env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-mermaid
 
 This also writes a companion Mermaid source map at `pneumonia.mmd.source-map.json`.
 
+The Mermaid backend now defaults to a more clinician-friendly style:
+
+- left-to-right layout
+- larger labels
+- color-coded variables, predicates, decisions, outputs, and rules
+
+You can override the main layout knobs from the CLI:
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-mermaid examples/pneumonia.ir.json --output generated\pneumonia\pneumonia.mmd --direction TD --font-size 30
+```
+
 ## Create an immutable intake bundle
 
 ```bash

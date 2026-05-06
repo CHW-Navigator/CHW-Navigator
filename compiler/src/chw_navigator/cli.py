@@ -18,7 +18,7 @@ from .compare import (
 )
 from .dmn import DMNImportError, import_dmn_decisions
 from .evaluator import EvaluationError, evaluate_document
-from .mermaid_backend import build_mermaid_artifact
+from .mermaid_backend import MermaidOptions, build_mermaid_artifact
 from .validator import validate_document
 from .xlsform_import import XLSFormImportError, import_xlsform_files_detailed
 from .z3_backend import (
@@ -99,6 +99,8 @@ def main(argv: list[str] | None = None) -> int:
     mermaid_parser = subparsers.add_parser("build-mermaid", help="build a Mermaid flowchart from canonical Clinical IR")
     mermaid_parser.add_argument("ir_path")
     mermaid_parser.add_argument("--output", dest="output_path")
+    mermaid_parser.add_argument("--direction", dest="direction", default="LR")
+    mermaid_parser.add_argument("--font-size", dest="font_size", type=int, default=24)
 
     compare_parser = subparsers.add_parser("compare", help="compare interpreter, DMN-imported IR, XLSForm runtime, and Z3 witnesses")
     compare_parser.add_argument("ir_path")
@@ -151,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "build-xlsform":
         return _handle_build_xlsform(Path(args.ir_path), args.output_dir)
     if args.command == "build-mermaid":
-        return _handle_build_mermaid(Path(args.ir_path), args.output_path)
+        return _handle_build_mermaid(Path(args.ir_path), args.output_path, args.direction, args.font_size)
     if args.command == "compare":
         return _handle_compare(Path(args.ir_path), args.dmn_path, args.patient_path)
     if args.command == "create-bundle":
@@ -430,15 +432,16 @@ def _handle_build_xlsform(ir_path: Path, output_dir: str) -> int:
     return 0
 
 
-def _handle_build_mermaid(ir_path: Path, output_path: str | None) -> int:
+def _handle_build_mermaid(ir_path: Path, output_path: str | None, direction: str, font_size: int) -> int:
     try:
         document = _load_document(ir_path)
     except CLIError as exc:
         print(f"mermaid build failed: {exc}")
         return 1
-    artifact = build_mermaid_artifact(document)
+    artifact = build_mermaid_artifact(document, options=MermaidOptions(direction=direction, font_size_px=font_size))
     if output_path:
         output = Path(output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(artifact.text, encoding="utf-8")
         source_map_path = output.with_suffix(output.suffix + ".source-map.json")
         source_map_path.write_text(
