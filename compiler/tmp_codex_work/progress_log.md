@@ -20,3 +20,14 @@
   - `python -m unittest tests.test_staged_lint -v`
   - `python -m unittest tests.test_staged_lint tests.test_bundles tests.test_engine_logs tests.test_artifact_drift -v`
   - both runs passed when executed with `PYTHONPATH='src;tests'` and the shared `.venv` interpreter
+- Extended bundle generation so each evidence bundle now stores staged lint reports for:
+  - base IR
+  - DMN input
+  - explicit patient cases when provided
+  - merged IR
+  - generated XLSForm
+  - generated Mermaid
+  - generated SMT2
+- Re-ran focused regression with:
+  - `python -m unittest tests.test_bundles tests.test_staged_lint -v`
+  - the run passed with the shared `.venv` interpreter

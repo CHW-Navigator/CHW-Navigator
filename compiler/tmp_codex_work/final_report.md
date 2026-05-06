@@ -9,6 +9,7 @@ This file is being updated incrementally during the overnight pass.
 - Added staged lint helpers and CLI commands for source, IR, XLSForm, Mermaid, and SMT linting.
 - Added DMN source-preflight parsing support.
 - Added bundle artifact hashing via `artifact_hashes.json` and metadata linkage.
+- Added staged lint reports to bundle contents so lint evidence now travels with the intake package.
 
 ## In progress
 
@@ -18,6 +19,7 @@ This file is being updated incrementally during the overnight pass.
 
 - `python -m unittest tests.test_staged_lint -v`
 - `python -m unittest tests.test_staged_lint tests.test_bundles tests.test_engine_logs tests.test_artifact_drift -v`
+- `python -m unittest tests.test_bundles tests.test_staged_lint -v`
 
 ## Notes
 

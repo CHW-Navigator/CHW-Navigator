@@ -18,6 +18,14 @@ from .compare import (
 from .dmn import import_dmn_decisions
 from .evidence_utils import allocate_timestamped_dir, compiler_metadata, describe_file, portable_relative_path
 from .mermaid_backend import build_mermaid_artifact
+from .staged_lint import (
+    lint_ir_document,
+    lint_mermaid_artifact,
+    lint_smt_artifact,
+    lint_xlsform_artifacts,
+    preflight_source_artifact,
+    render_stage_lint_report,
+)
 from .validator import validate_document
 from .xlsform_backend import build_xlsform, write_xlsform_csvs
 from .z3_backend import analyze_document, export_smt2
@@ -99,14 +107,46 @@ def create_bundle(
         if patient_cases_path and copied_cases_path is not None:
             shutil.copy2(patient_cases_path, copied_cases_path)
 
+        input_lint_dir = input_dir / "lint"
+        input_lint_dir.mkdir(parents=True, exist_ok=True)
+        base_ir_lint_path = input_lint_dir / "base.ir.lint.json"
+        base_ir_lint_path.write_text(
+            render_stage_lint_report(lint_ir_document(base_document, source_path=str(base_ir_path))),
+            encoding="utf-8",
+        )
+        dmn_lint_path = input_lint_dir / "source.dmn.lint.json"
+        dmn_lint_path.write_text(
+            render_stage_lint_report(preflight_source_artifact("dmn", copied_dmn_path)),
+            encoding="utf-8",
+        )
+        explicit_cases_lint_path: Path | None = None
+        if copied_cases_path is not None:
+            explicit_cases_lint_path = input_lint_dir / "explicit.cases.lint.json"
+            explicit_cases_lint_path.write_text(
+                render_stage_lint_report(preflight_source_artifact("patient_cases", copied_cases_path)),
+                encoding="utf-8",
+            )
+
         merged_ir_path = output_dir / "merged.ir.json"
         merged_ir_path.write_text(json.dumps(_clean(merged_document), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_lint_dir = output_dir / "lint"
+        output_lint_dir.mkdir(parents=True, exist_ok=True)
+        merged_ir_lint_path = output_lint_dir / "merged.ir.lint.json"
+        merged_ir_lint_path.write_text(
+            render_stage_lint_report(lint_ir_document(merged_document, source_path="outputs/merged.ir.json")),
+            encoding="utf-8",
+        )
 
         xlsform_dir = output_dir / "xlsform"
         survey_path_raw, choices_path_raw, source_map_path_raw = write_xlsform_csvs(xlsform, xlsform_dir)
         survey_path = Path(survey_path_raw)
         choices_path = Path(choices_path_raw)
         source_map_path = Path(source_map_path_raw)
+        xlsform_lint_path = xlsform_dir / "lint.json"
+        xlsform_lint_path.write_text(
+            render_stage_lint_report(lint_xlsform_artifacts(survey_path, choices_path)),
+            encoding="utf-8",
+        )
 
         mermaid_dir = output_dir / "mermaid"
         mermaid_path = mermaid_dir / f"{label}.mmd"
@@ -117,11 +157,21 @@ def create_bundle(
             json.dumps({"node_sources": mermaid.node_sources}, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        mermaid_lint_path = mermaid_dir / "lint.json"
+        mermaid_lint_path.write_text(
+            render_stage_lint_report(lint_mermaid_artifact(merged_document, candidate_text=mermaid.text)),
+            encoding="utf-8",
+        )
 
         z3_dir = output_dir / "z3"
         z3_dir.mkdir(parents=True, exist_ok=True)
         smt2_path = z3_dir / f"{label}.smt2"
         smt2_path.write_text(smt2_text, encoding="utf-8")
+        smt2_lint_path = z3_dir / "smt2.lint.json"
+        smt2_lint_path.write_text(
+            render_stage_lint_report(lint_smt_artifact(merged_document, candidate_text=smt2_text)),
+            encoding="utf-8",
+        )
         z3_checks_path = z3_dir / "z3-checks.json"
         z3_checks_path.write_text(
             json.dumps(
@@ -210,6 +260,13 @@ def create_bundle(
             explicit_compare_path=explicit_compare_path,
             derived_compare_path=derived_compare_path,
             hash_manifest_path=bundle_dir / "artifact_hashes.json",
+            base_ir_lint_path=base_ir_lint_path,
+            dmn_lint_path=dmn_lint_path,
+            explicit_cases_lint_path=explicit_cases_lint_path,
+            merged_ir_lint_path=merged_ir_lint_path,
+            xlsform_lint_path=xlsform_lint_path,
+            mermaid_lint_path=mermaid_lint_path,
+            smt2_lint_path=smt2_lint_path,
         )
         metadata_path = bundle_dir / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -252,7 +309,9 @@ def _allocate_bundle_dir(bundle_root: Path, label: str) -> Path:
 def _create_bundle_scaffold(bundle_dir: Path) -> None:
     for relative in (
         "inputs",
+        "inputs/lint",
         "outputs",
+        "outputs/lint",
         "outputs/xlsform",
         "outputs/mermaid",
         "outputs/z3",
@@ -345,6 +404,19 @@ def _build_metadata(**kwargs: Any) -> dict[str, Any]:
                 else None
             ),
         },
+        "lint_reports": {
+            "base_ir": _portable_relative_path(kwargs["base_ir_lint_path"], kwargs["bundle_dir"]),
+            "dmn": _portable_relative_path(kwargs["dmn_lint_path"], kwargs["bundle_dir"]),
+            "patient_cases": (
+                _portable_relative_path(kwargs["explicit_cases_lint_path"], kwargs["bundle_dir"])
+                if kwargs["explicit_cases_lint_path"] is not None
+                else None
+            ),
+            "merged_ir": _portable_relative_path(kwargs["merged_ir_lint_path"], kwargs["bundle_dir"]),
+            "xlsform": _portable_relative_path(kwargs["xlsform_lint_path"], kwargs["bundle_dir"]),
+            "mermaid": _portable_relative_path(kwargs["mermaid_lint_path"], kwargs["bundle_dir"]),
+            "smt2": _portable_relative_path(kwargs["smt2_lint_path"], kwargs["bundle_dir"]),
+        },
         "outputs": {
             "merged_ir": _portable_relative_path(kwargs["merged_ir_path"], kwargs["bundle_dir"]),
             "xlsform_survey": _portable_relative_path(kwargs["survey_path"], kwargs["bundle_dir"]),
@@ -371,6 +443,7 @@ def _build_metadata(**kwargs: Any) -> dict[str, Any]:
 def _render_bundle_readme(metadata: dict[str, Any]) -> str:
     source = metadata["source"]
     copied_inputs = metadata["copied_inputs"]
+    lint_reports = metadata["lint_reports"]
     outputs = metadata["outputs"]
     tests = metadata["tests"]
     compiler = metadata["compiler"]
@@ -395,6 +468,8 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
         "",
         f"- Inputs: `{copied_inputs['base_ir']}`, `{copied_inputs['dmn']}`"
         + (f", `{copied_inputs['patient_cases']}`" if copied_inputs["patient_cases"] else ""),
+        f"- Lint reports: `{lint_reports['base_ir']}`, `{lint_reports['dmn']}`, `{lint_reports['merged_ir']}`, `{lint_reports['xlsform']}`, `{lint_reports['mermaid']}`, `{lint_reports['smt2']}`"
+        + (f", `{lint_reports['patient_cases']}`" if lint_reports["patient_cases"] else ""),
         f"- Canonical IR: `{outputs['merged_ir']}`",
         f"- XLSForm: `{outputs['xlsform_survey']}`, `{outputs['xlsform_choices']}`, `{outputs['xlsform_source_map']}`",
         f"- Mermaid: `{outputs['mermaid']}`, `{outputs['mermaid_source_map']}`",
