@@ -33,6 +33,11 @@ Defines encounter variables and scalar state variables that may be referenced by
 - `domain_max`
 - `domain_values`
 - `unit`
+- `remeasure_min`
+- `remeasure_max`
+- `dont_allow_min`
+- `dont_allow_max`
+- `measurement_limits`
 
 ## Allowed Types
 
@@ -58,6 +63,13 @@ Defines encounter variables and scalar state variables that may be referenced by
       "type": "int",
       "domain": { "min": 0, "max": 120 },
       "unit": "months",
+      "measurement_limits": {
+        "remeasure_min": 0,
+        "remeasure_max": 120,
+        "dont_allow_min": 0,
+        "dont_allow_max": 3650,
+        "source": "moh_optional"
+      },
       "allowed_missingness": false,
       "multivalue": false,
       "provenance": [
@@ -89,6 +101,10 @@ Optional columns:
 - `domain_max`
 - `domain_values`
 - `unit`
+- `remeasure_min`
+- `remeasure_max`
+- `dont_allow_min`
+- `dont_allow_max`
 - `provenance_kind`
 - `provenance_location`
 - `provenance_row`
@@ -101,9 +117,10 @@ Optional columns:
 ## CSV Example
 
 ```csv
-id,type,domain_min,domain_max,unit,allowed_missingness,multivalue,provenance_source_id,provenance_kind,provenance_location
-v_age_months,int,0,120,months,false,false,MOH_GUIDE_2026,variable_catalog,row:1
-st_fever_done,bool,,,,false,false,MOH_GUIDE_2026,state_catalog,row:8
+id,type,domain_min,domain_max,unit,remeasure_min,remeasure_max,dont_allow_min,dont_allow_max,allowed_missingness,multivalue,provenance_source_id,provenance_kind,provenance_location
+v_age_months,int,0,120,months,0,120,0,3650,false,false,MOH_GUIDE_2026,variable_catalog,row:1
+v_temp_c_x10,int,250,450,tenths_c,355,400,250,450,false,false,MOH_GUIDE_2026,variable_catalog,row:2
+st_fever_done,bool,,,,,,,,false,false,MOH_GUIDE_2026,state_catalog,row:8
 ```
 
 ## Semantics
@@ -111,6 +128,39 @@ st_fever_done,bool,,,,false,false,MOH_GUIDE_2026,state_catalog,row:8
 - `allowed_missingness=false` means the field is expected to be present at collection time unless logic or workflow says otherwise.
 - `allowed_missingness=true` means the field may be omitted, but downstream predicate and decision logic must handle that safely.
 - `unit` belongs here, not on predicates.
+- `domain` defines the proof / representational domain used by the compiler and formal tooling.
+- `remeasure_*` values are optional MOH-supplied quality thresholds that suggest the user should measure again before trusting the value.
+- `dont_allow_*` values are optional wider hard-stop thresholds beyond which the application should reject the entry rather than continue.
+- `remeasure_*` and `dont_allow_*` are authoring and validation metadata, not replacements for the compiler's formal proof domain.
+- If MOH does not supply these thresholds, the variable catalog may omit them.
+
+## Measurement Limits
+
+Recommended JSON shape when a variable uses MOH-supplied measurement thresholds:
+
+```json
+{
+  "measurement_limits": {
+    "remeasure_min": 355,
+    "remeasure_max": 400,
+    "dont_allow_min": 250,
+    "dont_allow_max": 450,
+    "source": "moh_optional"
+  }
+}
+```
+
+Recommended interpretation:
+
+- values inside `remeasure_*` bounds can proceed normally
+- values outside `remeasure_*` but inside `dont_allow_*` should trigger a re-measure prompt or warning
+- values outside `dont_allow_*` should be rejected at data-entry time
+
+Cross-cutting rules:
+
+- these thresholds are optional and should be requested from MOH when available
+- they should usually be present for continuous measurement variables
+- they should not silently narrow the Z3 proof universe unless the formal domain is explicitly changed
 
 ## Provenance
 

@@ -18,6 +18,7 @@ Cross-cutting rules:
 
 - all contracts require structured provenance objects rather than free-text provenance strings
 - EHR/history-fed fields should remain in the normal identifier families and may use an `_h` suffix, for example `v_weight_kg_h` or `st_prev_referral_h`
+- continuous variables may optionally carry MOH-supplied `remeasure_*` and `dont_allow_*` thresholds in the variable catalog
 
 Files:
 

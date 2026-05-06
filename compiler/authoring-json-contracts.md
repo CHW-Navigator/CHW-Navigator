@@ -82,6 +82,12 @@ Recommended upstream JSON or CSV:
       "type": "int",
       "domain": { "min": 0, "max": 120 },
       "unit": null,
+      "measurement_limits": {
+        "remeasure_min": 0,
+        "remeasure_max": 120,
+        "dont_allow_min": 0,
+        "dont_allow_max": 3650
+      },
       "allowed_missingness": false,
       "multivalue": false,
       "provenance": [
@@ -107,9 +113,24 @@ Expected fields:
 - `type`: required
 - `domain`: optional except recommended for numeric and enum variables
 - `unit`: optional
+- `measurement_limits`: optional
 - `allowed_missingness`: required
 - `multivalue`: required, but currently must be `false`
 - `provenance`: required
+
+Recommended optional `measurement_limits` fields for continuous variables:
+
+- `remeasure_min`
+- `remeasure_max`
+- `dont_allow_min`
+- `dont_allow_max`
+
+Use these when MOH provides:
+
+- a narrower "re-measure" band
+- a wider "don't allow" hard-stop band
+
+These are authoring/validation thresholds and should stay distinct from the compiler's formal proof domain.
 
 Allowed `type` values today:
 
