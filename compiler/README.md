@@ -16,6 +16,8 @@ The authored clinical source of truth is:
 
 Clinical IR is the canonical compiled representation used for execution, QA, and backend generation. Everything else in the toolchain compiles through that shared semantic layer after ingest from those authored sources.
 
+Temporary compatibility adapters for one-off external artifact shapes should stay outside the core compiler contracts. As of 2026-05-05, the `gen7` mini-compiler bridge is intentionally kept separate from the main compiler branch and should not be treated as a long-term supported authoring path.
+
 ## Current scope
 
 - typed Clinical IR data model
@@ -218,6 +220,8 @@ The Mermaid backend now defaults to a more clinician-friendly style:
 - left-to-right layout
 - larger labels
 - color-coded variables, predicates, decisions, outputs, and rules
+- humanized labels instead of raw `v_` / `p_` / `o_` identifiers where possible
+- automatic line breaks for longer rule labels
 
 You can override the main layout knobs from the CLI:
 
