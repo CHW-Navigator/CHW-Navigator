@@ -250,3 +250,7 @@
   - variable payload validation now structurally checks flat and nested measurement-limit fields
   - staged lint now warns when well-known clinical numeric variables declare domains narrower than the recommended broad proof domains
   - staged lint now nudges weight variables to document UI/display precision guidance
+- Added a practical use-case survey:
+  - new `docs/use-cases.md`
+  - captures current, near-term, and future compiler use cases
+  - makes the "other use cases?" backlog item concrete enough for team review

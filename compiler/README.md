@@ -338,6 +338,16 @@ This report is intentionally scoped:
 - it does not claim whole-proof-space equivalence
 - it is useful for reviewer-facing “same behavior on these cases?” checks while fuller proof-space equivalence remains future work
 
+## Team Docs
+
+- [Authoring guide](./docs/authoring-guide.md)
+- [User types manual](./docs/user-types-manual.md)
+- [DMN intake runbook](./docs/dmn-intake-runbook.md)
+- [Source-of-truth editing policy](./docs/source-of-truth-editing-policy.md)
+- [Release workflow](./docs/release-workflow.md)
+- [LLM authoring guidance](./docs/llm-authoring-guidance.md)
+- [Use cases](./docs/use-cases.md)
+
 ## Compare engines on explicit cases
 
 ```bash

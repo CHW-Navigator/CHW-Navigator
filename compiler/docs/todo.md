@@ -172,6 +172,8 @@ Execution rule:
   - how Mermaid and QA findings get corrected upstream in DMN/predicate artifacts
 
 - Survey additional practical use cases for the compiler.
+  - initial survey now exists in `docs/use-cases.md`
+  - remaining work is deciding which of those use cases become funded product paths
   - beyond current CHT/XLSForm/Z3 review flows
   - include teaching, guideline migration, regression review, and multi-platform publishing scenarios
 
