@@ -13,6 +13,11 @@ Defines encounter variables and scalar state variables that may be referenced by
 
 - encounter variables must start with `v_`
 - scalar state variables must start with `st_`
+- numeric and measured variables should include the stored unit in the identifier when practical, for example:
+  - `v_weight_g`
+  - `v_temp_c_x10`
+  - `v_height_mm`
+  - `v_waz_x10`
 - EHR/history-fed values may use an `_h` suffix inside those same families, for example:
   - `v_weight_kg_h`
   - `v_last_hb_h`
@@ -161,6 +166,38 @@ Cross-cutting rules:
 - these thresholds are optional and should be requested from MOH when available
 - they should usually be present for continuous measurement variables
 - they should not silently narrow the Z3 proof universe unless the formal domain is explicitly changed
+
+## Storage Recommendations
+
+Prefer stable integer storage for continuous clinical measurements used in logic or formal verification.
+
+Examples:
+
+- temperature: `v_temp_c_x10`
+- weight: `v_weight_g` or `v_weight_kg_x100`
+- length/height: `v_height_mm` or `v_height_cm_x10`
+- z-scores: `v_waz_x10`, `v_haz_x10`, `v_whz_x10`
+
+### Weight
+
+Recommended internal storage:
+
+- integer grams, for example `v_weight_g`
+- or integer `kg x 100`, for example `v_weight_kg_x100`
+
+Recommended user-input behavior:
+
+- allow two decimal places (`0.01 kg`) for infant assessments when the data-entry interface collects kilograms
+
+Recommended display behavior:
+
+- round to one decimal place (`0.1 kg`) only in summary screens or labels where that rounding does not affect safety
+
+Rationale:
+
+- avoid floating-point drift in Z3 and form runtimes
+- keep stored units explicit in the variable identifier
+- keep computation precision separate from display precision
 
 ## Provenance
 
