@@ -1,6 +1,6 @@
 # CHW Navigator To Do
 
-Last updated: 2026-05-05
+Last updated: 2026-05-06
 
 Execution rule:
 
@@ -49,6 +49,10 @@ Execution rule:
   - good and bad JSON, CSV, and DMN examples
   - common failures and where they should be fixed
 
+- Write a manual for user types.
+  - especially authors adding DMN, predicate catalogs, phrase banks, and related XLS-based source artifacts
+  - include clear pointers to the input rules and where each kind of fix belongs
+
 - Define the intake runbook for "new DMN arrives".
   - where files go
   - which commands run
@@ -64,6 +68,21 @@ Execution rule:
 - Run test patients through a real headless form runner.
   - target something Enketo-like or equivalent
   - compare the same patients across IR interpreter, DMN, generated XLSForm runtime, headless form runner, and Z3
+
+- Build a differential review example from a slightly changed authored source set.
+  - create a second DMN/predicate/phrase/source bundle with a small clinical change
+  - regenerate compiler outputs, Mermaid, and evidence
+  - prove the diff workflow is understandable to reviewers
+
+- Strengthen the XLSForm-to-IR-to-Z3 proof path.
+  - take XLSForm artifacts back into IR
+  - use Z3 to prove consistency and surface gaps
+  - make this part of the quality case for supported XLSForm ingest
+
+- Run externally designed patient suites through all engines.
+  - accept patient cases designed by others
+  - compare results across DMN, Z3, IR, and XLSForm
+  - store those runs as reviewable evidence bundles
 
 - Remove low-value syntax burden from LLM prompts where the compiler or lint can enforce it instead.
   - keep prompts focused on content extraction and structured authoring
@@ -103,6 +122,11 @@ Execution rule:
   - signoff
   - versioning
 
+- Add a clinical-equivalence report.
+  - given two authored source sets such as DMN + predicate catalogs
+  - report whether they are clinically identical over the supported proof space
+  - distinguish “textually different but clinically equivalent” from “clinically changed”
+
 ## Maybe
 
 - Add a first-class action/care-plan layer instead of encoding everything as outputs.
@@ -140,6 +164,10 @@ Execution rule:
 
 - Formalize the clinician review loop.
   - how Mermaid and QA findings get corrected upstream in DMN/predicate artifacts
+
+- Survey additional practical use cases for the compiler.
+  - beyond current CHT/XLSForm/Z3 review flows
+  - include teaching, guideline migration, regression review, and multi-platform publishing scenarios
 
 - Decide the final fate of the temporary `gen7` bridge.
   - review and keep briefly
