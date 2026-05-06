@@ -100,6 +100,9 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `examples/multi_module_router.dmn`: DMN counterpart for the multi-table module-routing example
 - `examples/multi_module_router.cases.json`: explicit comparison cases for the multi-table module-routing example
 - `examples/state_prefix.ir.json`: minimal example showing supported `st_` state-variable prefix usage
+- `examples/fever_basic.ir.json`: small second golden clinical example with a DMN counterpart and explicit cases
+- `examples/fever_basic.dmn`: DMN counterpart for the small fever example
+- `examples/fever_basic.cases.json`: explicit cases for the fever example
 - `examples/catalogs/pneumonia_rr_cutoff_plus1.predicates.json`: persistent changed-source predicate example for review-package and diff testing
 - `examples/change_memos/pneumonia_rr_cutoff_plus1.memo.json`: change memo paired with the cutoff-shift review example
 - `examples/pneumonia_rr_cutoff_plus1.cases.json`: explicit changed-case suite for the cutoff-shift review example

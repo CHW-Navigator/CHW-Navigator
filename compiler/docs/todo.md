@@ -107,6 +107,8 @@ Execution rule:
   - remaining work is broader coverage, CSV/header validation, and team adoption
 
 - Add more golden clinical examples beyond pneumonia and the current router example.
+  - initial second small golden example now exists as `fever_basic`
+  - remaining work is more condition families and richer real-world examples
 
 - Standardize recommended Z3 numeric domains and scaling rules.
   - use scaled integers instead of floating point

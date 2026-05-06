@@ -227,3 +227,9 @@
     - `patient_case`
     - `patient_case_suite`
   - updated README and TODO to reflect that this roadmap item is now partly implemented
+- Added a second small golden clinical example:
+  - `examples/fever_basic.ir.json`
+  - `examples/fever_basic.dmn`
+  - `examples/fever_basic.cases.json`
+  - `tests/test_golden_examples.py`
+  - this example is intentionally simple so the repo is not overly centered on pneumonia and the router example

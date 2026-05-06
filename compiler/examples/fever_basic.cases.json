@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "name": "danger_sign_referral",
+      "values": {
+        "v_temp_c_x10": 390,
+        "v_danger_sign": true
+      }
+    },
+    {
+      "name": "fever_home_care",
+      "values": {
+        "v_temp_c_x10": 380,
+        "v_danger_sign": false
+      }
+    },
+    {
+      "name": "no_fever_no_action",
+      "values": {
+        "v_temp_c_x10": 360,
+        "v_danger_sign": false
+      }
+    }
+  ]
+}
