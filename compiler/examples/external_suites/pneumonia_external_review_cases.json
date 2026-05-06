@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "category": "danger_sign",
+      "name": "external_danger_sign_referral",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Simulated externally designed review case set",
+          "source_id": "EXTERNAL_REVIEW_TEAM"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "urgent_referral"
+      ],
+      "values": {
+        "v_age_months": 10,
+        "v_danger_sign": true,
+        "v_resp_rate": 30
+      }
+    },
+    {
+      "category": "fast_breathing",
+      "name": "external_infant_fast_breathing",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Simulated externally designed review case set",
+          "source_id": "EXTERNAL_REVIEW_TEAM"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "infant_threshold"
+      ],
+      "values": {
+        "v_age_months": 11,
+        "v_danger_sign": false,
+        "v_resp_rate": 50
+      }
+    },
+    {
+      "category": "fast_breathing",
+      "name": "external_older_child_fast_breathing",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Simulated externally designed review case set",
+          "source_id": "EXTERNAL_REVIEW_TEAM"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "older_child_threshold"
+      ],
+      "values": {
+        "v_age_months": 18,
+        "v_danger_sign": false,
+        "v_resp_rate": 40
+      }
+    },
+    {
+      "category": "no_problem",
+      "name": "external_no_action_case",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Simulated externally designed review case set",
+          "source_id": "EXTERNAL_REVIEW_TEAM"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "control"
+      ],
+      "values": {
+        "v_age_months": 18,
+        "v_danger_sign": false,
+        "v_resp_rate": 30
+      }
+    }
+  ]
+}

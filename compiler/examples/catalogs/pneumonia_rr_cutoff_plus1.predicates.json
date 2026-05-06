@@ -1,0 +1,99 @@
+{
+  "predicates": [
+    {
+      "id": "p_danger_sign",
+      "inputs_used": [
+        "v_danger_sign"
+      ],
+      "expression": {
+        "kind": "var",
+        "id": "v_danger_sign"
+      },
+      "missingness_policy": "require_inputs",
+      "description": "Danger sign present",
+      "provenance": [
+        {
+          "source_id": "EXAMPLE_CATALOG",
+          "kind": "predicate_catalog",
+          "location": "row:1"
+        }
+      ]
+    },
+    {
+      "id": "p_fast_breathing",
+      "inputs_used": [
+        "v_age_months",
+        "v_resp_rate"
+      ],
+      "expression": {
+        "kind": "or",
+        "args": [
+          {
+            "kind": "and",
+            "args": [
+              {
+                "kind": "<",
+                "left": {
+                  "kind": "var",
+                  "id": "v_age_months"
+                },
+                "right": {
+                  "kind": "literal",
+                  "value": 12
+                }
+              },
+              {
+                "kind": ">=",
+                "left": {
+                  "kind": "var",
+                  "id": "v_resp_rate"
+                },
+                "right": {
+                  "kind": "literal",
+                  "value": 50
+                }
+              }
+            ]
+          },
+          {
+            "kind": "and",
+            "args": [
+              {
+                "kind": ">=",
+                "left": {
+                  "kind": "var",
+                  "id": "v_age_months"
+                },
+                "right": {
+                  "kind": "literal",
+                  "value": 12
+                }
+              },
+              {
+                "kind": ">=",
+                "left": {
+                  "kind": "var",
+                  "id": "v_resp_rate"
+                },
+                "right": {
+                  "kind": "literal",
+                  "value": 41
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "missingness_policy": "require_inputs",
+      "description": "Fast breathing present",
+      "provenance": [
+        {
+          "source_id": "EXAMPLE_CATALOG",
+          "kind": "predicate_catalog",
+          "location": "row:2",
+          "note": "Old-child cutoff raised from 40 to 41 for change-review example"
+        }
+      ]
+    }
+  ]
+}

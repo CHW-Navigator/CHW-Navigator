@@ -188,3 +188,27 @@
 - Ran focused cleanup regression with:
   - `python -m unittest compiler.tests.test_pydantic_and_lint compiler.tests.test_staged_lint -v`
   - all 24 tests passed
+- Added a user-type manual:
+  - new `docs/user-types-manual.md`
+  - covers DMN authors, predicate authors, variable authors, phrase authors, operators, and clinical reviewers
+  - includes “where to fix things” pointers instead of making reviewers infer artifact ownership
+- Promoted the pneumonia RR cutoff-shift proof into persistent repo examples:
+  - `examples/catalogs/pneumonia_rr_cutoff_plus1.predicates.json`
+  - `examples/change_memos/pneumonia_rr_cutoff_plus1.memo.json`
+  - `examples/pneumonia_rr_cutoff_plus1.cases.json`
+  - updated `test_change_control.py` to use the persistent example instead of generating it ad hoc in scratch
+- Strengthened the `XLSForm -> IR -> Z3` proof path:
+  - `test_xlsform_import.py` now compares imported/generated workbooks across interpreter, XLSForm runtime, headless runner, and Z3
+  - added the same parity check for the imported web tip example
+- Added an external-style patient-suite example and regression:
+  - `examples/external_suites/pneumonia_external_review_cases.json`
+  - `tests/test_external_patient_suites.py`
+  - this suite is tagged and proven across DMN, IR, XLSForm, headless, and Z3
+- Updated `compiler/README.md` to point to:
+  - the user manual
+  - the persistent cutoff-shift review example
+  - the external patient-suite example
+  - the stronger imported-XLSForm proof story
+- Ran focused regression with:
+  - `python -m unittest compiler.tests.test_change_control compiler.tests.test_xlsform_import compiler.tests.test_external_patient_suites -v`
+  - all 10 tests passed

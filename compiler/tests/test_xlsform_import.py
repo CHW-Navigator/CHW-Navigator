@@ -12,7 +12,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from chw_navigator.clinical_ir import ClinicalIRDocument
-from chw_navigator.compare import compare_document_pair, load_patient_cases
+from chw_navigator.compare import compare_backends, compare_document_pair, load_patient_cases
 from chw_navigator.validator import validate_document
 from chw_navigator.xlsform_import import XLSFormImportError, import_xlsform_files, import_xlsform_files_detailed
 from test_support import create_test_run, reset_suite_runs
@@ -56,6 +56,10 @@ class XLSFormImportTests(unittest.TestCase):
         self.assertTrue(results)
         self.assertTrue(all(result.ok for result in results))
 
+        backend_results = compare_backends(imported, patient_cases=cases)
+        self.assertTrue(backend_results)
+        self.assertTrue(all(result.ok for result in backend_results))
+
     def test_imports_generated_multi_module_workbook(self) -> None:
         imported = import_xlsform_files(
             str(GENERATED / "multi_module_router" / "survey.csv"),
@@ -70,6 +74,10 @@ class XLSFormImportTests(unittest.TestCase):
         self.assertTrue(results)
         self.assertTrue(all(result.ok for result in results))
 
+        backend_results = compare_backends(imported, patient_cases=cases)
+        self.assertTrue(backend_results)
+        self.assertTrue(all(result.ok for result in backend_results))
+
     def test_imports_web_tip_example_with_standalone_output_calculation(self) -> None:
         imported = import_xlsform_files(
             str(EXAMPLES / "web_xlsform" / "tip_survey.csv"),
@@ -79,6 +87,10 @@ class XLSFormImportTests(unittest.TestCase):
         self.assertEqual([], validate_document(imported))
         self.assertIn("o_tip", imported.outputs)
         self.assertIn("d_imported_calculations", imported.decisions)
+        cases = load_patient_cases(str(EXAMPLES / "web_xlsform" / "tip_cases.json"))
+        backend_results = compare_backends(imported, patient_cases=cases)
+        self.assertTrue(backend_results)
+        self.assertTrue(all(result.ok for result in backend_results))
 
     def test_normalizes_wild_xlsform_names_and_reports_findings(self) -> None:
         survey = self.test_run.inputs_dir / "wild_tip_survey.csv"

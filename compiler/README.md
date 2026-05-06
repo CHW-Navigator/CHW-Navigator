@@ -21,6 +21,7 @@ Temporary compatibility adapters for one-off external artifact shapes should sta
 Supporting process docs:
 
 - `docs/authoring-guide.md`
+- `docs/user-types-manual.md`
 - `docs/dmn-intake-runbook.md`
 - `docs/source-of-truth-editing-policy.md`
 
@@ -96,6 +97,10 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `examples/multi_module_router.dmn`: DMN counterpart for the multi-table module-routing example
 - `examples/multi_module_router.cases.json`: explicit comparison cases for the multi-table module-routing example
 - `examples/state_prefix.ir.json`: minimal example showing supported `st_` state-variable prefix usage
+- `examples/catalogs/pneumonia_rr_cutoff_plus1.predicates.json`: persistent changed-source predicate example for review-package and diff testing
+- `examples/change_memos/pneumonia_rr_cutoff_plus1.memo.json`: change memo paired with the cutoff-shift review example
+- `examples/pneumonia_rr_cutoff_plus1.cases.json`: explicit changed-case suite for the cutoff-shift review example
+- `examples/external_suites/pneumonia_external_review_cases.json`: external-style patient suite that is compared across DMN, IR, XLSForm, headless, and Z3
 
 ## Run the validator
 
@@ -196,6 +201,12 @@ and then the imported IR can go directly into:
 - `build-xlsform`
 - `compare`
 
+The regression suite now treats imported XLSForms as proof targets, not just parser targets:
+
+- generated `survey.csv` + `choices.csv` are imported back into IR
+- the imported IR is validated
+- the imported IR is compared across interpreter, generated XLSForm runtime, headless runner, and Z3 on explicit patient cases
+
 ## Check Z3 lowering
 
 ```bash
@@ -275,6 +286,20 @@ Each bundle gets a fresh timestamped folder and is never overwritten. The bundle
 - baseline comparison reports under `tests/good/`
 - a mutation workspace plus manifest under `mutations/`
 - `metadata.json` and `README.md` with compiler version, source paths, and provenance
+
+## Build the persistent cutoff-shift review example
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compose-ir examples/catalogs/pneumonia.metadata.json examples/catalogs/pneumonia.variables.csv examples/catalogs/pneumonia_rr_cutoff_plus1.predicates.json examples/catalogs/pneumonia.phrases.csv --output generated\catalog_demo\pneumonia_rr_cutoff_plus1.base.ir.json
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli import-dmn generated\catalog_demo\pneumonia_rr_cutoff_plus1.base.ir.json examples/pneumonia.dmn --output generated\catalog_demo\pneumonia_rr_cutoff_plus1.ir.json
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-change-review examples/change_memos/pneumonia_rr_cutoff_plus1.memo.json examples/pneumonia.ir.json generated\catalog_demo\pneumonia_rr_cutoff_plus1.ir.json generated\reviews --patients examples/pneumonia_rr_cutoff_plus1.cases.json --baseline-dmn examples/pneumonia.dmn --updated-dmn examples/pneumonia.dmn
+```
+
+This example is intentionally small:
+
+- only one authored predicate threshold changes
+- the review package shows which patient case changes
+- the generated diff is meant to be understandable to clinicians and technical reviewers
 
 ## Compare engines on explicit cases
 

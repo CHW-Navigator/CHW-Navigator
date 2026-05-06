@@ -135,77 +135,21 @@ class ChangeControlTests(unittest.TestCase):
                 EXAMPLES / "catalogs" / "pneumonia.metadata.json",
                 EXAMPLES / "catalogs" / "pneumonia.variables.csv",
                 EXAMPLES / "catalogs" / "pneumonia.predicates.json",
+                EXAMPLES / "catalogs" / "pneumonia_rr_cutoff_plus1.predicates.json",
                 EXAMPLES / "catalogs" / "pneumonia.phrases.csv",
+                EXAMPLES / "change_memos" / "pneumonia_rr_cutoff_plus1.memo.json",
+                EXAMPLES / "pneumonia_rr_cutoff_plus1.cases.json",
                 EXAMPLES / "pneumonia.dmn",
             ),
         )
-        source_dir = test_run.scratch_dir / "source"
-        source_dir.mkdir(parents=True, exist_ok=True)
-
-        updated_predicates_path = source_dir / "pneumonia.predicates.cutoff_plus_1.json"
-        memo_path = source_dir / "pneumonia.cutoff_shift.memo.json"
-        cases_path = source_dir / "pneumonia.cutoff_shift.cases.json"
-
-        baseline_predicates = json.loads((EXAMPLES / "catalogs" / "pneumonia.predicates.json").read_text(encoding="utf-8"))
-        updated_predicates = json.loads(json.dumps(baseline_predicates))
-        _shift_old_child_fast_breathing_cutoff(updated_predicates)
-        updated_predicates_path.write_text(json.dumps(updated_predicates, indent=2) + "\n", encoding="utf-8")
-
-        cases = {
-            "cases": [
-                {"name": "danger_sign_unchanged", "values": {"v_age_months": 12, "v_resp_rate": 40, "v_danger_sign": True}},
-                {"name": "old_child_just_below_cutoff", "values": {"v_age_months": 12, "v_resp_rate": 39, "v_danger_sign": False}},
-                {"name": "old_child_at_original_cutoff", "values": {"v_age_months": 12, "v_resp_rate": 40, "v_danger_sign": False}},
-                {"name": "old_child_at_new_cutoff", "values": {"v_age_months": 12, "v_resp_rate": 41, "v_danger_sign": False}},
-                {"name": "infant_cutoff_unchanged", "values": {"v_age_months": 11, "v_resp_rate": 50, "v_danger_sign": False}},
-            ]
-        }
-        cases_path.write_text(json.dumps(cases, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
-        memo = {
-            "metadata": {
-                "memo_version": 1,
-                "change_id": "pneumonia-rr-cutoff-plus-1-v1",
-                "title": "Raise the old-child fast-breathing cutoff by one breath per minute",
-                "change_type": "modify_module",
-                "effective_date": "2026-05-06",
-                "applies_to": ["pneumonia_module", "children_12_months_and_older"],
-                "source_provenance": [
-                    "Temporary proof memo for compiler change-review validation",
-                    "Predicate table cutoff adjustment exercise",
-                ],
-            },
-            "clinical_intent": "Demonstrate that a one-unit change in the old-child fast-breathing threshold is visible throughout the authored-source, compiled, review, and QA artifacts.",
-            "new_or_changed_inputs": ["No new inputs are introduced."],
-            "new_predicates_needed": ["No new predicates are introduced; the existing p_fast_breathing predicate changes threshold for children 12 months and older."],
-            "changed_classifications": ["Children 12 months and older now require respiratory rate >= 41 instead of >= 40 to enter the fast-breathing branch."],
-            "changed_actions": ["Home-treatment recommendation should no longer fire for an old child with respiratory rate exactly 40 unless another rule path applies."],
-            "priority_rules": [
-                "Danger-sign referral remains highest priority.",
-                "The cutpoint change affects only the fast-breathing threshold for older children.",
-            ],
-            "missingness_rules": ["Respiratory rate remains required for fast-breathing determination."],
-            "stockout_device_rules": ["No stockout or device rule changes are introduced."],
-            "safety_invariants": [
-                "Danger-sign referral must remain unchanged.",
-                "Infant fast-breathing threshold must remain unchanged.",
-            ],
-            "counseling_messages": ["No counseling text changes are introduced."],
-            "follow_up": ["Continue standard follow-up for fast-breathing pneumonia when the updated threshold is met."],
-            "data_capture_reporting": ["No new reporting fields are introduced."],
-            "sunset_review_condition": "Retire this proof artifact after the change-review workflow is accepted by the team.",
-            "unresolved_questions": [],
-        }
-        memo_path.write_text(json.dumps(memo, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
         baseline = _compose_pneumonia_document(EXAMPLES / "catalogs" / "pneumonia.predicates.json")
-        updated = _compose_pneumonia_document(updated_predicates_path)
+        updated = _compose_pneumonia_document(EXAMPLES / "catalogs" / "pneumonia_rr_cutoff_plus1.predicates.json")
         built = create_change_review_package(
-            memo=load_change_memo(memo_path),
+            memo=load_change_memo(EXAMPLES / "change_memos" / "pneumonia_rr_cutoff_plus1.memo.json"),
             baseline_document=baseline,
             updated_document=updated,
             review_root=test_run.scratch_dir / "cutoff_reviews",
-            patient_cases_path=cases_path,
+            patient_cases_path=EXAMPLES / "pneumonia_rr_cutoff_plus1.cases.json",
             baseline_dmn_path=EXAMPLES / "pneumonia.dmn",
             updated_dmn_path=EXAMPLES / "pneumonia.dmn",
         )
@@ -238,39 +182,6 @@ def _compose_pneumonia_document(predicate_path: Path) -> ClinicalIRDocument:
         EXAMPLES / "catalogs" / "pneumonia.phrases.csv",
     )
     return import_dmn_decisions(base, str(EXAMPLES / "pneumonia.dmn"))
-
-
-def _shift_old_child_fast_breathing_cutoff(payload: dict[str, object]) -> None:
-    predicates = payload.get("predicates", [])
-    if not isinstance(predicates, list):
-        raise ValueError("predicates payload is malformed")
-    for predicate in predicates:
-        if not isinstance(predicate, dict):
-            continue
-        if predicate.get("id") != "p_fast_breathing":
-            continue
-        expression = predicate.get("expression", {})
-        if not isinstance(expression, dict):
-            continue
-        args = expression.get("args", [])
-        if not isinstance(args, list) or len(args) < 2:
-            continue
-        older_child_branch = args[1]
-        if not isinstance(older_child_branch, dict):
-            continue
-        branch_args = older_child_branch.get("args", [])
-        if not isinstance(branch_args, list) or len(branch_args) < 2:
-            continue
-        rr_cutoff_expr = branch_args[1]
-        if not isinstance(rr_cutoff_expr, dict):
-            continue
-        right = rr_cutoff_expr.get("right", {})
-        if not isinstance(right, dict):
-            continue
-        right["value"] = 41
-        return
-    raise ValueError("could not find p_fast_breathing older-child cutoff to shift")
-
 
 if __name__ == "__main__":
     unittest.main()
