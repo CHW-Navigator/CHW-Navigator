@@ -44,6 +44,27 @@ Supporting process docs:
 - example IR document
 - hardened DMN XML parsing via `defusedxml`
 
+## Validation layers
+
+The compiler now uses a clearer validation split:
+
+- Pydantic/schema validation:
+  - structural contract checks
+  - identifier-family checks
+  - local cross-field checks that do not require execution semantics
+- `validate_document(...)` semantic validation:
+  - expression typing
+  - decision semantics
+  - dependency ordering
+  - runtime-subset compatibility
+- `lint_document(...)` quality lint:
+  - coverage gaps
+  - dead or suspicious authored elements
+  - workflow-policy guidance
+  - non-blocking review findings
+
+In short: invalid payload shape should fail in Pydantic first, semantic impossibility should fail in `validate_document`, and review-quality concerns should show up in lint.
+
 ## Project layout
 
 - `src/chw_navigator/clinical_ir.py`: canonical compiled data model

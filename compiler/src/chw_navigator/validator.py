@@ -63,16 +63,6 @@ def _validate_variables(document: ClinicalIRDocument, errors: list[ValidationErr
                     f"unknown variable reference '{binding.recorded_at_var}'",
                 )
             )
-        if (
-            binding.must_collect_fresh_when is not None
-            and binding.must_collect_fresh_when.get("kind") == "output"
-        ):
-            errors.append(
-                ValidationError(
-                    f"variables.{variable.id}.history_binding.must_collect_fresh_when",
-                    "history freshness conditions must not reference outputs directly",
-                )
-            )
 
 
 def _validate_predicates(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
@@ -87,14 +77,6 @@ def _validate_predicates(document: ClinicalIRDocument, errors: list[ValidationEr
                         f"unknown variable reference '{identifier}'",
                     )
                 )
-        output_refs = collect_refs(predicate.expression, {"output"})
-        for output_id in sorted(output_refs):
-            errors.append(
-                ValidationError(
-                    f"predicates.{predicate.id}.expression",
-                    f"predicate must not reference output '{output_id}'",
-                )
-            )
         expr_type = _infer_expr_type(
             predicate.expression,
             document,
@@ -325,23 +307,7 @@ def _validate_invariants(document: ClinicalIRDocument, errors: list[ValidationEr
 
 
 def _validate_phrase_bindings(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
-    """Check phrase bindings only for runtime-required output references."""
-
-    for output_name, binding in document.phrase_bindings.items():
-        if output_name not in document.outputs:
-            errors.append(
-                ValidationError(
-                    f"phrase_bindings.{output_name}",
-                    f"phrase binding references unknown output '{output_name}'",
-                )
-            )
-        elif not any(binding.get(key) for key in ("message_key", "guidance_key")):
-            errors.append(
-                ValidationError(
-                    f"phrase_bindings.{output_name}",
-                    "phrase binding must include a non-empty message_key or guidance_key",
-                )
-            )
+    """Phrase-binding schema and local contract checks now happen in Pydantic."""
 
 
 def _validate_predicate_dependencies(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:

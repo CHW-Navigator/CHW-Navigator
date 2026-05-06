@@ -15,17 +15,13 @@ class LintIssue:
 
 def lint_document(
     document: ClinicalIRDocument,
-    *,
-    allow_output_in_predicates: bool = False,
 ) -> list[LintIssue]:
     issues: list[LintIssue] = []
-    _lint_output_references_in_predicates(document, issues, allow_output_in_predicates)
     _lint_dead_predicates(document, issues)
     _lint_dead_variables(document, issues)
     _lint_history_variables(document, issues)
     _lint_decision_graph(document, issues)
     _lint_phrase_coverage(document, issues)
-    _lint_phrase_bindings(document, issues)
     _lint_actions(document, issues)
     _lint_age_normalization(document, issues)
     return issues
@@ -37,25 +33,6 @@ def lint_errors(issues: list[LintIssue]) -> list[LintIssue]:
 
 def lint_warnings(issues: list[LintIssue]) -> list[LintIssue]:
     return [issue for issue in issues if issue.level == "WARNING"]
-
-
-def _lint_output_references_in_predicates(
-    document: ClinicalIRDocument,
-    issues: list[LintIssue],
-    allow_output_in_predicates: bool,
-) -> None:
-    if allow_output_in_predicates:
-        return
-    for predicate in document.predicates.values():
-        refs = collect_refs(predicate.expression, {"output"})
-        for output_id in sorted(refs):
-            issues.append(
-                LintIssue(
-                    level="ERROR",
-                    path=f"predicates.{predicate.id}.expression",
-                    message=f"predicate must not reference output '{output_id}'",
-                )
-            )
 
 
 def _lint_dead_predicates(document: ClinicalIRDocument, issues: list[LintIssue]) -> None:
@@ -80,7 +57,7 @@ def _lint_dead_predicates(document: ClinicalIRDocument, issues: list[LintIssue])
                 LintIssue(
                     level="WARNING",
                     path=f"predicates.{predicate.id}",
-                    message="predicate is never referenced by any decision or invariant",
+                    message="predicate is never referenced by any decision, action, or invariant",
                 )
             )
 
@@ -125,7 +102,7 @@ def _lint_dead_variables(document: ClinicalIRDocument, issues: list[LintIssue]) 
                 LintIssue(
                     level="WARNING",
                     path=f"variables.{variable.id}",
-                    message="variable is never referenced by any predicate",
+                    message="variable is never referenced by any predicate, history binding, decision, action, or invariant",
                 )
             )
 
@@ -295,20 +272,6 @@ def _lint_actions(document: ClinicalIRDocument, issues: list[LintIssue]) -> None
                     message=f"action message_key '{action.message_key}' points to entity '{phrase.entity_id}' instead of '{action.id}'",
                 )
             )
-
-
-def _lint_phrase_bindings(document: ClinicalIRDocument, issues: list[LintIssue]) -> None:
-    for output_id, binding in document.phrase_bindings.items():
-        for field_name in ("message_key", "guidance_key"):
-            key = binding.get(field_name)
-            if key and not key.startswith("m_"):
-                issues.append(
-                    LintIssue(
-                        level="WARNING",
-                        path=f"phrase_bindings.{output_id}.{field_name}",
-                        message="phrase binding keys must reference m_ phrases",
-                    )
-                )
 
 
 def _lint_age_normalization(document: ClinicalIRDocument, issues: list[LintIssue]) -> None:

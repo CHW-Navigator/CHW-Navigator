@@ -108,7 +108,7 @@ class PydanticAndLintTests(unittest.TestCase):
             ClinicalIRDocument.from_dict(payload)
         self.assertIn("phrase binding key must start with one of: m_", str(exc.exception))
 
-    def test_lint_forbids_output_references_inside_predicates(self) -> None:
+    def test_ir_schema_rejects_output_references_inside_predicates(self) -> None:
         payload = {
             "metadata": {
                 "ir_version": 1,
@@ -145,10 +145,32 @@ class PydanticAndLintTests(unittest.TestCase):
             "invariants": {},
             "phrase_bindings": {},
         }
-        document = ClinicalIRDocument.from_dict(payload)
-        issues = lint_document(document)
-        messages = [issue.message for issue in issues if issue.level == "ERROR"]
-        self.assertTrue(any("must not reference output 'o_alert'" in message for message in messages))
+        with self.assertRaises(ValueError) as exc:
+            ClinicalIRDocument.from_dict(payload)
+        self.assertIn("must not reference outputs directly", str(exc.exception))
+
+    def test_ir_schema_rejects_phrase_bindings_to_unknown_outputs(self) -> None:
+        payload = {
+            "metadata": {
+                "ir_version": 1,
+                "guideline_id": "demo",
+                "sources": [{"source_id": "SRC"}],
+            },
+            "outputs": {
+                "o_alert": {
+                    "type": "bool",
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+            "phrase_bindings": {
+                "o_missing": {
+                    "message_key": "m_alert"
+                },
+            },
+        }
+        with self.assertRaises(ValueError) as exc:
+            ClinicalIRDocument.from_dict(payload)
+        self.assertIn("references unknown output", str(exc.exception))
 
     def test_history_and_staged_decision_fields_load_and_validate(self) -> None:
         payload = {

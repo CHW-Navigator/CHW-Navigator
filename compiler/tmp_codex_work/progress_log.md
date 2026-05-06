@@ -172,3 +172,19 @@
   - `python -m unittest compiler.tests.test_catalog_ingest compiler.tests.test_pydantic_and_lint compiler.tests.test_staged_lint -v`
   - `python -m chw_navigator.cli preflight-bundle compiler/examples/catalogs/pneumonia.metadata.json compiler/examples/catalogs/pneumonia.variables.csv compiler/examples/catalogs/pneumonia.predicates.json compiler/examples/catalogs/pneumonia.phrases.csv --dmn compiler/examples/pneumonia.dmn`
   - both passed after rerunning `test_staged_lint` once to clear a transient Windows file lock in the shared generated test folder
+- Refactored the validation stack to reduce duplication between Pydantic, semantic validation, and lint:
+  - moved predicate-output prohibition into `PredicateModel`
+  - moved history-freshness output prohibition into `HistoryBindingModel`
+  - moved phrase-binding output-id validity into `ClinicalIRDocumentModel`
+  - removed duplicated phrase-binding and predicate-output checks from `lint.py`
+  - removed the same local-contract checks from `validator.py`
+- Clarified validation-layer responsibilities in `compiler/README.md`:
+  - Pydantic for structural/local contract failures
+  - `validate_document(...)` for semantic/runtime-subset failures
+  - `lint_document(...)` for non-blocking quality and coverage findings
+- Updated regression coverage to reflect the new ownership:
+  - predicate output references are now rejected at `ClinicalIRDocument.from_dict(...)`
+  - phrase bindings to unknown outputs are now rejected at `ClinicalIRDocument.from_dict(...)`
+- Ran focused cleanup regression with:
+  - `python -m unittest compiler.tests.test_pydantic_and_lint compiler.tests.test_staged_lint -v`
+  - all 24 tests passed

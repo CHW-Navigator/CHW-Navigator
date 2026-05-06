@@ -4,6 +4,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
+from .expr_tools import collect_refs
+
 
 def _require_prefix(value: str, prefixes: tuple[str, ...], field_name: str) -> str:
     if not value.startswith(prefixes):
@@ -172,6 +174,14 @@ class HistoryBindingModel(StrictModel):
             raise ValueError("freshness_max_age_days cannot be negative")
         if (self.derivation_kind is None) != (self.derivation_expr is None):
             raise ValueError("derivation_kind and derivation_expr must be provided together")
+        if self.must_collect_fresh_when is not None:
+            output_refs = collect_refs(self.must_collect_fresh_when.model_dump(by_alias=True), {"output"})
+            if output_refs:
+                joined = ", ".join(sorted(output_refs))
+                raise ValueError(
+                    "history freshness conditions must not reference outputs directly"
+                    f" ({joined})"
+                )
         return self
 
 
@@ -241,6 +251,14 @@ class PredicateModel(StrictModel):
         for value in values:
             _require_prefix(value, ("v_", "st_"), "predicate inputs_used item")
         return values
+
+    @model_validator(mode="after")
+    def validate_predicate(self) -> "PredicateModel":
+        output_refs = collect_refs(self.expression.model_dump(by_alias=True), {"output"})
+        if output_refs:
+            joined = ", ".join(sorted(output_refs))
+            raise ValueError(f"predicate expressions must not reference outputs directly ({joined})")
+        return self
 
 
 class PhraseModel(StrictModel):
@@ -507,6 +525,8 @@ class ClinicalIRDocumentModel(StrictModel):
         self._check_keys_match("invariants", self.invariants)
         for output_id in self.phrase_bindings:
             _require_prefix(output_id, ("o_",), "phrase_bindings output id")
+            if output_id not in self.outputs:
+                raise ValueError(f"phrase_bindings.{output_id} references unknown output")
         return self
 
     def _check_keys_match(self, label: str, values: dict[str, Any], *, attr: str = "id") -> None:
