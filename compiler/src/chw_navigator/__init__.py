@@ -18,6 +18,7 @@ from .compare import (
 )
 from .evaluator import EvaluationError, EvaluationResult, evaluate_document
 from .form_ir import load_xlsform_workbook
+from .headless_runner import HeadlessEvaluationResult, HeadlessRunnerError, evaluate_workbook_headless
 from .mermaid_backend import (
     MermaidArtifact,
     MermaidComparisonResult,
@@ -74,6 +75,8 @@ __all__ = [
     "ComparisonError",
     "EvaluationError",
     "EvaluationResult",
+    "HeadlessEvaluationResult",
+    "HeadlessRunnerError",
     "ImportedXLSForm",
     "XLSFormImportFinding",
     "XLSFormImportReport",
@@ -104,6 +107,7 @@ __all__ = [
     "create_change_review_package",
     "create_bundle",
     "evaluate_document",
+    "evaluate_workbook_headless",
     "evaluate_patient",
     "evaluate_smt2_file",
     "evaluate_smt2_text",

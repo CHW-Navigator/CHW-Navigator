@@ -35,6 +35,7 @@ Supporting process docs:
 - Z3 QA checks with witness patients
 - minimal Form IR and XLSForm CSV backend
 - generated XLSForm runtime for comparison
+- independent headless XLSForm runner for parity checks
 - Mermaid audit graph generation
 - staged linting for source inputs, compiled IR, and generated backends
 - provenance validation and backend source maps
@@ -56,6 +57,7 @@ Supporting process docs:
 - `src/chw_navigator/xlsform_expr.py`: parser for the supported XLSForm expression subset
 - `src/chw_navigator/xlsform_import.py`: supported XLSForm survey/choices import back into Clinical IR
 - `src/chw_navigator/xlsform_runtime.py`: evaluator for the generated XLSForm subset
+- `src/chw_navigator/headless_runner.py`: independent headless XLSForm evaluator used for cross-engine parity
 - `src/chw_navigator/compare.py`: cross-engine comparison harness
 - `src/chw_navigator/mermaid_backend.py`: Mermaid flowchart generation from canonical logic
 - `src/chw_navigator/bundles.py`: immutable intake bundle creation for inputs, outputs, and test evidence

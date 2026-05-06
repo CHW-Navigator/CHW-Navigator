@@ -45,3 +45,11 @@
 - Ran focused change-control regression with:
   - `python -m unittest tests.test_change_control -v`
   - the run passed with the shared `.venv` interpreter
+- Added an independent headless XLSForm runner and integrated it into `compare_backends(...)`.
+- Added regression coverage for:
+  - headless runner parity with the generated XLSForm runtime
+  - comparison log shape after headless integration
+- Ran focused headless regression with:
+  - `python -m unittest tests.test_headless_runner -v`
+  - `python -m unittest tests.test_artifact_drift tests.test_engine_logs -v`
+  - both runs passed with the shared `.venv` interpreter

@@ -14,6 +14,7 @@ This file is being updated incrementally during the overnight pass.
 - Recorded the DOB/age helper gap as an explicit blocker instead of treating validator-only support as executable.
 - Added a real `build-change-review` CLI command.
 - Added regression coverage for the pneumonia cutoff-shift change-review scenario.
+- Added an independent headless XLSForm runner and wired it into cross-engine comparison.
 
 ## In progress
 
@@ -25,6 +26,8 @@ This file is being updated incrementally during the overnight pass.
 - `python -m unittest tests.test_staged_lint tests.test_bundles tests.test_engine_logs tests.test_artifact_drift -v`
 - `python -m unittest tests.test_bundles tests.test_staged_lint -v`
 - `python -m unittest tests.test_change_control -v`
+- `python -m unittest tests.test_headless_runner -v`
+- `python -m unittest tests.test_artifact_drift tests.test_engine_logs -v`
 
 ## Notes
 

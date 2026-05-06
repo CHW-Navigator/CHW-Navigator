@@ -40,6 +40,7 @@ class EngineLogTests(unittest.TestCase):
         self.assertIn("category", first)
         self.assertIn("tags", first)
         self.assertIn("interpreter_outputs", first)
+        self.assertIn("headless_outputs", first)
         self.assertIn("mermaid_ok", first)
         self.assertIn("mermaid_trace_nodes", first)
         self.assertIn("mismatches", first)
