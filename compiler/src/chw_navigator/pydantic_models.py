@@ -448,6 +448,41 @@ class PhraseBindingModel(StrictModel):
         return self
 
 
+class PatientCaseModel(StrictModel):
+    name: str | None = None
+    values: dict[str, Any]
+    missing: list[str] = Field(default_factory=list)
+    expected_outputs: dict[str, Any] = Field(default_factory=dict)
+    expected_predicates: dict[str, Any] = Field(default_factory=dict)
+    expected_rule_hits: dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=list)
+    provenance: list[ProvenanceModel] = Field(default_factory=list)
+
+    @field_validator("values")
+    @classmethod
+    def validate_values(cls, value: dict[str, Any]) -> dict[str, Any]:
+        for key, item in value.items():
+            _require_prefix(key, ("v_", "st_"), "patient case values key")
+            if item is None:
+                raise ValueError(f"patient case values must not use null for '{key}'; use the missing list instead")
+        return value
+
+    @field_validator("missing")
+    @classmethod
+    def validate_missing(cls, value: list[str]) -> list[str]:
+        for item in value:
+            _require_prefix(item, ("v_", "st_"), "patient case missing item")
+        return value
+
+    @model_validator(mode="after")
+    def validate_case(self) -> "PatientCaseModel":
+        overlap = set(self.values) & set(self.missing)
+        if overlap:
+            joined = ", ".join(sorted(overlap))
+            raise ValueError(f"patient case marks the same fields as present and missing: {joined}")
+        return self
+
+
 class ClinicalIRDocumentModel(StrictModel):
     metadata: MetadataModel
     variables: dict[str, VariableModel] = Field(default_factory=dict)
@@ -502,6 +537,10 @@ def validate_phrase_payload(data: dict[str, Any]) -> None:
 
 def validate_metadata_payload(data: dict[str, Any]) -> None:
     MetadataModel.model_validate(data)
+
+
+def validate_patient_case_payload(data: dict[str, Any]) -> None:
+    PatientCaseModel.model_validate(data)
 
 
 def format_pydantic_error(exc: ValidationError) -> str:

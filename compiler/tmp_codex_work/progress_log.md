@@ -84,3 +84,20 @@
   - `python -m unittest tests.test_staged_lint -v`
   - `python -m chw_navigator.cli lint-mermaid examples/pneumonia.ir.json`
   - both passed; current environment reports `python_only` because `mmdc` is not installed locally
+- Added more contract-aware source linters where the contracts are crisp:
+  - predicate catalog:
+    - detect expression variable refs missing from `inputs_used`
+    - warn on `inputs_used` entries not used by the expression
+    - reject non-`v_` / `st_` entries in `inputs_used`
+  - phrase bank:
+    - detect duplicate `entity_id` + `role` rows
+    - warn when English text is missing from the row
+  - simulated patient data:
+    - reject `null` inside `values`
+    - reject present/missing overlap
+    - warn on duplicate entries in `missing`
+- Beefed up Pydantic where it fits well by adding a patient-case model for source-preflight validation.
+- Ran focused regression with:
+  - `python -m unittest tests.test_staged_lint -v`
+  - `python -m chw_navigator.cli preflight-source predicate_catalog examples/catalogs/pneumonia.predicates.json`
+  - both passed

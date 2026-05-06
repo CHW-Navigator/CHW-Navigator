@@ -20,9 +20,11 @@ from .catalogs import (
 from .clinical_ir import ClinicalIRDocument
 from .compare import load_patient_cases
 from .dmn import DMNImportError, lint_dmn_file
+from .expr_tools import collect_refs
 from .form_ir import load_xlsform_workbook
 from .lint import lint_document
 from .mermaid_backend import build_mermaid_artifact, compare_mermaid_text
+from .pydantic_models import format_pydantic_error, validate_patient_case_payload
 from .validator import validate_document
 from .z3_backend import Z3BackendUnavailable, export_smt2
 
@@ -70,21 +72,25 @@ def preflight_source_artifact(kind: str, path: str | Path) -> StageLintReport:
                 metadata={"count": len(variables), "path": str(active_path)},
             )
         if kind == "predicate_catalog":
+            raw_rows = _load_source_rows(active_path, "predicates")
             predicates = load_predicate_catalog(active_path)
+            issues = _predicate_catalog_issues(raw_rows)
             return StageLintReport(
                 stage="source_preflight",
                 artifact_type=kind,
-                ok=True,
-                issues=[],
+                ok=not any(item.level == "ERROR" for item in issues),
+                issues=issues,
                 metadata={"count": len(predicates), "path": str(active_path)},
             )
         if kind == "phrase_bank":
+            raw_rows = _load_source_rows(active_path, "phrases")
             phrases = load_phrase_bank(active_path)
+            issues = _phrase_bank_issues(raw_rows)
             return StageLintReport(
                 stage="source_preflight",
                 artifact_type=kind,
-                ok=True,
-                issues=[],
+                ok=not any(item.level == "ERROR" for item in issues),
+                issues=issues,
                 metadata={"count": len(phrases), "path": str(active_path)},
             )
         if kind == "dmn":
@@ -98,15 +104,12 @@ def preflight_source_artifact(kind: str, path: str | Path) -> StageLintReport:
             )
         if kind == "patient_cases":
             cases = load_patient_cases(str(active_path))
-            duplicate_names = _duplicates(case.name for case in cases)
-            issues = [
-                StageLintIssue("ERROR", "cases", f"duplicate case name '{name}'")
-                for name in duplicate_names
-            ]
+            raw_payload = _load_json_payload(active_path)
+            issues = _patient_case_issues(raw_payload)
             return StageLintReport(
                 stage="source_preflight",
                 artifact_type=kind,
-                ok=not issues,
+                ok=not any(item.level == "ERROR" for item in issues),
                 issues=issues,
                 metadata={"count": len(cases), "path": str(active_path)},
             )
@@ -343,6 +346,135 @@ def _measurement_limit_issues(variables: dict[str, Any]) -> list[StageLintIssue]
     return issues
 
 
+def _predicate_catalog_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue]:
+    issues: list[StageLintIssue] = []
+    for index, row in enumerate(rows, start=1):
+        predicate_id = str(row.get("id", f"row_{index}")).strip() or f"row_{index}"
+        inputs_used = _split_list_like(row.get("inputs_used"))
+        duplicate_inputs = _duplicates(inputs_used)
+        for item in duplicate_inputs:
+            issues.append(
+                StageLintIssue(
+                    "ERROR",
+                    f"predicates.{predicate_id}.inputs_used",
+                    f"duplicate inputs_used entry '{item}'",
+                )
+            )
+        for item in inputs_used:
+            if not item.startswith(("v_", "st_")):
+                issues.append(
+                    StageLintIssue(
+                        "ERROR",
+                        f"predicates.{predicate_id}.inputs_used",
+                        f"inputs_used item '{item}' must start with v_ or st_",
+                    )
+                )
+        expression = row.get("expression", row.get("expression_json"))
+        if expression is None:
+            continue
+        try:
+            expression_obj = _decode_json_object(expression, f"predicates.{predicate_id}.expression")
+        except ValueError as exc:
+            issues.append(StageLintIssue("ERROR", f"predicates.{predicate_id}.expression", str(exc)))
+            continue
+        var_refs = sorted(collect_refs(expression_obj, {"var"}))
+        missing_inputs = sorted(set(var_refs) - set(inputs_used))
+        extra_inputs = sorted(set(inputs_used) - set(var_refs))
+        for item in missing_inputs:
+            issues.append(
+                StageLintIssue(
+                    "ERROR",
+                    f"predicates.{predicate_id}.inputs_used",
+                    f"expression references variable '{item}' that is missing from inputs_used",
+                )
+            )
+        for item in extra_inputs:
+            issues.append(
+                StageLintIssue(
+                    "WARNING",
+                    f"predicates.{predicate_id}.inputs_used",
+                    f"inputs_used includes '{item}' but the expression does not reference it",
+                )
+            )
+    return issues
+
+
+def _phrase_bank_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue]:
+    issues: list[StageLintIssue] = []
+    seen_entity_role: dict[tuple[str, str], int] = {}
+    for index, row in enumerate(rows, start=1):
+        key = str(row.get("key", f"row_{index}")).strip() or f"row_{index}"
+        entity_id = str(row.get("entity_id") or row.get("variable_name") or "").strip()
+        role = str(row.get("role", "")).strip()
+        if entity_id and role:
+            marker = (entity_id, role)
+            if marker in seen_entity_role:
+                issues.append(
+                    StageLintIssue(
+                        "ERROR",
+                        f"phrases.{key}",
+                        f"duplicate entity_id/role combination '{entity_id}' + '{role}' first seen at row {seen_entity_role[marker]}",
+                    )
+                )
+            else:
+                seen_entity_role[marker] = index
+        if not any(str(column).startswith("text_") and str(value).strip() for column, value in row.items()):
+            texts = row.get("texts")
+            if not (isinstance(texts, str) and "\"en\"" in texts) and not (isinstance(texts, dict) and "en" in texts):
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"phrases.{key}",
+                        "phrase row does not include text_en; current defaults prefer English when selecting one label",
+                    )
+                )
+        elif not str(row.get("text_en", "")).strip():
+            issues.append(
+                StageLintIssue(
+                    "WARNING",
+                    f"phrases.{key}",
+                    "phrase row has no populated text_en column; current defaults prefer English when selecting one label",
+                )
+            )
+    return issues
+
+
+def _patient_case_issues(payload: Any) -> list[StageLintIssue]:
+    issues: list[StageLintIssue] = []
+    raw_cases = payload.get("cases", payload) if isinstance(payload, dict) else payload
+    if not isinstance(raw_cases, list):
+        return [StageLintIssue("ERROR", "cases", "patient case file must be a list or an object with a 'cases' list")]
+
+    names: list[str] = []
+    for index, item in enumerate(raw_cases):
+        if not isinstance(item, dict):
+            issues.append(StageLintIssue("ERROR", f"cases[{index}]", "case must be an object"))
+            continue
+        try:
+            validate_patient_case_payload(item)
+        except Exception as exc:
+            message = str(exc)
+            if hasattr(exc, "errors"):
+                message = format_pydantic_error(exc)  # type: ignore[arg-type]
+            issues.append(StageLintIssue("ERROR", f"cases[{index}]", message))
+        name = str(item.get("name", f"case_{index + 1}"))
+        names.append(name)
+        raw_missing = item.get("missing", [])
+        if isinstance(raw_missing, list):
+            duplicate_missing = _duplicates(str(entry) for entry in raw_missing if isinstance(entry, str))
+            for duplicate in duplicate_missing:
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"cases[{index}].missing",
+                        f"duplicate missing entry '{duplicate}'",
+                    )
+                )
+    for duplicate in _duplicates(names):
+        issues.append(StageLintIssue("ERROR", "cases", f"duplicate case name '{duplicate}'"))
+    return issues
+
+
 def _duplicates(values: Any) -> list[str]:
     seen: set[str] = set()
     duplicates: list[str] = []
@@ -351,6 +483,26 @@ def _duplicates(values: Any) -> list[str]:
             duplicates.append(value)
         seen.add(value)
     return duplicates
+
+
+def _split_list_like(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    text = str(value).strip()
+    if not text:
+        return []
+    if text.startswith("["):
+        try:
+            parsed = json.loads(text)
+        except JSONDecodeError:
+            return []
+        if isinstance(parsed, list):
+            return [str(item).strip() for item in parsed if str(item).strip()]
+        return []
+    parts = [item.strip() for item in text.replace("|", ",").split(",")]
+    return [item for item in parts if item]
 
 
 def _load_source_rows(path: Path, list_key: str) -> list[dict[str, Any]]:
@@ -368,6 +520,27 @@ def _load_source_rows(path: Path, list_key: str) -> list[dict[str, Any]]:
         if isinstance(rows, list):
             return [dict(item) for item in rows if isinstance(item, dict)]
     return []
+
+
+def _load_json_payload(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except JSONDecodeError as exc:
+        raise ValueError(f"{path} is not valid JSON: {exc.msg} at line {exc.lineno} column {exc.colno}") from exc
+
+
+def _decode_json_object(value: Any, label: str) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str):
+        raise ValueError(f"{label} must be a JSON object or JSON string")
+    try:
+        parsed = json.loads(value)
+    except JSONDecodeError as exc:
+        raise ValueError(f"{label} is not valid JSON: {exc.msg}") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError(f"{label} must decode to a JSON object")
+    return parsed
 
 
 def _raw_number(value: Any) -> float | None:

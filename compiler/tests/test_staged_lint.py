@@ -60,6 +60,53 @@ class StagedLintTests(unittest.TestCase):
         self.assertTrue(report.ok)
         self.assertGreaterEqual(report.metadata.get("decision_count", 0), 1)
 
+    def test_preflight_predicate_catalog_detects_input_expression_mismatch(self) -> None:
+        path = self.test_run.inputs_dir / "predicates.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "predicates": [
+                        {
+                            "id": "p_demo",
+                            "description": "demo predicate",
+                            "inputs_used": ["v_age_months", "v_extra"],
+                            "expression": {
+                                "kind": ">=",
+                                "left": {"kind": "var", "id": "v_resp_rate"},
+                                "right": {"kind": "literal", "value": 40},
+                            },
+                            "missingness_policy": "require_inputs",
+                            "provenance": [{"source_id": "CATALOG_TEST"}],
+                        }
+                    ]
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("predicate_catalog", path)
+        self.assertFalse(report.ok)
+        messages = [item.message for item in report.issues]
+        self.assertTrue(any("missing from inputs_used" in message for message in messages))
+        self.assertTrue(any("does not reference it" in message for message in messages))
+
+    def test_preflight_phrase_bank_detects_duplicate_entity_role(self) -> None:
+        path = self.test_run.inputs_dir / "phrases.csv"
+        path.write_text(
+            "\n".join(
+                [
+                    "key,entity_id,role,text_en,provenance_source_id",
+                    "m_referral_a,o_referral,message,Refer now,CATALOG_TEST",
+                    "m_referral_b,o_referral,message,Refer immediately,CATALOG_TEST",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("phrase_bank", path)
+        self.assertFalse(report.ok)
+        self.assertTrue(any("duplicate entity_id/role combination" in item.message for item in report.issues))
+
     def test_ir_xlsform_mermaid_and_smt_lint_on_catalog_example(self) -> None:
         document = compose_document_from_catalogs(
             EXAMPLES / "catalogs" / "pneumonia.metadata.json",
@@ -125,6 +172,29 @@ class StagedLintTests(unittest.TestCase):
         report = preflight_source_artifact("patient_cases", path)
         self.assertFalse(report.ok)
         self.assertTrue(any("duplicate case name" in item.message for item in report.issues))
+
+    def test_preflight_patient_cases_rejects_null_and_overlap(self) -> None:
+        path = self.test_run.inputs_dir / "bad_cases.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "cases": [
+                        {
+                            "name": "bad_case",
+                            "values": {"v_age_months": None},
+                            "missing": ["v_age_months", "v_age_months"],
+                        }
+                    ]
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("patient_cases", path)
+        self.assertFalse(report.ok)
+        messages = [item.message for item in report.issues]
+        self.assertTrue(any("must not use null" in message for message in messages))
+        self.assertTrue(any("duplicate missing entry" in message for message in messages))
 
 
 if __name__ == "__main__":
