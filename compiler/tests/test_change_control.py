@@ -18,7 +18,7 @@ from chw_navigator.change_control import create_change_review_package, load_chan
 from chw_navigator.clinical_ir import ClinicalIRDocument
 from chw_navigator.cli import main as cli_main
 from chw_navigator.dmn import import_dmn_decisions
-from chw_navigator.lint import lint_document
+from chw_navigator.lint import lint_document, lint_errors
 from chw_navigator.validator import validate_document
 from test_support import create_test_run, reset_suite_runs
 
@@ -45,7 +45,7 @@ class ChangeControlTests(unittest.TestCase):
         updated = _load_document(EXAMPLES / "pneumonia_covid_no_test.ir.json")
 
         self.assertEqual([], validate_document(updated))
-        self.assertEqual([], lint_document(updated))
+        self.assertEqual([], lint_errors(lint_document(updated)))
 
         built = create_change_review_package(
             memo=memo,
@@ -67,6 +67,7 @@ class ChangeControlTests(unittest.TestCase):
         self.assertTrue((built.review_dir / "tests" / "validation" / "validation_report.json").exists())
         self.assertTrue((built.review_dir / "outputs" / "baseline_cht" / "cht_lowering_plan.json").exists())
         self.assertTrue((built.review_dir / "outputs" / "updated_cht" / "cht_lowering_plan.json").exists())
+        self.assertTrue(built.hash_manifest_path.exists())
         self.assertIsNotNone(built.case_delta_path)
         self.assertTrue(built.case_delta_path is not None and built.case_delta_path.exists())
 
@@ -86,11 +87,15 @@ class ChangeControlTests(unittest.TestCase):
         self.assertIn("pneumonia-covid-no-test-v1", summary_text)
         self.assertIn("Changed explicit patient cases: `1` of `4`", summary_text)
         self.assertIn("Workflow Burden", summary_text)
+        self.assertIn("Review Provenance", summary_text)
+        self.assertIn("sha256", summary_text)
 
         readme_text = built.readme_path.read_text(encoding="utf-8")
         self.assertIn("Compiler version:", readme_text)
         self.assertIn("Purpose of the tests", readme_text)
         self.assertIn("impact_map.md", readme_text)
+        self.assertIn("Key Evidence Hashes", readme_text)
+        self.assertIn("artifact_hashes.json", readme_text)
 
     def test_build_change_review_cli_creates_example_package(self) -> None:
         test_run = create_test_run(

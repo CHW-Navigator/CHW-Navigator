@@ -14,7 +14,7 @@ from .change_control_models import format_change_memo_error, validate_change_mem
 from .clinical_ir import ClinicalIRDocument
 from .cht_backend import build_cht_lowering_plan, write_cht_adapter_stub
 from .compare import ComparisonCase, load_patient_cases
-from .evidence_utils import allocate_timestamped_dir, compiler_metadata, portable_relative_path
+from .evidence_utils import allocate_timestamped_dir, compiler_metadata, describe_file, portable_relative_path
 from .evaluator import evaluate_document
 from .expr_tools import collect_refs
 from .lint import LintIssue, lint_document
@@ -32,6 +32,7 @@ class ChangeReviewArtifacts:
     review_dir: Path
     metadata_path: Path
     readme_path: Path
+    hash_manifest_path: Path
     summary_path: Path
     semantic_diff_path: Path
     xlsform_diff_path: Path
@@ -192,22 +193,36 @@ def create_change_review_package(
             )
 
         summary_path = review_artifacts_dir / "change_summary.md"
+        review_provenance = _build_review_provenance(
+            review_dir=review_dir,
+            compiler=compiler_metadata(),
+            memo_path=inputs_dir / "change.memo.json",
+            baseline_ir_copy=inputs_dir / "baseline.ir.json" if baseline_ir_path is not None else None,
+            updated_ir_copy=inputs_dir / "updated.ir.json" if updated_ir_path is not None else None,
+            patient_cases_copy=inputs_dir / "patient_cases.json" if patient_cases_path is not None else None,
+            baseline_dmn_copy=inputs_dir / "baseline.dmn" if baseline_dmn_path is not None else None,
+            updated_dmn_copy=inputs_dir / "updated.dmn" if updated_dmn_path is not None else None,
+            semantic_diff_path=semantic_diff_path,
+            case_delta_path=case_delta_path,
+        )
         summary_path.write_text(
             _render_change_summary(
                 memo=memo,
                 semantic_diff=semantic_diff,
                 safety_report=safety_report,
                 case_delta=case_delta if explicit_cases is not None else None,
+                review_provenance=review_provenance,
             ),
             encoding="utf-8",
         )
 
+        compiler = review_provenance["compiler"]
         metadata = {
             "created_at": datetime.now().isoformat(timespec="seconds"),
             "change_id": label,
             "memo_title": ((memo.get("metadata") or {}) if isinstance(memo, dict) else {}).get("title"),
             "review_dir": str(review_dir),
-            "compiler": compiler_metadata(),
+            "compiler": compiler,
             "inputs": {
                 "baseline_ir_path": str(baseline_ir_path) if baseline_ir_path is not None else None,
                 "updated_ir_path": str(updated_ir_path) if updated_ir_path is not None else None,
@@ -227,17 +242,25 @@ def create_change_review_package(
                 "validation_report": str(validation_report_path.relative_to(review_dir)),
                 "case_delta": str(case_delta_path.relative_to(review_dir)) if case_delta_path is not None else None,
             },
+            "key_artifact_hashes": review_provenance["key_artifact_hashes"],
+            "artifact_hash_manifest": "artifact_hashes.json",
         }
         metadata_path = review_dir / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
         readme_path = review_dir / "README.md"
         readme_path.write_text(_render_review_readme(metadata), encoding="utf-8")
+        hash_manifest_path = review_dir / "artifact_hashes.json"
+        hash_manifest_path.write_text(
+            json.dumps(_build_review_hash_manifest(review_dir), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
         return ChangeReviewArtifacts(
             review_dir=review_dir,
             metadata_path=metadata_path,
             readme_path=readme_path,
+            hash_manifest_path=hash_manifest_path,
             summary_path=summary_path,
             semantic_diff_path=semantic_diff_path,
             xlsform_diff_path=xlsform_diff_path,
@@ -599,8 +622,11 @@ def _render_change_summary(
     semantic_diff: dict[str, object],
     safety_report: dict[str, object],
     case_delta: dict[str, object] | None,
+    review_provenance: dict[str, object],
 ) -> str:
     metadata = memo.get("metadata", {}) if isinstance(memo, dict) else {}
+    compiler = review_provenance.get("compiler", {}) if isinstance(review_provenance, dict) else {}
+    key_hashes = review_provenance.get("key_artifact_hashes", {}) if isinstance(review_provenance, dict) else {}
     lines = [
         f"# Change Summary: {metadata.get('title', 'Untitled change')}",
         "",
@@ -612,9 +638,24 @@ def _render_change_summary(
         "",
         str(memo.get("clinical_intent", "")),
         "",
+        "## Review Provenance",
+        "",
+        f"- Compiler version: `{compiler.get('version', 'unknown')}`",
+        f"- Git commit: `{compiler.get('git_commit', 'unknown') or 'unknown'}`",
+        f"- Python: `{compiler.get('python', 'unknown')}`",
+        f"- Platform: `{compiler.get('platform', 'unknown')}`",
+        "",
         "## Scope",
         "",
     ]
+    if isinstance(key_hashes, dict) and key_hashes:
+        for label, entry in key_hashes.items():
+            if not isinstance(entry, dict):
+                continue
+            lines.append(
+                f"- `{label}`: `{entry.get('path')}` sha256 `{str(entry.get('sha256', ''))[:16]}...`"
+            )
+        lines.append("")
     applies_to = metadata.get("applies_to", [])
     if isinstance(applies_to, list):
         lines.extend(f"- {item}" for item in applies_to)
@@ -767,31 +808,108 @@ def _summarize_output_changes(
 def _render_review_readme(metadata: dict[str, object]) -> str:
     compiler = metadata.get("compiler", {}) if isinstance(metadata, dict) else {}
     artifacts = metadata.get("artifacts", {}) if isinstance(metadata, dict) else {}
-    return (
-        "# Change Review Package\n\n"
-        "This folder contains one immutable evidence package for a clinical change.\n\n"
-        "## Provenance\n\n"
-        f"- Created: `{metadata.get('created_at', '')}`\n"
-        f"- Compiler version: `{compiler.get('version', 'unknown')}`\n"
-        f"- Python: `{compiler.get('python', 'unknown')}`\n"
-        f"- Platform: `{compiler.get('platform', 'unknown')}`\n"
-        f"- Git commit: `{compiler.get('git_commit', 'unknown') or 'unknown'}`\n\n"
-        "## Purpose of the tests\n\n"
-        "- confirm the updated IR still validates and lints cleanly\n"
-        "- show which explicit patient cases changed behavior and which stayed the same\n"
-        "- make the semantic delta visible in generated artifacts such as XLSForm and Mermaid\n"
-        "- preserve the exact inputs, outputs, and software version used for this review\n\n"
-        "## Suggested reading order\n\n"
-        "- `outputs/review/change_summary.md`\n"
-        "- `outputs/review/semantic_diff.json`\n"
-        "- `outputs/review/impact_map.md`\n"
-        "- `outputs/review/xlsform_delta.md`\n"
-        "- `outputs/review/workflow_burden.md`\n"
-        f"- `{artifacts.get('baseline_cht', 'outputs/baseline_cht/cht_lowering_plan.json')}` and `{artifacts.get('updated_cht', 'outputs/updated_cht/cht_lowering_plan.json')}`\n"
-        f"- `{artifacts.get('safety_report', 'tests/validation/safety_report.json')}`\n"
-        f"- `{artifacts.get('validation_report', 'tests/validation/validation_report.json')}`\n"
-        + (f"- `{artifacts.get('case_delta')}`\n" if artifacts.get("case_delta") else "")
+    key_hashes = metadata.get("key_artifact_hashes", {}) if isinstance(metadata, dict) else {}
+    lines = [
+        "# Change Review Package",
+        "",
+        "This folder contains one immutable evidence package for a clinical change.",
+        "",
+        "## Provenance",
+        "",
+        f"- Created: `{metadata.get('created_at', '')}`",
+        f"- Compiler version: `{compiler.get('version', 'unknown')}`",
+        f"- Python: `{compiler.get('python', 'unknown')}`",
+        f"- Platform: `{compiler.get('platform', 'unknown')}`",
+        f"- Git commit: `{compiler.get('git_commit', 'unknown') or 'unknown'}`",
+        "",
+        "## Key Evidence Hashes",
+        "",
+    ]
+    if isinstance(key_hashes, dict) and key_hashes:
+        for label, entry in key_hashes.items():
+            if not isinstance(entry, dict):
+                continue
+            lines.append(
+                f"- `{label}`: `{entry.get('path')}` sha256 `{str(entry.get('sha256', ''))[:16]}...` ({entry.get('size_bytes')} bytes)"
+            )
+    else:
+        lines.append("- No key hashes recorded")
+    lines.extend(
+        [
+        "",
+        "The full hash list is preserved in `artifact_hashes.json` for exact verification.",
+        "",
+        "## Purpose of the tests",
+        "",
+        "- confirm the updated IR still validates and lints cleanly",
+        "- show which explicit patient cases changed behavior and which stayed the same",
+        "- make the semantic delta visible in generated artifacts such as XLSForm and Mermaid",
+        "- preserve the exact inputs, outputs, and software version used for this review",
+        "",
+        "## Suggested reading order",
+        "",
+        "- `outputs/review/change_summary.md`",
+        "- `outputs/review/semantic_diff.json`",
+        "- `outputs/review/impact_map.md`",
+        "- `outputs/review/xlsform_delta.md`",
+        "- `outputs/review/workflow_burden.md`",
+        f"- `{artifacts.get('baseline_cht', 'outputs/baseline_cht/cht_lowering_plan.json')}` and `{artifacts.get('updated_cht', 'outputs/updated_cht/cht_lowering_plan.json')}`",
+        f"- `{artifacts.get('safety_report', 'tests/validation/safety_report.json')}`",
+        f"- `{artifacts.get('validation_report', 'tests/validation/validation_report.json')}`",
+        ]
     )
+    if artifacts.get("case_delta"):
+        lines.append(f"- `{artifacts.get('case_delta')}`")
+    return "\n".join(lines) + "\n"
+
+
+def _build_review_provenance(
+    *,
+    review_dir: Path,
+    compiler: dict[str, object],
+    memo_path: Path,
+    baseline_ir_copy: Path | None,
+    updated_ir_copy: Path | None,
+    patient_cases_copy: Path | None,
+    baseline_dmn_copy: Path | None,
+    updated_dmn_copy: Path | None,
+    semantic_diff_path: Path,
+    case_delta_path: Path | None,
+) -> dict[str, object]:
+    key_paths = {
+        "memo": memo_path,
+        "semantic_diff": semantic_diff_path,
+    }
+    optional_paths = {
+        "baseline_ir": baseline_ir_copy,
+        "updated_ir": updated_ir_copy,
+        "patient_cases": patient_cases_copy,
+        "baseline_dmn": baseline_dmn_copy,
+        "updated_dmn": updated_dmn_copy,
+        "case_delta": case_delta_path,
+    }
+    for label, path in optional_paths.items():
+        if path is not None:
+            key_paths[label] = path
+    return {
+        "compiler": compiler,
+        "key_artifact_hashes": {label: describe_file(path, review_dir) for label, path in key_paths.items()},
+    }
+
+
+def _build_review_hash_manifest(review_dir: Path) -> dict[str, object]:
+    files: list[Path] = []
+    for file_path in review_dir.rglob("*"):
+        if not file_path.is_file():
+            continue
+        if file_path.name == "artifact_hashes.json":
+            continue
+        files.append(file_path)
+    files.sort(key=lambda path: portable_relative_path(path, review_dir))
+    return {
+        "algorithm": "sha256",
+        "files": [describe_file(path, review_dir) for path in files],
+    }
 
 
 def _render_text_diff(before_name: str, before_text: str, after_name: str, after_text: str) -> str:

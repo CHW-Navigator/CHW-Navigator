@@ -271,6 +271,20 @@ def create_bundle(
         metadata_path = bundle_dir / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
+        key_hashes = _build_bundle_key_hashes(
+            bundle_dir,
+            copied_base_ir_path=copied_base_ir_path,
+            copied_dmn_path=copied_dmn_path,
+            copied_cases_path=copied_cases_path,
+            merged_ir_path=merged_ir_path,
+            mermaid_path=mermaid_path,
+            smt2_path=smt2_path,
+            derived_compare_path=derived_compare_path,
+            explicit_compare_path=explicit_compare_path,
+        )
+        metadata["key_artifact_hashes"] = key_hashes
+        metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
         readme_path = bundle_dir / "README.md"
         readme_path.write_text(_render_bundle_readme(metadata), encoding="utf-8")
         hash_manifest_path = bundle_dir / "artifact_hashes.json"
@@ -447,6 +461,7 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
     outputs = metadata["outputs"]
     tests = metadata["tests"]
     compiler = metadata["compiler"]
+    key_hashes = metadata.get("key_artifact_hashes", {})
     lines = [
         f"# Bundle `{metadata['bundle_id']}`",
         "",
@@ -479,6 +494,27 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
         f"- Artifact hash manifest: `{metadata['artifact_hash_manifest']}`",
         "- Mutation workspace: `mutations/` with expected candidate filenames documented in `mutations/manifest.json`",
         "",
+        "## Key Evidence Hashes",
+        "",
+    ]
+    if isinstance(key_hashes, dict) and key_hashes:
+        for label, entry in key_hashes.items():
+            if not isinstance(entry, dict):
+                continue
+            lines.append(
+                f"- `{label}`: `{entry.get('path')}` sha256 `{str(entry.get('sha256', ''))[:16]}...` ({entry.get('size_bytes')} bytes)"
+            )
+        lines.extend(
+            [
+                "",
+                "The full hash list is preserved in `artifact_hashes.json` for exact verification.",
+                "",
+            ]
+        )
+    else:
+        lines.extend(["- No key hashes recorded", ""])
+    lines.extend(
+        [
         "## Expected Workflow",
         "",
         "1. Copy a new DMN and base IR into a fresh bundle by rerunning the bundle command. Do not overwrite older bundles.",
@@ -486,7 +522,8 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
         "3. Add deliberate drift candidates under `mutations/` when you want to prove that mismatch detection still works.",
         "4. Keep any new patient suites or reviewer notes in this bundle so the audit trail stays attached to the exact compiler version and source snapshot.",
         "",
-    ]
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -507,6 +544,33 @@ def _build_hash_manifest(bundle_dir: Path, *, metadata_path: Path, readme_path: 
             "readme_path": portable_relative_path(readme_path, bundle_dir),
         },
     }
+
+
+def _build_bundle_key_hashes(
+    bundle_dir: Path,
+    *,
+    copied_base_ir_path: Path,
+    copied_dmn_path: Path,
+    copied_cases_path: Path | None,
+    merged_ir_path: Path,
+    mermaid_path: Path,
+    smt2_path: Path,
+    derived_compare_path: Path,
+    explicit_compare_path: Path | None,
+) -> dict[str, Any]:
+    items = {
+        "base_ir": copied_base_ir_path,
+        "dmn": copied_dmn_path,
+        "merged_ir": merged_ir_path,
+        "mermaid": mermaid_path,
+        "smt2": smt2_path,
+        "derived_compare": derived_compare_path,
+    }
+    if copied_cases_path is not None:
+        items["patient_cases"] = copied_cases_path
+    if explicit_compare_path is not None:
+        items["explicit_compare"] = explicit_compare_path
+    return {label: describe_file(path, bundle_dir) for label, path in items.items()}
 
 
 def _portable_relative_path(path: Path, root: Path) -> str:

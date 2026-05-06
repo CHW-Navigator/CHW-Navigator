@@ -70,6 +70,9 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(metadata["outputs"]["merged_ir"], "outputs/merged.ir.json")
         self.assertEqual(metadata["tests"]["explicit_compare"], "tests/good/explicit.compare.json")
         self.assertEqual(metadata["artifact_hash_manifest"], "artifact_hashes.json")
+        self.assertIn("key_artifact_hashes", metadata)
+        self.assertIn("dmn", metadata["key_artifact_hashes"])
+        self.assertIn("merged_ir", metadata["key_artifact_hashes"])
 
         hash_manifest = json.loads(built.hash_manifest_path.read_text(encoding="utf-8"))
         self.assertEqual("sha256", hash_manifest["algorithm"])
@@ -94,6 +97,10 @@ class BundleTests(unittest.TestCase):
         self.assertEqual("z3_checks", z3_log["log_type"])
         self.assertEqual(1, z3_log["contract_version"])
         self.assertTrue(z3_log["results"])
+
+        readme_text = built.readme_path.read_text(encoding="utf-8")
+        self.assertIn("Key Evidence Hashes", readme_text)
+        self.assertIn("artifact_hashes.json", readme_text)
 
     def test_create_bundle_never_overwrites_previous_bundle(self) -> None:
         document = self._load_document(EXAMPLES_DIR / "pneumonia.ir.json")

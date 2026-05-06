@@ -132,3 +132,22 @@
   - `python -m unittest compiler.tests.test_staged_lint -v`
   - `python -m chw_navigator.cli preflight-source dmn compiler/examples/pneumonia.dmn`
   - both passed
+- Surfaced evidence provenance and hashes more clearly in human-facing artifacts:
+  - bundle README now includes a `Key Evidence Hashes` section with short SHA-256 fingerprints for copied inputs and key generated outputs
+  - bundle metadata now records `key_artifact_hashes` explicitly, alongside the full `artifact_hashes.json` manifest
+  - change-review packages now write `artifact_hashes.json`
+  - change-review README now includes `Key Evidence Hashes`
+  - change summary now includes a `Review Provenance` section with compiler/git info and short SHA-256 fingerprints for the memo, copied source inputs, semantic diff, and case delta
+- Strengthened actual IR phrase/output coverage lint, not just phrase-bank preflight:
+  - outputs now warn separately when message coverage is missing
+  - outputs now warn separately when guidance coverage is missing
+  - decision-produced outputs still warn when they have no runtime-facing message or guidance coverage at all
+  - the current pneumonia catalog example now clearly surfaces the expected `o_referral` guidance gap at IR-lint time
+- Updated regression coverage for:
+  - bundle metadata/README hash visibility
+  - change-review hash manifest and provenance text
+  - IR-lint warning on missing output guidance coverage after DMN import
+- Ran focused regression and manual evidence checks with:
+  - `python -m unittest compiler.tests.test_bundles compiler.tests.test_change_control compiler.tests.test_staged_lint -v`
+  - `python -m chw_navigator.cli create-bundle compiler/examples/pneumonia.ir.json compiler/examples/pneumonia.dmn --patients compiler/examples/pneumonia.cases.json --bundle-root compiler/generated/t/manual_bundle_check2 --label pneumonia-hash-check`
+  - both passed

@@ -12,6 +12,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from chw_navigator.catalogs import compose_document_from_catalogs
+from chw_navigator.dmn import import_dmn_decisions
 from chw_navigator.staged_lint import (
     lint_ir_document,
     lint_mermaid_artifact,
@@ -225,19 +226,26 @@ class StagedLintTests(unittest.TestCase):
             EXAMPLES / "catalogs" / "pneumonia.predicates.json",
             EXAMPLES / "catalogs" / "pneumonia.phrases.csv",
         )
-        ir_report = lint_ir_document(document, source_path=str(EXAMPLES / "catalogs" / "pneumonia.metadata.json"))
+        lint_document = import_dmn_decisions(document, str(EXAMPLES / "pneumonia.dmn"))
+        ir_report = lint_ir_document(lint_document, source_path=str(EXAMPLES / "catalogs" / "pneumonia.metadata.json"))
         self.assertTrue(ir_report.ok)
+        self.assertTrue(
+            any(
+                issue.path == "outputs.o_referral" and "guidance coverage" in issue.message
+                for issue in ir_report.issues
+            )
+        )
 
-        built = build_xlsform(document)
+        built = build_xlsform(lint_document)
         output_dir = self.test_run.outputs_dir / "xlsform"
         survey_path, choices_path, _ = write_xlsform_csvs(built, str(output_dir))
         xlsform_report = lint_xlsform_artifacts(survey_path, choices_path)
         self.assertTrue(xlsform_report.ok)
 
-        mermaid_report = lint_mermaid_artifact(document)
+        mermaid_report = lint_mermaid_artifact(lint_document)
         self.assertTrue(mermaid_report.ok)
 
-        smt_report = lint_smt_artifact(document)
+        smt_report = lint_smt_artifact(lint_document)
         self.assertIn(smt_report.ok, {True, False})
         self.assertEqual("smt2", smt_report.artifact_type)
 

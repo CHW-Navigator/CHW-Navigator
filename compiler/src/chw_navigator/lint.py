@@ -210,16 +210,51 @@ def _lint_phrase_coverage(document: ClinicalIRDocument, issues: list[LintIssue])
 
     for output_id in document.outputs:
         bound = document.phrase_bindings.get(output_id, {})
-        if not bound:
-            if output_id not in messages and output_id not in guidance:
-                issues.append(
-                    LintIssue(
-                        level="WARNING",
-                        path=f"outputs.{output_id}",
-                        message="output is missing a direct message/guidance phrase or phrase binding",
-                    )
+        has_message = output_id in messages or bool(bound.get("message_key"))
+        has_guidance = output_id in guidance or bool(bound.get("guidance_key"))
+        if not has_message and not has_guidance:
+            issues.append(
+                LintIssue(
+                    level="WARNING",
+                    path=f"outputs.{output_id}",
+                    message="output is missing a direct message/guidance phrase or phrase binding",
                 )
+            )
             continue
+        if not has_message:
+            issues.append(
+                LintIssue(
+                    level="WARNING",
+                    path=f"outputs.{output_id}",
+                    message="output is missing message coverage; add a direct message phrase or message_key binding",
+                )
+            )
+        if not has_guidance:
+            issues.append(
+                LintIssue(
+                    level="WARNING",
+                    path=f"outputs.{output_id}",
+                    message="output is missing guidance coverage; add a direct guidance phrase or guidance_key binding",
+                )
+            )
+
+    produced_outputs: set[str] = set()
+    for decision in document.decisions.values():
+        for rule in decision.rules:
+            produced_outputs.update(rule.then.keys())
+    for output_id in sorted(produced_outputs):
+        if output_id not in document.outputs:
+            continue
+        has_message = output_id in messages or bool(document.phrase_bindings.get(output_id, {}).get("message_key"))
+        has_guidance = output_id in guidance or bool(document.phrase_bindings.get(output_id, {}).get("guidance_key"))
+        if not has_message and not has_guidance:
+            issues.append(
+                LintIssue(
+                    level="WARNING",
+                    path=f"decisions.output_coverage.{output_id}",
+                    message="decision-produced output has no message or guidance coverage",
+                )
+            )
 
 
 def _lint_actions(document: ClinicalIRDocument, issues: list[LintIssue]) -> None:
