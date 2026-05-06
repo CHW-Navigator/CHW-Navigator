@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any
 
 from .form_ir import XLSFormWorkbook
@@ -136,6 +137,8 @@ class _ExpressionEngine:
                 return self._parse_if_call()
             if token.value == "selected":
                 return self._parse_selected_call()
+            if token.value == "floor":
+                return self._parse_floor_call()
         raise HeadlessRunnerError(f"unexpected token '{token.kind}'")
 
     def _parse_if_call(self) -> Any:
@@ -163,6 +166,17 @@ class _ExpressionEngine:
         if isinstance(target, (list, tuple, set)):
             return choice in target
         return False
+
+    def _parse_floor_call(self) -> Any:
+        self._expect("IDENT", "floor")
+        self._expect("LPAREN")
+        value = self._parse_or()
+        self._expect("RPAREN")
+        if value is None:
+            return None
+        if not isinstance(value, (int, float)):
+            raise HeadlessRunnerError(f"floor() requires a numeric argument, got {value!r}")
+        return math.floor(value)
 
     def _peek(self) -> _Token:
         return self.tokens[self.index]
@@ -364,6 +378,10 @@ def _coerce_optional_bool(value: Any) -> bool | None:
 
 
 def _compare_values(left: Any, right: Any, operator: str) -> bool | None:
+    if left is None and right == "":
+        return operator == "="
+    if right is None and left == "":
+        return operator == "="
     if left is None or right is None:
         return None
     try:

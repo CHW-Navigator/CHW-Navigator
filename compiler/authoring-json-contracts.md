@@ -21,6 +21,7 @@ Authoring model:
 - every authoring contract should use structured provenance objects, not free-text provenance blobs
 - EHR/history-fed fields should stay in the normal identifier families and may use an `_h` suffix such as `v_weight_kg_h` or `st_prev_referral_h`
 - measured numeric variables should usually encode the stored unit in the identifier, such as `v_weight_g`, `v_temp_c_x10`, or `v_height_mm`
+- DOB/visit dates used in compiled logic should currently be represented as integer day serials, for example `v_birth_day` and `v_visit_day`
 
 ## What The Compiler Consumes Today
 
@@ -144,12 +145,22 @@ Examples:
 - `v_weight_kg_x100`
 - `v_temp_c_x10`
 - `v_waz_x10`
+- `v_birth_day`
+- `v_visit_day`
 
 Weight recommendation:
 
 - store internally as grams or `kg x 100`
 - allow user entry to two decimal places when needed for infants
 - round only for display, not for the stored computational value
+
+DOB recommendation:
+
+- if DOB is available and should drive clinical logic, store DOB and visit/as-of date as integer day serial variables
+- derive age using helper expressions such as:
+  - `date_diff_days(v_visit_day, v_birth_day)`
+  - `age_months_from_date(v_visit_day, v_birth_day)`
+- current supported semantics are numeric day-serial based, not free-form calendar-date strings
 
 Allowed `type` values today:
 
@@ -268,6 +279,13 @@ Recommended expression grammar for any staging string form:
   - `selected(x, 'choice')`
 
 If you use string expressions upstream, they should be parsed into the AST before compile time.
+
+Current helper calls supported in the IR subset:
+
+- `is_missing(x)`
+- `date_diff_days(a, b)`
+- `age_months_from_date(a, b)`
+- `floor(x)`
 
 ## Phrase Bank Contract
 

@@ -177,6 +177,7 @@ Examples:
 - weight: `v_weight_g` or `v_weight_kg_x100`
 - length/height: `v_height_mm` or `v_height_cm_x10`
 - z-scores: `v_waz_x10`, `v_haz_x10`, `v_whz_x10`
+- day-serial dates used in logic: `v_visit_day`, `v_birth_day`
 
 ### Weight
 
@@ -198,6 +199,24 @@ Rationale:
 - avoid floating-point drift in Z3 and form runtimes
 - keep stored units explicit in the variable identifier
 - keep computation precision separate from display precision
+
+### DOB and Visit Date
+
+Recommended current compiled path:
+
+- store DOB and visit/as-of dates used in logic as integer day serials
+- examples:
+  - `v_birth_day`
+  - `v_visit_day`
+
+Recommended use:
+
+- use helper expressions such as `date_diff_days(v_visit_day, v_birth_day)` and `age_months_from_date(v_visit_day, v_birth_day)` in predicates or derived logic
+- treat the stored unit as `days` or `day_serial` explicitly in authoring notes if needed
+
+Current limitation:
+
+- the supported compiler path is numeric day serials, not free-form ISO date strings
 
 ## Provenance
 

@@ -442,8 +442,30 @@ def _infer_expr_type(
             else:
                 errors.append(ValidationError(f"{path}.args[{index}]", "call arguments must be expressions"))
         if fn == "is_missing":
+            if len(args) != 1:
+                errors.append(ValidationError(path, "is_missing expects exactly one argument"))
             return ScalarType.BOOL
+        if fn == "floor":
+            if len(args) != 1:
+                errors.append(ValidationError(path, "floor expects exactly one argument"))
+                return None
+            arg_type = _infer_expr_type(args[0], document, f"{path}.args[0]", errors)
+            if arg_type is not None and not _is_numeric(arg_type):
+                errors.append(ValidationError(f"{path}.args[0]", "floor requires a numeric argument"))
+            return ScalarType.INT
         if fn in {"date_diff_days", "age_months_from_date"}:
+            if len(args) != 2:
+                errors.append(ValidationError(path, f"{fn} expects exactly two arguments"))
+                return None
+            for index, arg in enumerate(args):
+                arg_type = _infer_expr_type(arg, document, f"{path}.args[{index}]", errors)
+                if arg_type is not None and not _is_numeric(arg_type):
+                    errors.append(
+                        ValidationError(
+                            f"{path}.args[{index}]",
+                            f"{fn} requires numeric day-serial arguments",
+                        )
+                    )
             return ScalarType.INT
         errors.append(ValidationError(path, f"unsupported helper function '{fn}'"))
         return None

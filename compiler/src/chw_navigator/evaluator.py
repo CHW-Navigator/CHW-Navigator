@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import math
 from typing import Any
 
 from .clinical_ir import ClinicalIRDocument, MissingnessPolicy, ScalarType
@@ -113,6 +114,8 @@ class _Interpreter:
             return self._eval_predicate(expr["id"])
         if kind == "output":
             return self.outputs[expr["id"]]
+        if kind == "call":
+            return self._eval_call(expr)
 
         if kind == "not":
             return _tri_not(self._eval_expr(expr["arg"]))
@@ -148,6 +151,21 @@ class _Interpreter:
             raise EvaluationError(f"selected() target must be a string or list, got {type(target).__name__}")
 
         raise EvaluationError(f"unsupported expression kind '{kind}'")
+
+    def _eval_call(self, expr: dict[str, Any]) -> Any:
+        fn = expr["fn"]
+        args = [self._eval_expr(arg) for arg in expr["args"]]
+        if fn == "is_missing":
+            return any(arg is MISSING or arg is None for arg in args)
+        if any(arg is MISSING or arg is None for arg in args):
+            return None
+        if fn == "date_diff_days":
+            return args[0] - args[1]
+        if fn == "age_months_from_date":
+            return math.floor((args[0] - args[1]) / 30)
+        if fn == "floor":
+            return math.floor(args[0])
+        raise EvaluationError(f"unsupported helper function '{fn}'")
 
     def _eval_predicate(self, predicate_id: str) -> Any:
         if predicate_id in self.predicate_cache:

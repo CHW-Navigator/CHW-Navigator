@@ -866,6 +866,8 @@ class _Z3Compiler:
                 value=self.outputs[expr["id"]],
                 missing=z3.BoolVal(False),
             )
+        if kind == "call":
+            return self._compile_call(expr)
         if kind == "not":
             compiled = self.compile_expr(expr["arg"])
             return CompiledExpr(value=z3.Not(compiled.value), missing=compiled.missing)
@@ -925,6 +927,37 @@ class _Z3Compiler:
         if kind == "selected":
             raise Z3LoweringError("selected() is not yet supported in the initial Z3 backend")
         raise Z3LoweringError(f"unsupported expression kind '{kind}'")
+
+    def _compile_call(self, expr: dict[str, Any]) -> CompiledExpr:
+        fn = expr["fn"]
+        compiled_args = [self.compile_expr(arg) for arg in expr["args"]]
+        if fn == "is_missing":
+            if len(compiled_args) != 1:
+                raise Z3LoweringError("is_missing requires exactly one argument")
+            return CompiledExpr(value=compiled_args[0].missing, missing=z3.BoolVal(False))
+        if fn == "date_diff_days":
+            if len(compiled_args) != 2:
+                raise Z3LoweringError("date_diff_days requires exactly two arguments")
+            return CompiledExpr(
+                value=compiled_args[0].value - compiled_args[1].value,
+                missing=z3.Or(compiled_args[0].missing, compiled_args[1].missing),
+            )
+        if fn == "age_months_from_date":
+            if len(compiled_args) != 2:
+                raise Z3LoweringError("age_months_from_date requires exactly two arguments")
+            delta = compiled_args[0].value - compiled_args[1].value
+            return CompiledExpr(
+                value=delta / z3.IntVal(30),
+                missing=z3.Or(compiled_args[0].missing, compiled_args[1].missing),
+            )
+        if fn == "floor":
+            if len(compiled_args) != 1:
+                raise Z3LoweringError("floor requires exactly one argument")
+            return CompiledExpr(
+                value=z3.ToInt(compiled_args[0].value),
+                missing=compiled_args[0].missing,
+            )
+        raise Z3LoweringError(f"unsupported helper function '{fn}'")
 
     def compile_condition(self, expr: dict[str, Any]) -> Any:
         compiled = self.compile_expr(expr)

@@ -53,3 +53,24 @@
   - `python -m unittest tests.test_headless_runner -v`
   - `python -m unittest tests.test_artifact_drift tests.test_engine_logs -v`
   - both runs passed with the shared `.venv` interpreter
+- Implemented a working DOB/day-serial helper path across:
+  - evaluator
+  - Z3 lowering
+  - generated XLSForm lowering
+  - generated XLSForm runtime
+  - headless XLSForm runner
+  - generated XLSForm re-import
+- Added helper support for:
+  - `is_missing(...)`
+  - `date_diff_days(...)`
+  - `age_months_from_date(...)`
+  - `floor(...)`
+- Added regression coverage in `tests/test_date_helpers.py` for:
+  - cross-engine compare on explicit DOB/day-serial cases
+  - missingness handling for birth date presence
+  - generated XLSForm round-trip back into IR
+- Ran focused DOB/date regression with:
+  - `python -m unittest tests.test_date_helpers -v`
+  - `python -m unittest tests.test_xlsform_import tests.test_headless_runner tests.test_engine_logs -v`
+  - both runs passed with the shared `.venv` interpreter
+- Updated published guidance so the docs now describe the supported day-serial path and its current limits instead of treating DOB helpers as validator-only.

@@ -41,9 +41,9 @@ Execution rule:
   - keep mutation tests for DMN, IR, XLSForm, Mermaid, and SMT/Z3 artifacts
   - decide which mutations are routine regression versus one-off review
 
-- Add: given birthday, compute age.
-  - prefer age derivation from date of birth over stale age snapshots
-  - make this explicit in contracts and IR guidance
+- Extend DOB-derived age support beyond the current day-serial path.
+  - the compiler now supports integer day-serial DOB/as-of values and helper calls such as `date_diff_days(...)` and `age_months_from_date(...)`
+  - future expansion, if needed, is calendar-exact date handling rather than the current day-serial convention
 
 - Create a short authoring guide with examples.
   - good and bad JSON, CSV, and DMN examples

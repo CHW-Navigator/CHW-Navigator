@@ -132,17 +132,29 @@ Why:
 
 ## DOB and Age
 
-Preferred long-term direction:
+Preferred direction:
 
 - use date of birth as the upstream clinical fact
 - derive age fields systematically rather than hand-maintaining stale age snapshots
 
-Current caution:
+Current supported compiled path:
 
-- helper names such as `date_diff_days` and `age_months_from_date` appear in validation/lint surfaces
-- do not assume they are fully supported end to end in every backend until execution support is completed
+- represent visit date and date of birth as integer day serials
+- examples:
+  - `v_visit_day`
+  - `v_birth_day`
+- supported helper calls in the current compiler subset:
+  - `is_missing(x)`
+  - `date_diff_days(v_visit_day, v_birth_day)`
+  - `age_months_from_date(v_visit_day, v_birth_day)`
 
-For now:
+Current limits:
 
-- if you need a production-safe path in the current subset, provide the already-derived age variable explicitly, such as `v_age_days` or `v_age_months`
-- keep DOB-related plans documented, but do not rely on validator-only helper names as if they are fully executable
+- the supported end-to-end path is numeric day-serial input, not free-form calendar-date strings
+- `age_months_from_date(...)` currently uses integer `floor((visit_day - birth_day) / 30)` semantics
+- if you need calendar-exact month arithmetic, document that as a future requirement rather than assuming it already exists
+
+Recommended current practice:
+
+- if DOB is available from the device or EHR, store it in a day-serial variable and derive age systematically
+- if only a curated age field is available upstream, use explicit derived-age variables such as `v_age_days` or `v_age_months`

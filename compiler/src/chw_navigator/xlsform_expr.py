@@ -109,6 +109,8 @@ class _ExpressionParser:
             return self._parse_if()
         if self.text.startswith("selected(", self.pos):
             return self._parse_selected()
+        if self.text.startswith("floor(", self.pos):
+            return self._parse_floor()
         if self.text.startswith("true()", self.pos):
             self.pos += len("true()")
             return {"kind": "literal", "value": True}
@@ -149,6 +151,12 @@ class _ExpressionParser:
         if choice.get("kind") != "literal" or not isinstance(choice.get("value"), str):
             raise XLSFormExpressionError("selected() choice must be a string literal")
         return {"kind": "selected", "target": target, "choice": choice["value"]}
+
+    def _parse_floor(self) -> dict[str, Any]:
+        self._expect("floor(")
+        target = self._parse_or()
+        self._expect(")")
+        return {"kind": "call", "fn": "floor", "args": [target]}
 
     def _parse_string(self) -> str:
         self._expect("'")
