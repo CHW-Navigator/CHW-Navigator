@@ -25,6 +25,7 @@ from .staged_lint import (
     lint_mermaid_artifact,
     lint_smt_artifact,
     lint_xlsform_artifacts,
+    preflight_catalog_bundle,
     preflight_source_artifact,
     render_stage_lint_report,
 )
@@ -58,6 +59,17 @@ def main(argv: list[str] | None = None) -> int:
     source_lint_parser.add_argument("artifact_type", choices=["variable_catalog", "predicate_catalog", "phrase_bank", "dmn", "patient_cases"])
     source_lint_parser.add_argument("path")
     source_lint_parser.add_argument("--output", dest="output_path")
+
+    bundle_lint_parser = subparsers.add_parser(
+        "preflight-bundle",
+        help="run cross-file preflight lint across metadata, catalogs, and optional DMN",
+    )
+    bundle_lint_parser.add_argument("metadata_path")
+    bundle_lint_parser.add_argument("variable_catalog_path")
+    bundle_lint_parser.add_argument("predicate_catalog_path")
+    bundle_lint_parser.add_argument("phrase_bank_path")
+    bundle_lint_parser.add_argument("--dmn", dest="dmn_path")
+    bundle_lint_parser.add_argument("--output", dest="output_path")
 
     ir_lint_parser = subparsers.add_parser("lint-ir", help="run compiled IR validation plus IR lint")
     ir_lint_parser.add_argument("ir_path")
@@ -168,6 +180,15 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_validate(Path(args.ir_path))
     if args.command == "preflight-source":
         return _handle_preflight_source(args.artifact_type, Path(args.path), args.output_path)
+    if args.command == "preflight-bundle":
+        return _handle_preflight_bundle(
+            Path(args.metadata_path),
+            Path(args.variable_catalog_path),
+            Path(args.predicate_catalog_path),
+            Path(args.phrase_bank_path),
+            args.dmn_path,
+            args.output_path,
+        )
     if args.command == "lint-ir":
         return _handle_lint_ir(Path(args.ir_path), args.output_path)
     if args.command == "compose-ir":
@@ -286,6 +307,30 @@ def _handle_preflight_source(artifact_type: str, path: Path, output_path: str | 
         print(f"wrote source preflight report to {output}")
     else:
         print(rendered, end="")
+    return 0 if report.ok else 1
+
+
+def _handle_preflight_bundle(
+    metadata_path: Path,
+    variable_catalog_path: Path,
+    predicate_catalog_path: Path,
+    phrase_bank_path: Path,
+    dmn_path: str | None,
+    output_path: str | None,
+) -> int:
+    report = preflight_catalog_bundle(
+        metadata_path=metadata_path,
+        variable_catalog_path=variable_catalog_path,
+        predicate_catalog_path=predicate_catalog_path,
+        phrase_bank_path=phrase_bank_path,
+        dmn_path=Path(dmn_path) if dmn_path else None,
+    )
+    rendered = render_stage_lint_report(report)
+    if output_path:
+        output = Path(output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+    print(rendered, end="")
     return 0 if report.ok else 1
 
 

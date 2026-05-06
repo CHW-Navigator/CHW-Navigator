@@ -267,6 +267,34 @@ def _lint_actions(document: ClinicalIRDocument, issues: list[LintIssue]) -> None
                     message="create_task action is missing a message_key",
                 )
             )
+        if not action.message_key:
+            continue
+        phrase = document.phrases.get(action.message_key)
+        if phrase is None:
+            issues.append(
+                LintIssue(
+                    level="WARNING",
+                    path=f"actions.{action.id}.message_key",
+                    message=f"action message_key '{action.message_key}' does not exist in phrases",
+                )
+            )
+            continue
+        if phrase.role.value != "message":
+            issues.append(
+                LintIssue(
+                    level="WARNING",
+                    path=f"actions.{action.id}.message_key",
+                    message=f"action message_key '{action.message_key}' must reference a phrase with role 'message'",
+                )
+            )
+        if phrase.entity_id != action.id:
+            issues.append(
+                LintIssue(
+                    level="WARNING",
+                    path=f"actions.{action.id}.message_key",
+                    message=f"action message_key '{action.message_key}' points to entity '{phrase.entity_id}' instead of '{action.id}'",
+                )
+            )
 
 
 def _lint_phrase_bindings(document: ClinicalIRDocument, issues: list[LintIssue]) -> None:

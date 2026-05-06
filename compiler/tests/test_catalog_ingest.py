@@ -13,6 +13,7 @@ if str(SRC) not in sys.path:
 
 from chw_navigator.catalogs import CatalogLoadError, compose_document_from_catalogs
 from chw_navigator.clinical_ir import ClinicalIRDocument
+from chw_navigator.staged_lint import preflight_catalog_bundle
 from chw_navigator.dmn import import_dmn_decisions
 from chw_navigator.validator import validate_document
 from chw_navigator.xlsform_backend import build_xlsform
@@ -309,6 +310,52 @@ class CatalogIngestTests(unittest.TestCase):
         self.assertEqual([], validate_document(document))
         self.assertIn("v_weight_kg_h", document.variables)
         self.assertIn("st_prev_referral_h", document.variables)
+
+    def test_crossfile_preflight_reports_output_guidance_gap_after_dmn_import(self) -> None:
+        report = preflight_catalog_bundle(
+            metadata_path=EXAMPLES / "catalogs" / "pneumonia.metadata.json",
+            variable_catalog_path=EXAMPLES / "catalogs" / "pneumonia.variables.csv",
+            predicate_catalog_path=EXAMPLES / "catalogs" / "pneumonia.predicates.json",
+            phrase_bank_path=EXAMPLES / "catalogs" / "pneumonia.phrases.csv",
+            dmn_path=EXAMPLES / "pneumonia.dmn",
+        )
+        self.assertTrue(report.ok)
+        self.assertTrue(
+            any(
+                issue.path == "outputs.o_referral" and "guidance coverage" in issue.message
+                for issue in report.issues
+            )
+        )
+
+    def test_crossfile_preflight_warns_on_phrase_entity_missing_from_compiled_ir(self) -> None:
+        phrase_path = self.test_run.inputs_dir / "phrases_orphan.csv"
+        phrase_path.write_text(
+            "\n".join(
+                [
+                    "key,entity_id,role,text_en,provenance_source_id,provenance_kind,provenance_location",
+                    "m_v_age_months,v_age_months,label,Child age (months),CATALOG_TEST,phrase_bank,row:1",
+                    "m_v_resp_rate,v_resp_rate,label,Respiratory rate,CATALOG_TEST,phrase_bank,row:2",
+                    "m_o_referral,o_referral,message,Refer urgently to facility.,CATALOG_TEST,phrase_bank,row:3",
+                    "m_orphan,o_missing,message,Orphan text,CATALOG_TEST,phrase_bank,row:4",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_catalog_bundle(
+            metadata_path=self.metadata_path,
+            variable_catalog_path=self.variable_catalog_path,
+            predicate_catalog_path=self.predicate_catalog_path,
+            phrase_bank_path=phrase_path,
+            dmn_path=EXAMPLES / "pneumonia.dmn",
+        )
+        self.assertTrue(report.ok)
+        self.assertTrue(
+            any(
+                "does not match any variable, predicate, action, output, or decision" in issue.message
+                for issue in report.issues
+            )
+        )
 
 
 if __name__ == "__main__":

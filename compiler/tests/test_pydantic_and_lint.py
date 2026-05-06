@@ -346,6 +346,40 @@ class PydanticAndLintTests(unittest.TestCase):
         warnings = [issue.message for issue in lint_document(document) if issue.level == "WARNING"]
         self.assertTrue(any("neonatal threshold" in message for message in warnings))
 
+    def test_action_message_key_must_reference_matching_message_phrase(self) -> None:
+        payload = {
+            "metadata": {"ir_version": 1, "guideline_id": "demo", "sources": [{"source_id": "SRC"}]},
+            "variables": {},
+            "predicates": {},
+            "actions": {
+                "a_task_followup": {
+                    "kind": "create_task",
+                    "outputs": [],
+                    "task_type": "followup_visit",
+                    "due_in_days": 3,
+                    "priority": "routine",
+                    "assignee_role": "chw",
+                    "message_key": "m_wrong_target",
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+            "phrases": {
+                "m_wrong_target": {
+                    "entity_id": "o_tx_demo",
+                    "role": "message",
+                    "texts": {"en": "Visit again in 3 days."},
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+            "outputs": {},
+            "decisions": {},
+            "invariants": {},
+            "phrase_bindings": {},
+        }
+        document = ClinicalIRDocument.from_dict(payload)
+        warnings = [issue.message for issue in lint_document(document) if issue.level == "WARNING"]
+        self.assertTrue(any("points to entity 'o_tx_demo' instead of 'a_task_followup'" in message for message in warnings))
+
     def test_cht_adapter_stub_writer_emits_expected_files(self) -> None:
         payload = json.loads((EXAMPLES / "pneumonia.ir.json").read_text(encoding="utf-8"))
         document = ClinicalIRDocument.from_dict(payload)

@@ -151,3 +151,24 @@
   - `python -m unittest compiler.tests.test_bundles compiler.tests.test_change_control compiler.tests.test_staged_lint -v`
   - `python -m chw_navigator.cli create-bundle compiler/examples/pneumonia.ir.json compiler/examples/pneumonia.dmn --patients compiler/examples/pneumonia.cases.json --bundle-root compiler/generated/t/manual_bundle_check2 --label pneumonia-hash-check`
   - both passed
+- Extended action/task phrase coverage lint:
+  - `create_task` actions still warn when `message_key` is missing
+  - actions now also warn when `message_key` does not exist in `phrases`
+  - actions now warn when `message_key` points to a non-`message` phrase
+  - actions now warn when the phrase entity does not match the action id
+- Added a new cross-file source preflight step for authored source bundles:
+  - new CLI command: `preflight-bundle`
+  - composes metadata + variable catalog + predicate catalog + phrase bank
+  - optionally imports DMN before running the cross-file checks
+  - reports:
+    - output phrase-coverage gaps after DMN import
+    - predicate references to unknown variables
+    - orphan phrase rows whose `entity_id` does not match anything in the compiled IR
+- Added regression coverage for:
+  - action message-key/entity mismatch
+  - bundle-level warning on the current `o_referral` guidance gap after DMN import
+  - bundle-level warning on orphan phrase rows
+- Ran focused regression and live bundle preflight with:
+  - `python -m unittest compiler.tests.test_catalog_ingest compiler.tests.test_pydantic_and_lint compiler.tests.test_staged_lint -v`
+  - `python -m chw_navigator.cli preflight-bundle compiler/examples/catalogs/pneumonia.metadata.json compiler/examples/catalogs/pneumonia.variables.csv compiler/examples/catalogs/pneumonia.predicates.json compiler/examples/catalogs/pneumonia.phrases.csv --dmn compiler/examples/pneumonia.dmn`
+  - both passed after rerunning `test_staged_lint` once to clear a transient Windows file lock in the shared generated test folder

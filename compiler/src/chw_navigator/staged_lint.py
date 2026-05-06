@@ -13,13 +13,14 @@ from typing import Any
 
 from .catalogs import (
     CatalogLoadError,
+    compose_document_from_catalogs,
     load_phrase_bank,
     load_predicate_catalog,
     load_variable_catalog,
 )
 from .clinical_ir import ClinicalIRDocument
 from .compare import load_patient_cases
-from .dmn import DMNImportError, lint_dmn_file
+from .dmn import DMNImportError, import_dmn_decisions, lint_dmn_file
 from .expr_tools import collect_refs
 from .form_ir import load_xlsform_workbook
 from .lint import lint_document
@@ -132,6 +133,53 @@ def preflight_source_artifact(kind: str, path: str | Path) -> StageLintReport:
             metadata={"path": str(active_path)},
         )
     raise ValueError(f"unsupported source artifact kind '{kind}'")
+
+
+def preflight_catalog_bundle(
+    *,
+    metadata_path: str | Path,
+    variable_catalog_path: str | Path,
+    predicate_catalog_path: str | Path,
+    phrase_bank_path: str | Path,
+    dmn_path: str | Path | None = None,
+) -> StageLintReport:
+    source_paths = {
+        "metadata_path": str(Path(metadata_path)),
+        "variable_catalog_path": str(Path(variable_catalog_path)),
+        "predicate_catalog_path": str(Path(predicate_catalog_path)),
+        "phrase_bank_path": str(Path(phrase_bank_path)),
+        "dmn_path": str(Path(dmn_path)) if dmn_path is not None else None,
+    }
+    try:
+        base_document = compose_document_from_catalogs(
+            metadata_path=metadata_path,
+            variable_catalog_path=variable_catalog_path,
+            predicate_catalog_path=predicate_catalog_path,
+            phrase_bank_path=phrase_bank_path,
+        )
+        document = (
+            import_dmn_decisions(base_document, str(dmn_path))
+            if dmn_path is not None
+            else base_document
+        )
+    except (CatalogLoadError, DMNImportError) as exc:
+        return StageLintReport(
+            stage="source_crossfile",
+            artifact_type="catalog_bundle",
+            ok=False,
+            issues=[StageLintIssue("ERROR", "catalog_bundle", str(exc))],
+            metadata=source_paths,
+        )
+
+    issues = list(lint_ir_document(document).issues)
+    issues.extend(_catalog_crossfile_issues(document))
+    return StageLintReport(
+        stage="source_crossfile",
+        artifact_type="catalog_bundle",
+        ok=not any(item.level == "ERROR" for item in issues),
+        issues=issues,
+        metadata={**source_paths, "guideline_id": document.metadata.guideline_id},
+    )
 
 
 def lint_ir_document(document: ClinicalIRDocument, *, source_path: str | None = None) -> StageLintReport:
@@ -582,6 +630,40 @@ def _patient_case_issues(payload: Any) -> list[StageLintIssue]:
                 )
     for duplicate in _duplicates(names):
         issues.append(StageLintIssue("ERROR", "cases", f"duplicate case name '{duplicate}'"))
+    return issues
+
+
+def _catalog_crossfile_issues(document: ClinicalIRDocument) -> list[StageLintIssue]:
+    issues: list[StageLintIssue] = []
+    known_variable_ids = set(document.variables)
+    for predicate in document.predicates.values():
+        referenced = set(predicate.inputs_used) | collect_refs(predicate.expression, {"var"})
+        for variable_id in sorted(referenced):
+            if variable_id not in known_variable_ids:
+                issues.append(
+                    StageLintIssue(
+                        "ERROR",
+                        f"predicates.{predicate.id}",
+                        f"predicate references unknown variable '{variable_id}'",
+                    )
+                )
+
+    known_entities = (
+        set(document.variables)
+        | set(document.predicates)
+        | set(document.actions)
+        | set(document.outputs)
+        | set(document.decisions)
+    )
+    for phrase in document.phrases.values():
+        if phrase.entity_id not in known_entities:
+            issues.append(
+                StageLintIssue(
+                    "WARNING",
+                    f"phrases.{phrase.key}",
+                    f"phrase entity_id '{phrase.entity_id}' does not match any variable, predicate, action, output, or decision in the compiled IR",
+                )
+            )
     return issues
 
 
