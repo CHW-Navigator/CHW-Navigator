@@ -19,6 +19,14 @@ from .compare import (
 from .dmn import DMNImportError, import_dmn_decisions
 from .evaluator import EvaluationError, evaluate_document
 from .mermaid_backend import MermaidOptions, build_mermaid_artifact
+from .staged_lint import (
+    lint_ir_document,
+    lint_mermaid_artifact,
+    lint_smt_artifact,
+    lint_xlsform_artifacts,
+    preflight_source_artifact,
+    render_stage_lint_report,
+)
 from .validator import validate_document
 from .xlsform_import import XLSFormImportError, import_xlsform_files_detailed
 from .z3_backend import (
@@ -44,6 +52,15 @@ def main(argv: list[str] | None = None) -> int:
 
     validate_parser = subparsers.add_parser("validate", help="validate a Clinical IR JSON file")
     validate_parser.add_argument("ir_path")
+
+    source_lint_parser = subparsers.add_parser("preflight-source", help="run source-artifact preflight lint")
+    source_lint_parser.add_argument("artifact_type", choices=["variable_catalog", "predicate_catalog", "phrase_bank", "dmn", "patient_cases"])
+    source_lint_parser.add_argument("path")
+    source_lint_parser.add_argument("--output", dest="output_path")
+
+    ir_lint_parser = subparsers.add_parser("lint-ir", help="run compiled IR validation plus IR lint")
+    ir_lint_parser.add_argument("ir_path")
+    ir_lint_parser.add_argument("--output", dest="output_path")
 
     compose_parser = subparsers.add_parser(
         "compose-ir",
@@ -96,16 +113,31 @@ def main(argv: list[str] | None = None) -> int:
     xlsform_parser.add_argument("ir_path")
     xlsform_parser.add_argument("output_dir")
 
+    xlsform_lint_parser = subparsers.add_parser("lint-xlsform", help="run backend-specific lint on survey.csv and choices.csv")
+    xlsform_lint_parser.add_argument("survey_path")
+    xlsform_lint_parser.add_argument("choices_path")
+    xlsform_lint_parser.add_argument("--output", dest="output_path")
+
     mermaid_parser = subparsers.add_parser("build-mermaid", help="build a Mermaid flowchart from canonical Clinical IR")
     mermaid_parser.add_argument("ir_path")
     mermaid_parser.add_argument("--output", dest="output_path")
     mermaid_parser.add_argument("--direction", dest="direction", default="LR")
     mermaid_parser.add_argument("--font-size", dest="font_size", type=int, default=24)
 
+    mermaid_lint_parser = subparsers.add_parser("lint-mermaid", help="run backend-specific lint on canonical or candidate Mermaid text")
+    mermaid_lint_parser.add_argument("ir_path")
+    mermaid_lint_parser.add_argument("--candidate", dest="candidate_path")
+    mermaid_lint_parser.add_argument("--output", dest="output_path")
+
     compare_parser = subparsers.add_parser("compare", help="compare interpreter, DMN-imported IR, XLSForm runtime, and Z3 witnesses")
     compare_parser.add_argument("ir_path")
     compare_parser.add_argument("--dmn", dest="dmn_path")
     compare_parser.add_argument("--patients", dest="patient_path")
+
+    smt_lint_parser = subparsers.add_parser("lint-smt2", help="run backend-specific lint on canonical or candidate SMT-LIB")
+    smt_lint_parser.add_argument("ir_path")
+    smt_lint_parser.add_argument("--candidate", dest="candidate_path")
+    smt_lint_parser.add_argument("--output", dest="output_path")
 
     bundle_parser = subparsers.add_parser(
         "create-bundle",
@@ -121,6 +153,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "validate":
         return _handle_validate(Path(args.ir_path))
+    if args.command == "preflight-source":
+        return _handle_preflight_source(args.artifact_type, Path(args.path), args.output_path)
+    if args.command == "lint-ir":
+        return _handle_lint_ir(Path(args.ir_path), args.output_path)
     if args.command == "compose-ir":
         return _handle_compose_ir(
             Path(args.metadata_path),
@@ -152,10 +188,16 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_compare_smt2(Path(args.ir_path), args.smt2_path, args.patient_path)
     if args.command == "build-xlsform":
         return _handle_build_xlsform(Path(args.ir_path), args.output_dir)
+    if args.command == "lint-xlsform":
+        return _handle_lint_xlsform(Path(args.survey_path), Path(args.choices_path), args.output_path)
     if args.command == "build-mermaid":
         return _handle_build_mermaid(Path(args.ir_path), args.output_path, args.direction, args.font_size)
+    if args.command == "lint-mermaid":
+        return _handle_lint_mermaid(Path(args.ir_path), args.candidate_path, args.output_path)
     if args.command == "compare":
         return _handle_compare(Path(args.ir_path), args.dmn_path, args.patient_path)
+    if args.command == "lint-smt2":
+        return _handle_lint_smt2(Path(args.ir_path), args.candidate_path, args.output_path)
     if args.command == "create-bundle":
         return _handle_create_bundle(
             Path(args.ir_path),
@@ -209,6 +251,37 @@ def _handle_validate(path: Path) -> int:
         return 1
     print(f"validation passed: {path}")
     return 0
+
+
+def _handle_preflight_source(artifact_type: str, path: Path, output_path: str | None) -> int:
+    report = preflight_source_artifact(artifact_type, path)
+    rendered = render_stage_lint_report(report)
+    if output_path:
+        output = Path(output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        print(f"wrote source preflight report to {output}")
+    else:
+        print(rendered, end="")
+    return 0 if report.ok else 1
+
+
+def _handle_lint_ir(ir_path: Path, output_path: str | None) -> int:
+    try:
+        document = _load_document(ir_path)
+    except CLIError as exc:
+        print(f"ir lint failed: {exc}")
+        return 1
+    report = lint_ir_document(document, source_path=str(ir_path))
+    rendered = render_stage_lint_report(report)
+    if output_path:
+        output = Path(output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        print(f"wrote IR lint report to {output}")
+    else:
+        print(rendered, end="")
+    return 0 if report.ok else 1
 
 
 def _handle_evaluate(ir_path: Path, patient_path: Path) -> int:
@@ -432,6 +505,19 @@ def _handle_build_xlsform(ir_path: Path, output_dir: str) -> int:
     return 0
 
 
+def _handle_lint_xlsform(survey_path: Path, choices_path: Path, output_path: str | None) -> int:
+    report = lint_xlsform_artifacts(survey_path, choices_path)
+    rendered = render_stage_lint_report(report)
+    if output_path:
+        output = Path(output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        print(f"wrote XLSForm lint report to {output}")
+    else:
+        print(rendered, end="")
+    return 0 if report.ok else 1
+
+
 def _handle_build_mermaid(ir_path: Path, output_path: str | None, direction: str, font_size: int) -> int:
     try:
         document = _load_document(ir_path)
@@ -453,6 +539,31 @@ def _handle_build_mermaid(ir_path: Path, output_path: str | None, direction: str
     else:
         print(artifact.text)
     return 0
+
+
+def _handle_lint_mermaid(ir_path: Path, candidate_path: str | None, output_path: str | None) -> int:
+    try:
+        document = _load_document(ir_path)
+    except CLIError as exc:
+        print(f"mermaid lint failed: {exc}")
+        return 1
+    candidate_text = None
+    if candidate_path:
+        try:
+            candidate_text = Path(candidate_path).read_text(encoding="utf-8")
+        except OSError as exc:
+            print(f"mermaid lint failed: could not read candidate Mermaid '{candidate_path}': {exc}")
+            return 1
+    report = lint_mermaid_artifact(document, candidate_text=candidate_text)
+    rendered = render_stage_lint_report(report)
+    if output_path:
+        output = Path(output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        print(f"wrote Mermaid lint report to {output}")
+    else:
+        print(rendered, end="")
+    return 0 if report.ok else 1
 
 
 def _handle_compare(ir_path: Path, dmn_path: str | None, patient_path: str | None) -> int:
@@ -484,6 +595,31 @@ def _handle_compare(ir_path: Path, dmn_path: str | None, patient_path: str | Non
         )
     )
     return 0
+
+
+def _handle_lint_smt2(ir_path: Path, candidate_path: str | None, output_path: str | None) -> int:
+    try:
+        document = _load_document(ir_path)
+    except CLIError as exc:
+        print(f"smt2 lint failed: {exc}")
+        return 1
+    candidate_text = None
+    if candidate_path:
+        try:
+            candidate_text = Path(candidate_path).read_text(encoding="utf-8")
+        except OSError as exc:
+            print(f"smt2 lint failed: could not read candidate SMT-LIB '{candidate_path}': {exc}")
+            return 1
+    report = lint_smt_artifact(document, candidate_text=candidate_text)
+    rendered = render_stage_lint_report(report)
+    if output_path:
+        output = Path(output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        print(f"wrote SMT lint report to {output}")
+    else:
+        print(rendered, end="")
+    return 0 if report.ok else 1
 
 
 def _handle_create_bundle(

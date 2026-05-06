@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import platform
 import subprocess
 import sys
@@ -52,6 +53,22 @@ def compiler_metadata() -> dict[str, Any]:
 
 def portable_relative_path(path: Path, root: Path) -> str:
     return path.relative_to(root).as_posix()
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def describe_file(path: Path, root: Path) -> dict[str, Any]:
+    return {
+        "path": portable_relative_path(path, root),
+        "sha256": sha256_file(path),
+        "size_bytes": path.stat().st_size,
+    }
 
 
 def slugify(value: str, *, fallback: str) -> str:

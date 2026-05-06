@@ -24,6 +24,16 @@ from .mermaid_backend import (
     build_mermaid_artifact,
     compare_mermaid_text,
 )
+from .staged_lint import (
+    StageLintIssue,
+    StageLintReport,
+    lint_ir_document,
+    lint_mermaid_artifact,
+    lint_smt_artifact,
+    lint_xlsform_artifacts,
+    preflight_source_artifact,
+    render_stage_lint_report,
+)
 from .validator import ValidationError, validate_document
 from .xlsform_import import (
     ImportedXLSForm,
@@ -69,6 +79,8 @@ __all__ = [
     "MismatchEntry",
     "PairwiseCaseResult",
     "SmtLibComparisonResult",
+    "StageLintIssue",
+    "StageLintReport",
     "Z3AnalysisReport",
     "Z3CheckResult",
     "Z3GeneratedCase",
@@ -96,9 +108,15 @@ __all__ = [
     "import_xlsform_files",
     "import_xlsform_files_detailed",
     "import_xlsform_workbook",
+    "lint_ir_document",
+    "lint_mermaid_artifact",
+    "lint_smt_artifact",
+    "lint_xlsform_artifacts",
     "load_catalog_bundle",
     "load_xlsform_workbook",
     "load_patient_cases",
+    "preflight_source_artifact",
+    "render_stage_lint_report",
     "validate_document",
     "write_smt2",
     "XLSFormImportError",

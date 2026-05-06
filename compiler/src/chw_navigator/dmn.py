@@ -15,16 +15,30 @@ class DMNImportError(Exception):
     """Raised when a DMN file uses unsupported constructs."""
 
 
+def lint_dmn_file(dmn_path: str) -> dict[str, Any]:
+    root = _parse_dmn_root(dmn_path)
+    decision_count = 0
+    rule_count = 0
+    output_count = 0
+    for decision_elem in _children_by_name(root, "decision"):
+        decision, inferred_outputs = _parse_decision(decision_elem, dmn_path)
+        decision_count += 1
+        rule_count += len(decision.rules)
+        output_count += len(inferred_outputs)
+    if decision_count == 0:
+        raise DMNImportError(f"DMN file '{dmn_path}' does not contain any supported decision elements")
+    return {
+        "decision_count": decision_count,
+        "rule_count": rule_count,
+        "output_count": output_count,
+    }
+
+
 def import_dmn_decisions(
     base_document: ClinicalIRDocument,
     dmn_path: str,
 ) -> ClinicalIRDocument:
-    try:
-        root = ET.parse(dmn_path).getroot()
-    except FileNotFoundError as exc:
-        raise DMNImportError(f"DMN file not found: {dmn_path}") from exc
-    except (OSError, ET.ParseError, DefusedXmlException) as exc:
-        raise DMNImportError(f"unsafe or invalid DMN XML in '{dmn_path}': {exc}") from exc
+    root = _parse_dmn_root(dmn_path)
     decisions = copy.deepcopy(base_document.decisions)
     outputs = copy.deepcopy(base_document.outputs)
 
@@ -49,6 +63,15 @@ def import_dmn_decisions(
         message = "; ".join(f"{item.path}: {item.message}" for item in validation_errors)
         raise DMNImportError(f"imported DMN does not satisfy the supported Clinical IR subset: {message}")
     return merged
+
+
+def _parse_dmn_root(dmn_path: str) -> ET.Element:
+    try:
+        return ET.parse(dmn_path).getroot()
+    except FileNotFoundError as exc:
+        raise DMNImportError(f"DMN file not found: {dmn_path}") from exc
+    except (OSError, ET.ParseError, DefusedXmlException) as exc:
+        raise DMNImportError(f"unsafe or invalid DMN XML in '{dmn_path}': {exc}") from exc
 
 
 def _parse_decision(decision_elem: ET.Element, source_id: str) -> tuple[DecisionDef, dict[str, OutputDef]]:

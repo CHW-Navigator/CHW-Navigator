@@ -52,6 +52,7 @@ class BundleTests(unittest.TestCase):
         self.assertTrue((built.bundle_dir / "tests" / "good" / "explicit.compare.json").exists())
         self.assertTrue((built.bundle_dir / "tests" / "good" / "z3-derived.compare.json").exists())
         self.assertTrue((built.bundle_dir / "mutations" / "manifest.json").exists())
+        self.assertTrue(built.hash_manifest_path.exists())
 
         metadata = json.loads(built.metadata_path.read_text(encoding="utf-8"))
         self.assertEqual(metadata["source"]["source_label"], "pneumonia-demo")
@@ -59,6 +60,16 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(metadata["copied_inputs"]["dmn"], "inputs/source.dmn")
         self.assertEqual(metadata["outputs"]["merged_ir"], "outputs/merged.ir.json")
         self.assertEqual(metadata["tests"]["explicit_compare"], "tests/good/explicit.compare.json")
+        self.assertEqual(metadata["artifact_hash_manifest"], "artifact_hashes.json")
+
+        hash_manifest = json.loads(built.hash_manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual("sha256", hash_manifest["algorithm"])
+        self.assertTrue(hash_manifest["files"])
+        hashed_paths = {entry["path"] for entry in hash_manifest["files"]}
+        self.assertIn("inputs/source.dmn", hashed_paths)
+        self.assertIn("outputs/merged.ir.json", hashed_paths)
+        self.assertIn("metadata.json", hashed_paths)
+        self.assertIn("README.md", hashed_paths)
 
         explicit_log = json.loads((built.bundle_dir / "tests" / "good" / "explicit.compare.json").read_text(encoding="utf-8"))
         self.assertEqual("comparison_report", explicit_log["log_type"])

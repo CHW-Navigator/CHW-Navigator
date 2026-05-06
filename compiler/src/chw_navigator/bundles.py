@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 import json
-import platform
 import shutil
-import subprocess
-import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
-import tomllib
 
 from .clinical_ir import ClinicalIRDocument
 from .compare import (
@@ -21,6 +16,7 @@ from .compare import (
     load_patient_cases,
 )
 from .dmn import import_dmn_decisions
+from .evidence_utils import allocate_timestamped_dir, compiler_metadata, describe_file, portable_relative_path
 from .mermaid_backend import build_mermaid_artifact
 from .validator import validate_document
 from .xlsform_backend import build_xlsform, write_xlsform_csvs
@@ -35,6 +31,7 @@ class BundleBuildError(Exception):
 class BundleArtifacts:
     bundle_dir: Path
     metadata_path: Path
+    hash_manifest_path: Path
     readme_path: Path
     explicit_compare_path: Path | None
     derived_compare_path: Path
@@ -212,16 +209,32 @@ def create_bundle(
             derived_cases_path=derived_cases_path,
             explicit_compare_path=explicit_compare_path,
             derived_compare_path=derived_compare_path,
+            hash_manifest_path=bundle_dir / "artifact_hashes.json",
         )
         metadata_path = bundle_dir / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
         readme_path = bundle_dir / "README.md"
         readme_path.write_text(_render_bundle_readme(metadata), encoding="utf-8")
+        hash_manifest_path = bundle_dir / "artifact_hashes.json"
+        hash_manifest_path.write_text(
+            json.dumps(
+                _build_hash_manifest(
+                    bundle_dir,
+                    metadata_path=metadata_path,
+                    readme_path=readme_path,
+                ),
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
 
         return BundleArtifacts(
             bundle_dir=bundle_dir,
             metadata_path=metadata_path,
+            hash_manifest_path=hash_manifest_path,
             readme_path=readme_path,
             explicit_compare_path=explicit_compare_path,
             derived_compare_path=derived_compare_path,
@@ -233,14 +246,7 @@ def create_bundle(
 
 
 def _allocate_bundle_dir(bundle_root: Path, label: str) -> Path:
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    slug = _slugify(label)
-    candidate = bundle_root / f"{timestamp}-{slug}"
-    counter = 2
-    while candidate.exists():
-        candidate = bundle_root / f"{timestamp}-{slug}-{counter:02d}"
-        counter += 1
-    return candidate
+    return allocate_timestamped_dir(bundle_root, label, fallback_slug="bundle")
 
 
 def _create_bundle_scaffold(bundle_dir: Path) -> None:
@@ -319,17 +325,10 @@ def _write_mutation_manifest(mutation_dir: Path, label: str) -> None:
 
 
 def _build_metadata(**kwargs: Any) -> dict[str, Any]:
-    project_root = Path(__file__).resolve().parents[2]
     return {
         "bundle_id": kwargs["bundle_dir"].name,
         "created_at": datetime.now().isoformat(timespec="seconds"),
-        "compiler": {
-            "package": "chw-navigator",
-            "version": _load_project_version(project_root),
-            "python": sys.version.split()[0],
-            "platform": platform.platform(),
-            "git_commit": _get_git_commit(project_root),
-        },
+        "compiler": compiler_metadata(),
         "source": {
             "label": kwargs["label"],
             "source_label": kwargs["source_label"],
@@ -365,6 +364,7 @@ def _build_metadata(**kwargs: Any) -> dict[str, Any]:
             ),
             "derived_compare": _portable_relative_path(kwargs["derived_compare_path"], kwargs["bundle_dir"]),
         },
+        "artifact_hash_manifest": _portable_relative_path(kwargs["hash_manifest_path"], kwargs["bundle_dir"]),
     }
 
 
@@ -401,6 +401,7 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
         f"- Z3: `{outputs['smt2']}`, `{outputs['z3_checks']}`, `{outputs['derived_cases']}`",
         f"- Good-path tests: `{tests['derived_compare']}`"
         + (f", `{tests['explicit_compare']}`" if tests["explicit_compare"] else ""),
+        f"- Artifact hash manifest: `{metadata['artifact_hash_manifest']}`",
         "- Mutation workspace: `mutations/` with expected candidate filenames documented in `mutations/manifest.json`",
         "",
         "## Expected Workflow",
@@ -414,34 +415,23 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _load_project_version(project_root: Path) -> str:
-    pyproject_path = project_root / "pyproject.toml"
-    if not pyproject_path.exists():
-        return "unknown"
-    data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
-    project = data.get("project", {})
-    version = project.get("version")
-    return str(version) if version else "unknown"
-
-
-def _get_git_commit(project_root: Path) -> str | None:
-    try:
-        completed = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        return None
-    return completed.stdout.strip() or None
-
-
-def _slugify(value: str) -> str:
-    slug = "".join(character.lower() if character.isalnum() else "-" for character in value)
-    collapsed = "-".join(part for part in slug.split("-") if part)
-    return collapsed or "bundle"
+def _build_hash_manifest(bundle_dir: Path, *, metadata_path: Path, readme_path: Path) -> dict[str, Any]:
+    files: list[Path] = []
+    for file_path in bundle_dir.rglob("*"):
+        if not file_path.is_file():
+            continue
+        if file_path.name == "artifact_hashes.json":
+            continue
+        files.append(file_path)
+    files.sort(key=lambda path: portable_relative_path(path, bundle_dir))
+    return {
+        "algorithm": "sha256",
+        "files": [describe_file(path, bundle_dir) for path in files],
+        "notes": {
+            "metadata_path": portable_relative_path(metadata_path, bundle_dir),
+            "readme_path": portable_relative_path(readme_path, bundle_dir),
+        },
+    }
 
 
 def _portable_relative_path(path: Path, root: Path) -> str:
