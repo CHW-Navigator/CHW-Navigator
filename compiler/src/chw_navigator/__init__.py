@@ -2,6 +2,7 @@
 
 from .bundles import BundleArtifacts, BundleBuildError, create_bundle
 from .catalogs import CatalogBundle, CatalogLoadError, compose_document_from_catalogs, load_catalog_bundle
+from .change_control import ChangeReviewArtifacts, ChangeReviewBuildError, create_change_review_package, load_change_memo
 from .clinical_ir import ClinicalIRDocument
 from .compare import (
     ComparisonCase,
@@ -66,6 +67,8 @@ __all__ = [
     "BundleBuildError",
     "CatalogBundle",
     "CatalogLoadError",
+    "ChangeReviewArtifacts",
+    "ChangeReviewBuildError",
     "ClinicalIRDocument",
     "ComparisonCase",
     "ComparisonError",
@@ -98,6 +101,7 @@ __all__ = [
     "compare_smt2_text",
     "compare_workbook_pair",
     "compose_document_from_catalogs",
+    "create_change_review_package",
     "create_bundle",
     "evaluate_document",
     "evaluate_patient",
@@ -113,6 +117,7 @@ __all__ = [
     "lint_smt_artifact",
     "lint_xlsform_artifacts",
     "load_catalog_bundle",
+    "load_change_memo",
     "load_xlsform_workbook",
     "load_patient_cases",
     "preflight_source_artifact",

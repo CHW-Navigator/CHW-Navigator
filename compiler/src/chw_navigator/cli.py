@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .bundles import BundleBuildError, create_bundle
 from .catalogs import CatalogLoadError, compose_document_from_catalogs
+from .change_control import ChangeReviewBuildError, create_change_review_package, load_change_memo
 from .clinical_ir import ClinicalIRDocument
 from .compare import (
     ComparisonError,
@@ -149,6 +150,18 @@ def main(argv: list[str] | None = None) -> int:
     bundle_parser.add_argument("--bundle-root", dest="bundle_root", default="generated\\bundles")
     bundle_parser.add_argument("--label", dest="source_label")
 
+    change_review_parser = subparsers.add_parser(
+        "build-change-review",
+        help="create a change-review package from a memo, baseline IR, updated IR, and optional cases/DMN files",
+    )
+    change_review_parser.add_argument("memo_path")
+    change_review_parser.add_argument("baseline_ir_path")
+    change_review_parser.add_argument("updated_ir_path")
+    change_review_parser.add_argument("review_root")
+    change_review_parser.add_argument("--patients", dest="patient_path")
+    change_review_parser.add_argument("--baseline-dmn", dest="baseline_dmn_path")
+    change_review_parser.add_argument("--updated-dmn", dest="updated_dmn_path")
+
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
 
     if args.command == "validate":
@@ -205,6 +218,16 @@ def main(argv: list[str] | None = None) -> int:
             args.bundle_root,
             args.patient_path,
             args.source_label,
+        )
+    if args.command == "build-change-review":
+        return _handle_build_change_review(
+            Path(args.memo_path),
+            Path(args.baseline_ir_path),
+            Path(args.updated_ir_path),
+            Path(args.review_root),
+            args.patient_path,
+            args.baseline_dmn_path,
+            args.updated_dmn_path,
         )
     raise AssertionError(f"unknown command '{args.command}'")
 
@@ -661,6 +684,51 @@ def _handle_create_bundle(
         print(f"wrote explicit comparison report to {built.explicit_compare_path}")
     print(f"wrote Z3-derived comparison report to {built.derived_compare_path}")
     print(f"wrote derived comparison cases to {built.derived_cases_path}")
+    return 0
+
+
+def _handle_build_change_review(
+    memo_path: Path,
+    baseline_ir_path: Path,
+    updated_ir_path: Path,
+    review_root: Path,
+    patient_path: str | None,
+    baseline_dmn_path: str | None,
+    updated_dmn_path: str | None,
+) -> int:
+    try:
+        memo = load_change_memo(memo_path)
+        baseline_document = _load_document(baseline_ir_path)
+        updated_document = _load_document(updated_ir_path)
+    except (CLIError, ChangeReviewBuildError) as exc:
+        print(f"change-review build failed: {exc}")
+        return 1
+    try:
+        built = create_change_review_package(
+            memo=memo,
+            baseline_document=baseline_document,
+            updated_document=updated_document,
+            review_root=review_root,
+            baseline_ir_path=baseline_ir_path,
+            updated_ir_path=updated_ir_path,
+            patient_cases_path=Path(patient_path) if patient_path else None,
+            baseline_dmn_path=Path(baseline_dmn_path) if baseline_dmn_path else None,
+            updated_dmn_path=Path(updated_dmn_path) if updated_dmn_path else None,
+        )
+    except ChangeReviewBuildError as exc:
+        print(f"change-review build failed: {exc}")
+        return 1
+
+    print(f"created change review at {built.review_dir}")
+    print(f"wrote metadata to {built.metadata_path}")
+    print(f"wrote review README to {built.readme_path}")
+    print(f"wrote change summary to {built.summary_path}")
+    print(f"wrote semantic diff to {built.semantic_diff_path}")
+    print(f"wrote impact map to {built.impact_map_path}")
+    print(f"wrote XLSForm delta to {built.xlsform_diff_path}")
+    print(f"wrote workflow burden to {built.workflow_burden_path}")
+    if built.case_delta_path is not None:
+        print(f"wrote case delta to {built.case_delta_path}")
     return 0
 
 

@@ -12,6 +12,8 @@ This file is being updated incrementally during the overnight pass.
 - Added staged lint reports to bundle contents so lint evidence now travels with the intake package.
 - Added `docs/authoring-guide.md` and `docs/source-of-truth-editing-policy.md`.
 - Recorded the DOB/age helper gap as an explicit blocker instead of treating validator-only support as executable.
+- Added a real `build-change-review` CLI command.
+- Added regression coverage for the pneumonia cutoff-shift change-review scenario.
 
 ## In progress
 
@@ -22,6 +24,7 @@ This file is being updated incrementally during the overnight pass.
 - `python -m unittest tests.test_staged_lint -v`
 - `python -m unittest tests.test_staged_lint tests.test_bundles tests.test_engine_logs tests.test_artifact_drift -v`
 - `python -m unittest tests.test_bundles tests.test_staged_lint -v`
+- `python -m unittest tests.test_change_control -v`
 
 ## Notes
 

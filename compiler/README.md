@@ -39,6 +39,7 @@ Supporting process docs:
 - staged linting for source inputs, compiled IR, and generated backends
 - provenance validation and backend source maps
 - evidence bundles that now carry lint reports and artifact hashes
+- change-review package generation for baseline-vs-updated clinical deltas
 - example IR document
 - hardened DMN XML parsing via `defusedxml`
 
@@ -58,6 +59,7 @@ Supporting process docs:
 - `src/chw_navigator/compare.py`: cross-engine comparison harness
 - `src/chw_navigator/mermaid_backend.py`: Mermaid flowchart generation from canonical logic
 - `src/chw_navigator/bundles.py`: immutable intake bundle creation for inputs, outputs, and test evidence
+- `src/chw_navigator/change_control.py`: change-review package generation for clinician-facing delta review
 - `src/chw_navigator/cli.py`: command-line entry points
 - `tests/test_dmn_fail_loud.py`: fail-loud coverage for unsupported DMN inputs
 - `tests/test_artifact_drift.py`: mutated artifact drift detection across DMN, XLSForm, Mermaid, and IR

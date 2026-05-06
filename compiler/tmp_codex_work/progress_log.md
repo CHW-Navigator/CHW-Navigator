@@ -38,3 +38,10 @@
   - `docs/authoring-guide.md`
   - `docs/source-of-truth-editing-policy.md`
 - Linked the new process docs from `README.md` and `contracts/README.md`.
+- Added a real `build-change-review` CLI command on top of the existing change-control engine.
+- Added regression coverage for:
+  - CLI-based change-review package creation
+  - the pneumonia fast-breathing cutoff shift proof
+- Ran focused change-control regression with:
+  - `python -m unittest tests.test_change_control -v`
+  - the run passed with the shared `.venv` interpreter
