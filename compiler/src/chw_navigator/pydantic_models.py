@@ -52,6 +52,38 @@ class DomainModel(StrictModel):
         return self
 
 
+class MeasurementLimitsModel(StrictModel):
+    remeasure_min: int | float | None = None
+    remeasure_max: int | float | None = None
+    dont_allow_min: int | float | None = None
+    dont_allow_max: int | float | None = None
+    source: str | None = None
+
+    @model_validator(mode="after")
+    def validate_measurement_limits(self) -> "MeasurementLimitsModel":
+        if (self.remeasure_min is None) ^ (self.remeasure_max is None):
+            raise ValueError("measurement_limits must define both remeasure_min and remeasure_max together")
+        if (self.dont_allow_min is None) ^ (self.dont_allow_max is None):
+            raise ValueError("measurement_limits must define both dont_allow_min and dont_allow_max together")
+        if self.remeasure_min is not None and self.remeasure_max is not None and self.remeasure_min > self.remeasure_max:
+            raise ValueError("measurement_limits remeasure_min cannot exceed remeasure_max")
+        if self.dont_allow_min is not None and self.dont_allow_max is not None and self.dont_allow_min > self.dont_allow_max:
+            raise ValueError("measurement_limits dont_allow_min cannot exceed dont_allow_max")
+        if (
+            self.remeasure_min is not None
+            and self.dont_allow_min is not None
+            and self.remeasure_min < self.dont_allow_min
+        ):
+            raise ValueError("measurement_limits remeasure_min must not be lower than dont_allow_min")
+        if (
+            self.remeasure_max is not None
+            and self.dont_allow_max is not None
+            and self.remeasure_max > self.dont_allow_max
+        ):
+            raise ValueError("measurement_limits remeasure_max must not be higher than dont_allow_max")
+        return self
+
+
 ExpressionKind = Literal[
     "literal",
     "else",
@@ -190,6 +222,14 @@ class VariableModel(StrictModel):
     type: Literal["bool", "int", "decimal", "string", "string_key", "enum"]
     domain: DomainModel | None = None
     unit: str | None = None
+    storage_unit: str | None = None
+    input_decimals: int | None = None
+    display_decimals: int | None = None
+    remeasure_min: int | float | None = None
+    remeasure_max: int | float | None = None
+    dont_allow_min: int | float | None = None
+    dont_allow_max: int | float | None = None
+    measurement_limits: MeasurementLimitsModel | None = None
     allowed_missingness: bool = False
     multivalue: bool = False
     source_kind: Literal["encounter_input", "history", "state", "derived"] | None = None
@@ -205,6 +245,10 @@ class VariableModel(StrictModel):
     def validate_variable(self) -> "VariableModel":
         if self.type == "enum" and not (self.domain and self.domain.values):
             raise ValueError("enum variables must define non-empty domain.values")
+        if self.input_decimals is not None and self.input_decimals < 0:
+            raise ValueError("input_decimals cannot be negative")
+        if self.display_decimals is not None and self.display_decimals < 0:
+            raise ValueError("display_decimals cannot be negative")
         if self.source_kind == "encounter_input" and not self.id.startswith("v_"):
             raise ValueError("encounter_input variables must use v_ ids")
         if self.source_kind == "history" and not _is_history_id(self.id):
@@ -217,6 +261,30 @@ class VariableModel(StrictModel):
             raise ValueError("history variables must declare source_kind='history' when source_kind is set")
         if self.source_kind == "history" and self.history_binding is None:
             raise ValueError("history variables must define history_binding metadata")
+        limit_values = (
+            self.remeasure_min,
+            self.remeasure_max,
+            self.dont_allow_min,
+            self.dont_allow_max,
+            self.measurement_limits,
+            self.storage_unit,
+            self.input_decimals,
+            self.display_decimals,
+        )
+        if any(item is not None for item in limit_values) and self.type not in {"int", "decimal"}:
+            raise ValueError("measurement/scaling metadata is only supported on numeric variables")
+        if (self.remeasure_min is None) ^ (self.remeasure_max is None):
+            raise ValueError("remeasure_min and remeasure_max must be provided together")
+        if (self.dont_allow_min is None) ^ (self.dont_allow_max is None):
+            raise ValueError("dont_allow_min and dont_allow_max must be provided together")
+        if self.remeasure_min is not None and self.remeasure_max is not None and self.remeasure_min > self.remeasure_max:
+            raise ValueError("remeasure_min cannot exceed remeasure_max")
+        if self.dont_allow_min is not None and self.dont_allow_max is not None and self.dont_allow_min > self.dont_allow_max:
+            raise ValueError("dont_allow_min cannot exceed dont_allow_max")
+        if self.remeasure_min is not None and self.dont_allow_min is not None and self.remeasure_min < self.dont_allow_min:
+            raise ValueError("remeasure_min must not be lower than dont_allow_min")
+        if self.remeasure_max is not None and self.dont_allow_max is not None and self.remeasure_max > self.dont_allow_max:
+            raise ValueError("remeasure_max must not be higher than dont_allow_max")
         return self
 
 

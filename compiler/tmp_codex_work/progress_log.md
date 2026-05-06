@@ -233,3 +233,20 @@
   - `examples/fever_basic.cases.json`
   - `tests/test_golden_examples.py`
   - this example is intentionally simple so the repo is not overly centered on pneumonia and the router example
+- Added a bounded clinical-equivalence report feature:
+  - new `src/chw_navigator/equivalence.py`
+  - new CLI command: `build-equivalence-report`
+  - report scope is explicitly `explicit_case_suite_only`
+  - added `tests/test_equivalence_report.py`
+  - this addresses the roadmap item honestly without claiming whole-proof-space equivalence yet
+- Refined the bounded equivalence report so it separates:
+  - any semantic case mismatch count
+  - output-changing case count
+  - predicate-changing case count
+  - rule-hit-changing case count
+  - this keeps reviewer summaries honest when a source change only alters internal predicate truth on some cases but changes outputs on fewer cases
+- Extended the variable-source contract and lint around numeric proof domains and scaling guidance:
+  - variable payload validation now accepts precision/storage metadata such as `storage_unit`, `input_decimals`, and `display_decimals`
+  - variable payload validation now structurally checks flat and nested measurement-limit fields
+  - staged lint now warns when well-known clinical numeric variables declare domains narrower than the recommended broad proof domains
+  - staged lint now nudges weight variables to document UI/display precision guidance

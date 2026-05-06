@@ -453,6 +453,24 @@ def _variable_contract_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue
                         f"unit '{unit}' is not clearly reflected in the identifier '{variable_id}'",
                     )
                 )
+            storage_unit = str(row.get("storage_unit", "")).strip().lower()
+            if storage_unit and not _unit_matches_identifier(variable_id, storage_unit):
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"variables.{variable_id}.storage_unit",
+                        f"storage_unit '{storage_unit}' is not clearly reflected in the identifier '{variable_id}'",
+                    )
+                )
+            issues.extend(_recommended_numeric_domain_issues(variable_id, domain_min, domain_max))
+            if "weight" in variable_id and not _has_precision_metadata(row):
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"variables.{variable_id}",
+                        "weight variable should usually document input_decimals and display_decimals precision guidance",
+                    )
+                )
         if _provenance_is_sparse(row):
             issues.append(
                 StageLintIssue(
@@ -704,6 +722,10 @@ def _has_domain_metadata(row: dict[str, Any]) -> bool:
     )
 
 
+def _has_precision_metadata(row: dict[str, Any]) -> bool:
+    return any(str(row.get(field, "")).strip() for field in ("input_decimals", "display_decimals"))
+
+
 def _has_unit_hint(identifier: str) -> bool:
     hints = (
         "_g",
@@ -767,6 +789,58 @@ def _provenance_is_sparse(row: dict[str, Any]) -> bool:
         "provenance_note",
     )
     return not any(str(row.get(field, "")).strip() for field in locator_fields)
+
+
+def _recommended_numeric_domain_issues(
+    variable_id: str,
+    domain_min: float | int | None,
+    domain_max: float | int | None,
+) -> list[StageLintIssue]:
+    if domain_min is None or domain_max is None:
+        return []
+    recommendation = _recommended_numeric_domain(variable_id)
+    if recommendation is None:
+        return []
+    recommended_min, recommended_max, rationale = recommendation
+    issues: list[StageLintIssue] = []
+    if domain_min > recommended_min or domain_max < recommended_max:
+        issues.append(
+            StageLintIssue(
+                "WARNING",
+                f"variables.{variable_id}.domain",
+                f"declared domain [{domain_min}, {domain_max}] is narrower than the recommended broad proof domain [{recommended_min}, {recommended_max}] for {rationale}",
+            )
+        )
+    return issues
+
+
+def _recommended_numeric_domain(variable_id: str) -> tuple[int, int, str] | None:
+    identifier = variable_id.lower()
+    if "temp" in identifier and "_x10" in identifier:
+        return (250, 450, "temperature stored in tenths of degrees Celsius")
+    if "resp_rate" in identifier or "respiratory_rate" in identifier:
+        return (0, 250, "respiratory rate")
+    if "weight" in identifier and "_g" in identifier:
+        return (50, 200000, "weight stored in grams")
+    if "weight" in identifier and "_kg_x100" in identifier:
+        return (5, 20000, "weight stored as kg x 100")
+    if "height" in identifier and "_mm" in identifier:
+        return (200, 2500, "length/height stored in millimeters")
+    if "age" in identifier and "_day" in identifier:
+        return (0, 3650, "age stored in days")
+    if ("duration" in identifier or identifier.endswith("_days")) and "_day" in identifier:
+        return (0, 3650, "symptom duration stored in days")
+    if "stools" in identifier and ("_count" in identifier or "_day" in identifier):
+        return (0, 100, "stools per day count")
+    if "vomit" in identifier and ("_count" in identifier or "_day" in identifier):
+        return (0, 100, "vomits per day count")
+    if "muac" in identifier and "_mm" in identifier:
+        return (50, 300, "MUAC stored in millimeters")
+    if "spo2" in identifier or "spo_2" in identifier:
+        return (0, 100, "oxygen saturation percent")
+    if any(token in identifier for token in ("waz", "haz", "whz", "wlz", "baz")) and "_x10" in identifier:
+        return (-100, 100, "z-score stored in tenths")
+    return None
 
 
 def _phrase_languages(row: dict[str, Any]) -> list[str] | None:

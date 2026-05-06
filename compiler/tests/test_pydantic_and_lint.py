@@ -108,6 +108,30 @@ class PydanticAndLintTests(unittest.TestCase):
             ClinicalIRDocument.from_dict(payload)
         self.assertIn("phrase binding key must start with one of: m_", str(exc.exception))
 
+    def test_ir_schema_rejects_negative_precision_metadata(self) -> None:
+        payload = {
+            "metadata": {
+                "ir_version": 1,
+                "guideline_id": "demo",
+                "sources": [{"source_id": "SRC"}],
+            },
+            "variables": {
+                "v_weight_g": {
+                    "id": "v_weight_g",
+                    "type": "int",
+                    "domain": {"min": 50, "max": 200000},
+                    "unit": "g",
+                    "display_decimals": -1,
+                    "allowed_missingness": False,
+                    "multivalue": False,
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+        }
+        with self.assertRaises(ValueError) as exc:
+            ClinicalIRDocument.from_dict(payload)
+        self.assertIn("display_decimals cannot be negative", str(exc.exception))
+
     def test_ir_schema_rejects_output_references_inside_predicates(self) -> None:
         payload = {
             "metadata": {

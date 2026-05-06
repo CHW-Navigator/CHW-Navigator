@@ -325,6 +325,19 @@ This example is intentionally small:
 - the review package shows which patient case changes
 - the generated diff is meant to be understandable to clinicians and technical reviewers
 
+## Build a bounded clinical-equivalence report
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-equivalence-report examples/fever_basic.ir.json examples/fever_basic.ir.json examples/fever_basic.cases.json generated\equivalence
+```
+
+This report is intentionally scoped:
+
+- it compares two IR documents on an explicit supplied patient suite
+- it reports both any-semantic mismatch counts and output-changing case counts
+- it does not claim whole-proof-space equivalence
+- it is useful for reviewer-facing “same behavior on these cases?” checks while fuller proof-space equivalence remains future work
+
 ## Compare engines on explicit cases
 
 ```bash

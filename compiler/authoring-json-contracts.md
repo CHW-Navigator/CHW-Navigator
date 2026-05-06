@@ -115,6 +115,9 @@ Expected fields:
 - `type`: required
 - `domain`: optional except recommended for numeric and enum variables
 - `unit`: optional
+- `storage_unit`: optional, for teams that want a machine-readable field in addition to unit-bearing ids like `v_temp_c_x10`
+- `input_decimals`: optional, to document permitted UI input precision
+- `display_decimals`: optional, to document safe summary/display precision
 - `measurement_limits`: optional
 - `allowed_missingness`: required
 - `multivalue`: required, but currently must be `false`
@@ -138,11 +141,23 @@ Recommended storage rule for continuous variables:
 
 - prefer scaled integers over floating point for values that drive logic or formal verification
 - include the stored unit in the variable name when practical
+- keep the declared `domain` broad enough for Z3 proof, not just for normal values
 
 Examples:
 
 - `v_weight_g`
 - `v_weight_kg_x100`
+- `v_temp_c_x10`
+- `v_waz_x10`
+
+Recommended broad proof domains:
+
+- `v_temp_c_x10`: `250..450`
+- respiratory rate variables: `0..250`
+- age/day-serial durations: `0..3650`
+- MUAC in mm: `50..300`
+- SpO₂ percent: `0..100`
+- z-scores stored as `x10`: `-100..100`
 - `v_temp_c_x10`
 - `v_waz_x10`
 - `v_birth_day`

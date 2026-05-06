@@ -111,6 +111,8 @@ Execution rule:
   - remaining work is more condition families and richer real-world examples
 
 - Standardize recommended Z3 numeric domains and scaling rules.
+  - initial contract + lint support now exists for recommended broad proof domains and precision metadata
+  - remaining work is broader adoption in example catalogs and any future runtime use of the metadata
   - use scaled integers instead of floating point
   - keep Z3 domains broad enough to include bad-but-possible inputs
   - do not use WHO remeasurement/data-quality flags as proof-domain limits

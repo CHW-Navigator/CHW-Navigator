@@ -38,6 +38,9 @@ Defines encounter variables and scalar state variables that may be referenced by
 - `domain_max`
 - `domain_values`
 - `unit`
+- `storage_unit`
+- `input_decimals`
+- `display_decimals`
 - `remeasure_min`
 - `remeasure_max`
 - `dont_allow_min`
@@ -106,6 +109,9 @@ Optional columns:
 - `domain_max`
 - `domain_values`
 - `unit`
+- `storage_unit`
+- `input_decimals`
+- `display_decimals`
 - `remeasure_min`
 - `remeasure_max`
 - `dont_allow_min`
@@ -133,11 +139,42 @@ st_fever_done,bool,,,,,,,,false,false,MOH_GUIDE_2026,state_catalog,row:8
 - `allowed_missingness=false` means the field is expected to be present at collection time unless logic or workflow says otherwise.
 - `allowed_missingness=true` means the field may be omitted, but downstream predicate and decision logic must handle that safely.
 - `unit` belongs here, not on predicates.
-- `domain` defines the proof / representational domain used by the compiler and formal tooling.
+- `domain` defines the proof / representational domain used by the compiler and formal tooling, including Z3.
+- `storage_unit` may be used to document the stored unit explicitly when teams want a separate machine-readable field in addition to the unit-bearing identifier.
+- `input_decimals` documents how much precision a data-entry UI may accept.
+- `display_decimals` documents how much precision summary UIs may display without changing stored logic values.
 - `remeasure_*` values are optional MOH-supplied quality thresholds that suggest the user should measure again before trusting the value.
 - `dont_allow_*` values are optional wider hard-stop thresholds beyond which the application should reject the entry rather than continue.
 - `remeasure_*` and `dont_allow_*` are authoring and validation metadata, not replacements for the compiler's formal proof domain.
 - If MOH does not supply these thresholds, the variable catalog may omit them.
+
+## Recommended Z3 / Proof Domains
+
+These are recommended broad domains for formal verification, not tight clinical-normal ranges.
+
+| Variable family | Internal representation | Recommended domain |
+| --- | --- | --- |
+| temperature | integer tenths °C, e.g. `v_temp_c_x10` | `250..450` |
+| respiratory rate | integer breaths/min | `0..250` |
+| weight | integer grams | `50..200000` |
+| weight | integer `kg x 100` | `5..20000` |
+| length/height | integer mm | `200..2500` |
+| age | integer days | `0..3650` |
+| symptom duration | integer days | `0..3650` |
+| stools/day | integer count | `0..100` |
+| vomits/day | integer count | `0..100` |
+| MUAC | integer mm | `50..300` |
+| SpO₂ | integer percent | `0..100` |
+| WAZ | integer tenths z-score | `-100..100` |
+| HAZ | integer tenths z-score | `-100..100` |
+| WHZ/WLZ | integer tenths z-score | `-100..100` |
+| BAZ | integer tenths z-score | `-100..100` |
+
+Guidance:
+
+- keep domains broad enough to include bad-but-possible inputs
+- do not use WHO re-measurement/data-quality flags as proof-domain limits
+- validation limits and clinical decision logic should remain separate from the proof domain
 
 ## Measurement Limits
 

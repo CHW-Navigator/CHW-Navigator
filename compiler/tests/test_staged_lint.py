@@ -96,6 +96,38 @@ class StagedLintTests(unittest.TestCase):
             )
         )
 
+    def test_preflight_variable_catalog_warns_on_narrow_recommended_proof_domain(self) -> None:
+        path = self.test_run.inputs_dir / "variable_narrow_domain.csv"
+        path.write_text(
+            "\n".join(
+                [
+                    "id,type,domain_min,domain_max,unit,allowed_missingness,multivalue,provenance_source_id,provenance_kind",
+                    "v_temp_c_x10,int,355,400,tenths_c,false,false,CATALOG_TEST,variable_catalog",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("variable_catalog", path)
+        self.assertTrue(report.ok)
+        self.assertTrue(any("recommended broad proof domain" in item.message for item in report.issues))
+
+    def test_preflight_variable_catalog_warns_when_weight_precision_metadata_missing(self) -> None:
+        path = self.test_run.inputs_dir / "variable_weight_precision.csv"
+        path.write_text(
+            "\n".join(
+                [
+                    "id,type,domain_min,domain_max,unit,allowed_missingness,multivalue,provenance_source_id,provenance_kind",
+                    "v_weight_g,int,50,200000,g,false,false,CATALOG_TEST,variable_catalog",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("variable_catalog", path)
+        self.assertTrue(report.ok)
+        self.assertTrue(any("document input_decimals and display_decimals" in item.message for item in report.issues))
+
     def test_preflight_dmn_accepts_supported_subset(self) -> None:
         report = preflight_source_artifact("dmn", EXAMPLES / "pneumonia.dmn")
         self.assertTrue(report.ok)

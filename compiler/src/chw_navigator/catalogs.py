@@ -103,6 +103,17 @@ def load_variable_catalog(path: Path) -> dict[str, VariableDef]:
             "type": _required_string(row, "type", row_label),
             "domain": _domain_to_payload(_parse_domain_row(row, row_label)),
             "unit": _optional_string(row, "unit"),
+            "storage_unit": _optional_string(row, "storage_unit"),
+            "input_decimals": row.get("input_decimals"),
+            "display_decimals": row.get("display_decimals"),
+            "remeasure_min": row.get("remeasure_min"),
+            "remeasure_max": row.get("remeasure_max"),
+            "dont_allow_min": row.get("dont_allow_min"),
+            "dont_allow_max": row.get("dont_allow_max"),
+            "measurement_limits": _parse_optional_json_object(
+                row.get("measurement_limits"),
+                f"{row_label}.measurement_limits",
+            ),
             "allowed_missingness": _parse_bool(row.get("allowed_missingness", False), f"{row_label}.allowed_missingness"),
             "multivalue": _parse_bool(row.get("multivalue", False), f"{row_label}.multivalue"),
             "provenance": [_provenance_to_payload(item) for item in _parse_provenance_field(row, row_label)],
@@ -458,3 +469,19 @@ def _try_parse_json(value: str, label: str) -> Any:
         return json.loads(value)
     except JSONDecodeError as exc:
         raise CatalogLoadError(f"{label} is not valid JSON: {exc.msg}") from exc
+
+
+def _parse_optional_json_object(value: Any, label: str) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        parsed = _try_parse_json(text, label)
+        if not isinstance(parsed, dict):
+            raise CatalogLoadError(f"{label} must decode to a JSON object")
+        return parsed
+    raise CatalogLoadError(f"{label} must be an object or JSON object string")

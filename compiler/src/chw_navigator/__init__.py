@@ -17,6 +17,7 @@ from .compare import (
     load_patient_cases,
 )
 from .evaluator import EvaluationError, EvaluationResult, evaluate_document
+from .equivalence import EquivalenceArtifacts, build_case_suite_equivalence_report
 from .form_ir import load_xlsform_workbook
 from .headless_runner import HeadlessEvaluationResult, HeadlessRunnerError, evaluate_workbook_headless
 from .json_schema_export import build_json_schema, write_json_schemas
@@ -74,6 +75,7 @@ __all__ = [
     "ClinicalIRDocument",
     "ComparisonCase",
     "ComparisonError",
+    "EquivalenceArtifacts",
     "EvaluationError",
     "EvaluationResult",
     "HeadlessEvaluationResult",
@@ -98,6 +100,7 @@ __all__ = [
     "build_mermaid",
     "build_mermaid_artifact",
     "build_comparison_log",
+    "build_case_suite_equivalence_report",
     "build_z3_checks_log",
     "compare_backends",
     "compare_document_pair",

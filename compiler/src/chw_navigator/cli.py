@@ -19,6 +19,7 @@ from .compare import (
 )
 from .dmn import DMNImportError, import_dmn_decisions
 from .evaluator import EvaluationError, evaluate_document
+from .equivalence import build_case_suite_equivalence_report
 from .json_schema_export import write_json_schemas
 from .mermaid_backend import MermaidOptions, build_mermaid_artifact
 from .staged_lint import (
@@ -154,6 +155,15 @@ def main(argv: list[str] | None = None) -> int:
     compare_parser.add_argument("--dmn", dest="dmn_path")
     compare_parser.add_argument("--patients", dest="patient_path")
 
+    equivalence_parser = subparsers.add_parser(
+        "build-equivalence-report",
+        help="compare two IR documents over an explicit patient suite and write a bounded clinical-equivalence report",
+    )
+    equivalence_parser.add_argument("baseline_ir_path")
+    equivalence_parser.add_argument("candidate_ir_path")
+    equivalence_parser.add_argument("patient_path")
+    equivalence_parser.add_argument("output_dir")
+
     smt_lint_parser = subparsers.add_parser("lint-smt2", help="run backend-specific lint on canonical or candidate SMT-LIB")
     smt_lint_parser.add_argument("ir_path")
     smt_lint_parser.add_argument("--candidate", dest="candidate_path")
@@ -239,6 +249,13 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_lint_mermaid(Path(args.ir_path), args.candidate_path, args.output_path)
     if args.command == "compare":
         return _handle_compare(Path(args.ir_path), args.dmn_path, args.patient_path)
+    if args.command == "build-equivalence-report":
+        return _handle_build_equivalence_report(
+            Path(args.baseline_ir_path),
+            Path(args.candidate_ir_path),
+            Path(args.patient_path),
+            Path(args.output_dir),
+        )
     if args.command == "lint-smt2":
         return _handle_lint_smt2(Path(args.ir_path), args.candidate_path, args.output_path)
     if args.command == "create-bundle":
@@ -680,6 +697,33 @@ def _handle_compare(ir_path: Path, dmn_path: str | None, patient_path: str | Non
         )
     )
     return 0
+
+
+def _handle_build_equivalence_report(
+    baseline_ir_path: Path,
+    candidate_ir_path: Path,
+    patient_path: Path,
+    output_dir: Path,
+) -> int:
+    try:
+        baseline_document = _load_document(baseline_ir_path)
+        candidate_document = _load_document(candidate_ir_path)
+        patient_cases = load_patient_cases(str(patient_path))
+    except (CLIError, ComparisonError) as exc:
+        print(f"equivalence build failed: {exc}")
+        return 1
+    built = build_case_suite_equivalence_report(
+        baseline_document=baseline_document,
+        candidate_document=candidate_document,
+        patient_cases=patient_cases,
+        output_dir=output_dir,
+        baseline_label=baseline_document.metadata.guideline_id,
+        candidate_label=candidate_document.metadata.guideline_id,
+    )
+    print(f"wrote equivalence report to {built.report_path}")
+    print(f"wrote equivalence summary to {built.summary_path}")
+    report = json.loads(built.report_path.read_text(encoding="utf-8"))
+    return 0 if report.get("equivalent_on_case_suite") else 1
 
 
 def _handle_lint_smt2(ir_path: Path, candidate_path: str | None, output_path: str | None) -> int:
