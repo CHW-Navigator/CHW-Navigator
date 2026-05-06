@@ -23,6 +23,8 @@ Supporting process docs:
 - `docs/authoring-guide.md`
 - `docs/user-types-manual.md`
 - `docs/dmn-intake-runbook.md`
+- `docs/release-workflow.md`
+- `docs/llm-authoring-guidance.md`
 - `docs/source-of-truth-editing-policy.md`
 
 ## Current scope

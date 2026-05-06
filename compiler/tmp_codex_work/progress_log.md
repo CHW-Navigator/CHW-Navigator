@@ -212,3 +212,6 @@
 - Ran focused regression with:
   - `python -m unittest compiler.tests.test_change_control compiler.tests.test_xlsform_import compiler.tests.test_external_patient_suites -v`
   - all 10 tests passed
+- Added process docs for two remaining roadmap items:
+  - `docs/release-workflow.md` for review gates, signoff states, bundle expectations, and versioning
+  - `docs/llm-authoring-guidance.md` to separate mechanical checks that belong in code/lint from clinical-content instructions that still belong in prompts
