@@ -19,6 +19,7 @@ from .compare import (
 )
 from .dmn import DMNImportError, import_dmn_decisions
 from .evaluator import EvaluationError, evaluate_document
+from .json_schema_export import write_json_schemas
 from .mermaid_backend import MermaidOptions, build_mermaid_artifact
 from .staged_lint import (
     lint_ir_document,
@@ -54,6 +55,12 @@ def main(argv: list[str] | None = None) -> int:
 
     validate_parser = subparsers.add_parser("validate", help="validate a Clinical IR JSON file")
     validate_parser.add_argument("ir_path")
+
+    schema_parser = subparsers.add_parser(
+        "write-json-schemas",
+        help="write machine-checked JSON Schema files for supported JSON artifact families",
+    )
+    schema_parser.add_argument("output_dir")
 
     source_lint_parser = subparsers.add_parser("preflight-source", help="run source-artifact preflight lint")
     source_lint_parser.add_argument("artifact_type", choices=["variable_catalog", "predicate_catalog", "phrase_bank", "dmn", "patient_cases"])
@@ -178,6 +185,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "validate":
         return _handle_validate(Path(args.ir_path))
+    if args.command == "write-json-schemas":
+        return _handle_write_json_schemas(Path(args.output_dir))
     if args.command == "preflight-source":
         return _handle_preflight_source(args.artifact_type, Path(args.path), args.output_path)
     if args.command == "preflight-bundle":
@@ -251,6 +260,14 @@ def main(argv: list[str] | None = None) -> int:
             args.updated_dmn_path,
         )
     raise AssertionError(f"unknown command '{args.command}'")
+
+
+def _handle_write_json_schemas(output_dir: Path) -> int:
+    written = write_json_schemas(output_dir)
+    print(f"wrote {len(written)} JSON Schema files to {output_dir}")
+    for name, path in sorted(written.items()):
+        print(f"- {name}: {path}")
+    return 0
 
 
 def _handle_compose_ir(

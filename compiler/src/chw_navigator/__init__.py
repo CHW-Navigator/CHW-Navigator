@@ -19,6 +19,7 @@ from .compare import (
 from .evaluator import EvaluationError, EvaluationResult, evaluate_document
 from .form_ir import load_xlsform_workbook
 from .headless_runner import HeadlessEvaluationResult, HeadlessRunnerError, evaluate_workbook_headless
+from .json_schema_export import build_json_schema, write_json_schemas
 from .mermaid_backend import (
     MermaidArtifact,
     MermaidComparisonResult,
@@ -78,6 +79,7 @@ __all__ = [
     "HeadlessEvaluationResult",
     "HeadlessRunnerError",
     "ImportedXLSForm",
+    "build_json_schema",
     "XLSFormImportFinding",
     "XLSFormImportReport",
     "MermaidArtifact",
@@ -127,6 +129,7 @@ __all__ = [
     "preflight_source_artifact",
     "render_stage_lint_report",
     "validate_document",
+    "write_json_schemas",
     "write_smt2",
     "XLSFormImportError",
 ]

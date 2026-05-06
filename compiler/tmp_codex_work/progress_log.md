@@ -215,3 +215,15 @@
 - Added process docs for two remaining roadmap items:
   - `docs/release-workflow.md` for review gates, signoff states, bundle expectations, and versioning
   - `docs/llm-authoring-guidance.md` to separate mechanical checks that belong in code/lint from clinical-content instructions that still belong in prompts
+- Added machine-checked JSON Schema export for the JSON-backed artifact families:
+  - new `src/chw_navigator/json_schema_export.py`
+  - new CLI command: `write-json-schemas`
+  - schemas currently cover:
+    - `clinical_ir`
+    - `metadata`
+    - `variable_catalog_json`
+    - `predicate_catalog_json`
+    - `phrase_bank_json`
+    - `patient_case`
+    - `patient_case_suite`
+  - updated README and TODO to reflect that this roadmap item is now partly implemented

@@ -87,6 +87,7 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `src/chw_navigator/bundles.py`: immutable intake bundle creation for inputs, outputs, and test evidence
 - `src/chw_navigator/change_control.py`: change-review package generation for clinician-facing delta review
 - `src/chw_navigator/cli.py`: command-line entry points
+- `src/chw_navigator/json_schema_export.py`: machine-checked JSON Schema export for supported JSON artifact families
 - `tests/test_dmn_fail_loud.py`: fail-loud coverage for unsupported DMN inputs
 - `tests/test_artifact_drift.py`: mutated artifact drift detection across DMN, XLSForm, Mermaid, and IR
 - `tests/test_multi_module_router.py`: multi-table traffic-cop example with module priority and follow-on treatment/dosing tables
@@ -116,6 +117,24 @@ Or install the package in editable mode and use the console script:
 pip install -e .
 chw-nav validate examples/pneumonia.ir.json
 ```
+
+## Write machine-checked JSON Schemas
+
+```bash
+$env:PYTHONPATH='src'; python -m chw_navigator.cli write-json-schemas generated\schemas
+```
+
+This currently writes JSON Schemas for:
+
+- `clinical_ir`
+- `metadata`
+- `variable_catalog_json`
+- `predicate_catalog_json`
+- `phrase_bank_json`
+- `patient_case`
+- `patient_case_suite`
+
+These cover the JSON-shaped artifact families that already have Pydantic-backed validation.
 
 ## Compose a base IR from standalone catalogs
 

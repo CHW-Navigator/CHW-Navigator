@@ -103,6 +103,8 @@ Execution rule:
 ## Later
 
 - Build JSON Schema and stronger machine-checked contracts for all inputs.
+  - initial JSON Schema export now exists for the JSON-shaped artifact families backed by Pydantic
+  - remaining work is broader coverage, CSV/header validation, and team adoption
 
 - Add more golden clinical examples beyond pneumonia and the current router example.
 
