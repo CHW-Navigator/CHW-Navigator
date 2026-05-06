@@ -55,6 +55,46 @@ class StagedLintTests(unittest.TestCase):
         self.assertFalse(report.ok)
         self.assertTrue(any("remeasure_min and remeasure_max" in item.message for item in report.issues))
 
+    def test_preflight_variable_catalog_warns_on_missing_unit_domain_and_sparse_provenance(self) -> None:
+        path = self.test_run.inputs_dir / "variable_warnings.csv"
+        path.write_text(
+            "\n".join(
+                [
+                    "id,type,unit,allowed_missingness,multivalue,provenance_source_id",
+                    "v_weight,int,kg,false,false,CATALOG_TEST",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("variable_catalog", path)
+        self.assertTrue(report.ok)
+        messages = [item.message for item in report.issues]
+        self.assertTrue(any("numeric variable should define domain metadata" in message for message in messages))
+        self.assertTrue(any("should usually encode stored units in the identifier" in message for message in messages))
+        self.assertTrue(any("no additional locator fields" in message for message in messages))
+
+    def test_preflight_variable_catalog_detects_inverted_domain_bounds(self) -> None:
+        path = self.test_run.inputs_dir / "variable_bad_domain.csv"
+        path.write_text(
+            "\n".join(
+                [
+                    "id,type,domain_min,domain_max,unit,allowed_missingness,multivalue,provenance_source_id,provenance_kind",
+                    "v_muac_mm,int,300,50,mm,false,false,CATALOG_TEST,variable_catalog",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("variable_catalog", path)
+        self.assertFalse(report.ok)
+        self.assertTrue(
+            any(
+                "domain min cannot exceed max" in item.message or "domain_min must be <= domain_max" in item.message
+                for item in report.issues
+            )
+        )
+
     def test_preflight_dmn_accepts_supported_subset(self) -> None:
         report = preflight_source_artifact("dmn", EXAMPLES / "pneumonia.dmn")
         self.assertTrue(report.ok)
@@ -106,6 +146,24 @@ class StagedLintTests(unittest.TestCase):
         report = preflight_source_artifact("phrase_bank", path)
         self.assertFalse(report.ok)
         self.assertTrue(any("duplicate entity_id/role combination" in item.message for item in report.issues))
+
+    def test_preflight_phrase_bank_warns_on_language_and_output_role_gaps(self) -> None:
+        path = self.test_run.inputs_dir / "phrase_warnings.csv"
+        path.write_text(
+            "\n".join(
+                [
+                    "key,entity_id,role,text_EN,text_en,provenance_source_id,provenance_kind",
+                    "m_referral,o_referral,message,Refer now,Refer now,CATALOG_TEST,phrase_bank",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        report = preflight_source_artifact("phrase_bank", path)
+        self.assertFalse(report.ok)
+        messages = [item.message for item in report.issues]
+        self.assertTrue(any("duplicate language code 'en'" in message for message in messages))
+        self.assertTrue(any("missing a guidance role" in message for message in messages))
 
     def test_ir_xlsform_mermaid_and_smt_lint_on_catalog_example(self) -> None:
         document = compose_document_from_catalogs(

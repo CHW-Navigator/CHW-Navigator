@@ -64,6 +64,7 @@ def preflight_source_artifact(kind: str, path: str | Path) -> StageLintReport:
             raw_rows = _load_source_rows(active_path, "variables")
             variables = load_variable_catalog(active_path)
             issues = _measurement_limit_issues(raw_rows)
+            issues.extend(_variable_contract_issues(raw_rows))
             return StageLintReport(
                 stage="source_preflight",
                 artifact_type=kind,
@@ -346,6 +347,66 @@ def _measurement_limit_issues(variables: dict[str, Any]) -> list[StageLintIssue]
     return issues
 
 
+def _variable_contract_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue]:
+    issues: list[StageLintIssue] = []
+    for index, row in enumerate(rows, start=1):
+        variable_id = str(row.get("id", f"row_{index}")).strip() or f"row_{index}"
+        variable_type = str(row.get("type", "")).strip().lower()
+        if variable_type in {"int", "decimal"}:
+            domain_min = _raw_number(row.get("domain_min"))
+            domain_max = _raw_number(row.get("domain_max"))
+            if not _has_domain_metadata(row):
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"variables.{variable_id}",
+                        "numeric variable should define domain metadata such as domain_min/domain_max or a domain object",
+                    )
+                )
+            elif (domain_min is None) ^ (domain_max is None):
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"variables.{variable_id}",
+                        "numeric variable should usually provide both domain_min and domain_max together",
+                    )
+                )
+            elif domain_min is not None and domain_max is not None and domain_min > domain_max:
+                issues.append(
+                    StageLintIssue(
+                        "ERROR",
+                        f"variables.{variable_id}",
+                        "domain_min must be <= domain_max",
+                    )
+                )
+            if variable_id.startswith("v_") and not _has_unit_hint(variable_id):
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"variables.{variable_id}",
+                        "numeric encounter variable should usually encode stored units in the identifier",
+                    )
+                )
+            unit = str(row.get("unit", "")).strip().lower()
+            if unit and not _unit_matches_identifier(variable_id, unit):
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"variables.{variable_id}.unit",
+                        f"unit '{unit}' is not clearly reflected in the identifier '{variable_id}'",
+                    )
+                )
+        if _provenance_is_sparse(row):
+            issues.append(
+                StageLintIssue(
+                    "WARNING",
+                    f"variables.{variable_id}.provenance",
+                    "provenance includes source_id but no additional locator fields such as kind, row, page, section, or location",
+                )
+            )
+    return issues
+
+
 def _predicate_catalog_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue]:
     issues: list[StageLintIssue] = []
     for index, row in enumerate(rows, start=1):
@@ -402,6 +463,7 @@ def _predicate_catalog_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue
 def _phrase_bank_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue]:
     issues: list[StageLintIssue] = []
     seen_entity_role: dict[tuple[str, str], int] = {}
+    output_roles: dict[str, set[str]] = {}
     for index, row in enumerate(rows, start=1):
         key = str(row.get("key", f"row_{index}")).strip() or f"row_{index}"
         entity_id = str(row.get("entity_id") or row.get("variable_name") or "").strip()
@@ -418,9 +480,21 @@ def _phrase_bank_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue]:
                 )
             else:
                 seen_entity_role[marker] = index
-        if not any(str(column).startswith("text_") and str(value).strip() for column, value in row.items()):
-            texts = row.get("texts")
-            if not (isinstance(texts, str) and "\"en\"" in texts) and not (isinstance(texts, dict) and "en" in texts):
+            if entity_id.startswith("o_"):
+                output_roles.setdefault(entity_id, set()).add(role)
+        language_map = _phrase_languages(row)
+        if language_map is None:
+            if not any(str(column).startswith("text_") and str(value).strip() for column, value in row.items()):
+                texts = row.get("texts")
+                if not (isinstance(texts, str) and "\"en\"" in texts) and not (isinstance(texts, dict) and "en" in texts):
+                    issues.append(
+                        StageLintIssue(
+                            "WARNING",
+                            f"phrases.{key}",
+                            "phrase row does not include text_en; current defaults prefer English when selecting one label",
+                        )
+                    )
+            elif not str(row.get("text_en", "")).strip():
                 issues.append(
                     StageLintIssue(
                         "WARNING",
@@ -428,12 +502,39 @@ def _phrase_bank_issues(rows: list[dict[str, Any]]) -> list[StageLintIssue]:
                         "phrase row does not include text_en; current defaults prefer English when selecting one label",
                     )
                 )
-        elif not str(row.get("text_en", "")).strip():
+        else:
+            if "en" not in language_map:
+                issues.append(
+                    StageLintIssue(
+                        "WARNING",
+                        f"phrases.{key}",
+                        "phrase row does not include text_en; current defaults prefer English when selecting one label",
+                    )
+                )
+            duplicate_langs = _duplicates(language_map)
+            for language in duplicate_langs:
+                issues.append(
+                    StageLintIssue(
+                        "ERROR",
+                        f"phrases.{key}",
+                        f"duplicate language code '{language}' after normalization",
+                    )
+                )
+    for output_id, roles in output_roles.items():
+        if "message" not in roles:
             issues.append(
                 StageLintIssue(
                     "WARNING",
-                    f"phrases.{key}",
-                    "phrase row has no populated text_en column; current defaults prefer English when selecting one label",
+                    f"phrases.{output_id}",
+                    "output phrase coverage is missing a message role",
+                )
+            )
+        if "guidance" not in roles:
+            issues.append(
+                StageLintIssue(
+                    "WARNING",
+                    f"phrases.{output_id}",
+                    "output phrase coverage is missing a guidance role",
                 )
             )
     return issues
@@ -503,6 +604,101 @@ def _split_list_like(value: Any) -> list[str]:
         return []
     parts = [item.strip() for item in text.replace("|", ",").split(",")]
     return [item for item in parts if item]
+
+
+def _has_domain_metadata(row: dict[str, Any]) -> bool:
+    return any(
+        str(row.get(field, "")).strip()
+        for field in ("domain", "domain_min", "domain_max", "domain_values")
+    )
+
+
+def _has_unit_hint(identifier: str) -> bool:
+    hints = (
+        "_g",
+        "_kg",
+        "_mm",
+        "_cm",
+        "_day",
+        "_days",
+        "_month",
+        "_months",
+        "_year",
+        "_years",
+        "_pct",
+        "_percent",
+        "_rate",
+        "_count",
+        "_score",
+        "_x10",
+        "_x100",
+        "_x1000",
+        "_c_x10",
+        "_f_x10",
+    )
+    return any(hint in identifier for hint in hints)
+
+
+def _unit_matches_identifier(identifier: str, unit: str) -> bool:
+    normalized = unit.lower().replace(" ", "_")
+    mapping = {
+        "g": ("_g", "_kg_x100"),
+        "gram": ("_g",),
+        "grams": ("_g",),
+        "kg": ("_kg", "_g", "_kg_x100"),
+        "tenths_c": ("_c_x10", "_temp_c_x10"),
+        "c": ("_c", "_c_x10"),
+        "mm": ("_mm",),
+        "cm": ("_cm", "_cm_x10"),
+        "months": ("_months", "_month"),
+        "days": ("_days", "_day"),
+        "day_serial": ("_day", "_days"),
+        "percent": ("_percent", "_pct"),
+    }
+    expected = mapping.get(normalized)
+    if expected is None:
+        return _has_unit_hint(identifier) or normalized in identifier
+    return any(token in identifier for token in expected)
+
+
+def _provenance_is_sparse(row: dict[str, Any]) -> bool:
+    source_id = str(row.get("provenance_source_id", "")).strip()
+    if not source_id:
+        return False
+    locator_fields = (
+        "provenance_kind",
+        "provenance_location",
+        "provenance_row",
+        "provenance_column",
+        "provenance_table",
+        "provenance_page",
+        "provenance_section",
+        "provenance_note",
+    )
+    return not any(str(row.get(field, "")).strip() for field in locator_fields)
+
+
+def _phrase_languages(row: dict[str, Any]) -> list[str] | None:
+    languages: list[str] = []
+    for column, value in row.items():
+        if not isinstance(column, str) or not column.startswith("text_"):
+            continue
+        if not str(value).strip():
+            continue
+        languages.append(column[5:].strip().lower())
+    if languages:
+        return languages
+    texts = row.get("texts")
+    if isinstance(texts, dict):
+        return [str(key).strip().lower() for key, value in texts.items() if str(value).strip()]
+    if isinstance(texts, str) and texts.strip():
+        try:
+            parsed = json.loads(texts)
+        except JSONDecodeError:
+            return None
+        if isinstance(parsed, dict):
+            return [str(key).strip().lower() for key, value in parsed.items() if str(value).strip()]
+    return None
 
 
 def _load_source_rows(path: Path, list_key: str) -> list[dict[str, Any]]:

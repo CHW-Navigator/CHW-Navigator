@@ -101,3 +101,18 @@
   - `python -m unittest tests.test_staged_lint -v`
   - `python -m chw_navigator.cli preflight-source predicate_catalog examples/catalogs/pneumonia.predicates.json`
   - both passed
+- Strengthened variable-catalog preflight further for numeric contract quality:
+  - warn when numeric variables lack domain metadata
+  - warn when numeric encounter-variable IDs do not encode stored units
+  - warn when a declared `unit` is not clearly reflected in the identifier
+  - warn when provenance only has `source_id` and no locator fields
+  - catch inverted numeric domains explicitly in regression coverage
+- Strengthened phrase-bank preflight further for authoring consistency:
+  - detect per-language duplicates after normalizing codes like `text_EN` and `text_en`
+  - warn when output phrases are missing `message` or `guidance` role coverage
+- Fixed a bug in the new phrase-language normalization path so duplicate-language checks run correctly instead of relying on a nonexistent `.keys()` call.
+- Ran focused regression and real preflight checks with:
+  - `python -m unittest compiler.tests.test_staged_lint -v`
+  - `python -m chw_navigator.cli preflight-source variable_catalog compiler/examples/catalogs/pneumonia.variables.csv`
+  - `python -m chw_navigator.cli preflight-source phrase_bank compiler/examples/catalogs/pneumonia.phrases.csv`
+  - all passed; the current pneumonia phrase bank correctly emits a warning that `o_referral` has no `guidance` role yet
