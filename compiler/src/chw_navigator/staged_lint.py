@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import shutil
+import subprocess
+import tempfile
 from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
@@ -185,6 +189,7 @@ def lint_xlsform_artifacts(survey_path: str | Path, choices_path: str | Path) ->
 
 def lint_mermaid_artifact(document: ClinicalIRDocument, candidate_text: str | None = None) -> StageLintReport:
     artifact = build_mermaid_artifact(document)
+    mermaid_text = candidate_text or artifact.text
     issues: list[StageLintIssue] = []
     required_snippets = [
         "flowchart ",
@@ -197,16 +202,26 @@ def lint_mermaid_artifact(document: ClinicalIRDocument, candidate_text: str | No
     for snippet in required_snippets:
         if snippet not in artifact.text:
             issues.append(StageLintIssue("ERROR", "mermaid", f"missing required snippet '{snippet}'"))
+    issues.extend(_mermaid_style_issues(mermaid_text))
     if candidate_text is not None:
         comparison = compare_mermaid_text(document, candidate_text)
         for mismatch in comparison.mismatches:
             issues.append(StageLintIssue("ERROR", "mermaid.compare", mismatch))
+    render_ok, render_message = _lint_mermaid_render(mermaid_text)
+    metadata = {
+        "guideline_id": document.metadata.guideline_id,
+        "render_backend": "mmdc" if shutil.which("mmdc") else "python_only",
+    }
+    if render_ok is False:
+        issues.append(StageLintIssue("ERROR", "mermaid.render", render_message))
+    elif render_message:
+        issues.append(StageLintIssue("WARNING", "mermaid.render", render_message))
     return StageLintReport(
         stage="generated_backend",
         artifact_type="mermaid",
         ok=not any(item.level == "ERROR" for item in issues),
         issues=issues,
-        metadata={"guideline_id": document.metadata.guideline_id},
+        metadata=metadata,
     )
 
 
@@ -365,3 +380,56 @@ def _raw_number(value: Any) -> float | None:
         return float(text)
     except ValueError:
         return None
+
+
+def _mermaid_style_issues(text: str) -> list[StageLintIssue]:
+    issues: list[StageLintIssue] = []
+    stripped = text.strip()
+    if "graph " not in stripped and "flowchart " not in stripped:
+        issues.append(StageLintIssue("ERROR", "mermaid", "missing graph declaration"))
+    if "-->" not in text and "-.->" not in text and "==>" not in text:
+        issues.append(StageLintIssue("ERROR", "mermaid", "no edges defined"))
+    if text.count("{") != text.count("}"):
+        issues.append(StageLintIssue("ERROR", "mermaid", "unbalanced braces"))
+    if text.count("[") != text.count("]"):
+        issues.append(StageLintIssue("ERROR", "mermaid", "unbalanced square brackets"))
+    if "classDef " not in text:
+        issues.append(StageLintIssue("WARNING", "mermaid", "no class definitions found"))
+    return issues
+
+
+def _lint_mermaid_render(text: str) -> tuple[bool | None, str]:
+    mmdc_path = shutil.which("mmdc")
+    if not mmdc_path:
+        return None, "Mermaid CLI (mmdc) is not installed; skipped render validation"
+
+    mermaid_file = None
+    svg_file = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mmd", mode="w", encoding="utf-8") as handle:
+            handle.write(text)
+            mermaid_file = handle.name
+        svg_file = mermaid_file + ".svg"
+        result = subprocess.run(
+            [mmdc_path, "-i", mermaid_file, "-o", svg_file],
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        if result.returncode != 0:
+            stderr = (result.stderr or "").strip()
+            stdout = (result.stdout or "").strip()
+            detail = stderr or stdout or f"mmdc exited with code {result.returncode}"
+            return False, detail
+        return True, ""
+    except subprocess.TimeoutExpired:
+        return False, "Mermaid CLI render timed out"
+    except OSError as exc:
+        return False, f"Mermaid CLI render failed: {exc}"
+    finally:
+        for path in (mermaid_file, svg_file):
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass

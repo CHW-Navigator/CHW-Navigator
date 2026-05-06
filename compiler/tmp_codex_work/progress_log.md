@@ -74,3 +74,13 @@
   - `python -m unittest tests.test_xlsform_import tests.test_headless_runner tests.test_engine_logs -v`
   - both runs passed with the shared `.venv` interpreter
 - Updated published guidance so the docs now describe the supported day-serial path and its current limits instead of treating DOB helpers as validator-only.
+- Upgraded Mermaid staged lint to use two layers:
+  - Python-side style/shape checks for graph declaration, edges, and bracket balance
+  - optional `mmdc` render validation when Mermaid CLI is installed locally
+- Added regression coverage for:
+  - malformed Mermaid candidate text missing graph structure
+  - Mermaid lint metadata showing which render backend was used
+- Ran focused Mermaid/staged-lint regression with:
+  - `python -m unittest tests.test_staged_lint -v`
+  - `python -m chw_navigator.cli lint-mermaid examples/pneumonia.ir.json`
+  - both passed; current environment reports `python_only` because `mmdc` is not installed locally

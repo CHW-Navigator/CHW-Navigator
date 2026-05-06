@@ -83,6 +83,31 @@ class StagedLintTests(unittest.TestCase):
         self.assertIn(smt_report.ok, {True, False})
         self.assertEqual("smt2", smt_report.artifact_type)
 
+    def test_mermaid_lint_flags_missing_graph_structure(self) -> None:
+        document = compose_document_from_catalogs(
+            EXAMPLES / "catalogs" / "pneumonia.metadata.json",
+            EXAMPLES / "catalogs" / "pneumonia.variables.csv",
+            EXAMPLES / "catalogs" / "pneumonia.predicates.json",
+            EXAMPLES / "catalogs" / "pneumonia.phrases.csv",
+        )
+        report = lint_mermaid_artifact(document, candidate_text="classDef variable fill:#fff\nA[Start")
+        self.assertFalse(report.ok)
+        messages = [issue.message for issue in report.issues]
+        self.assertTrue(any("missing graph declaration" in message for message in messages))
+        self.assertTrue(any("no edges defined" in message for message in messages))
+
+    def test_mermaid_lint_reports_render_backend_metadata(self) -> None:
+        document = compose_document_from_catalogs(
+            EXAMPLES / "catalogs" / "pneumonia.metadata.json",
+            EXAMPLES / "catalogs" / "pneumonia.variables.csv",
+            EXAMPLES / "catalogs" / "pneumonia.predicates.json",
+            EXAMPLES / "catalogs" / "pneumonia.phrases.csv",
+        )
+        report = lint_mermaid_artifact(document)
+        self.assertIn(report.metadata.get("render_backend"), {"mmdc", "python_only"})
+        if report.metadata.get("render_backend") == "python_only":
+            self.assertTrue(any(issue.path == "mermaid.render" and issue.level == "WARNING" for issue in report.issues))
+
     def test_preflight_patient_cases_detects_duplicate_names(self) -> None:
         path = self.test_run.inputs_dir / "cases.json"
         path.write_text(
