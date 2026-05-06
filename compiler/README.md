@@ -18,6 +18,12 @@ Clinical IR is the canonical compiled representation used for execution, QA, and
 
 Temporary compatibility adapters for one-off external artifact shapes should stay outside the core compiler contracts. As of 2026-05-05, the `gen7` mini-compiler bridge is intentionally kept separate from the main compiler branch and should not be treated as a long-term supported authoring path.
 
+Supporting process docs:
+
+- `docs/authoring-guide.md`
+- `docs/dmn-intake-runbook.md`
+- `docs/source-of-truth-editing-policy.md`
+
 ## Current scope
 
 - typed Clinical IR data model
@@ -30,7 +36,9 @@ Temporary compatibility adapters for one-off external artifact shapes should sta
 - minimal Form IR and XLSForm CSV backend
 - generated XLSForm runtime for comparison
 - Mermaid audit graph generation
+- staged linting for source inputs, compiled IR, and generated backends
 - provenance validation and backend source maps
+- evidence bundles that now carry lint reports and artifact hashes
 - example IR document
 - hardened DMN XML parsing via `defusedxml`
 

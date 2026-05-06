@@ -10,6 +10,8 @@ This file is being updated incrementally during the overnight pass.
 - Added DMN source-preflight parsing support.
 - Added bundle artifact hashing via `artifact_hashes.json` and metadata linkage.
 - Added staged lint reports to bundle contents so lint evidence now travels with the intake package.
+- Added `docs/authoring-guide.md` and `docs/source-of-truth-editing-policy.md`.
+- Recorded the DOB/age helper gap as an explicit blocker instead of treating validator-only support as executable.
 
 ## In progress
 
@@ -24,3 +26,4 @@ This file is being updated incrementally during the overnight pass.
 ## Notes
 
 - The local repo clone does not currently have its own `.venv`; focused tests were run with the existing shared compiler `.venv`.
+- DOB/age derivation remains a partial capability: helper names exist in validation/lint, but full backend execution support still needs implementation.

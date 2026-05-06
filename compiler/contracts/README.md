@@ -28,3 +28,8 @@ Files:
 - `dmn.contract.md`
 - `simulated-patient-data.contract.md`
 - `engine-log.contract.md`
+
+Supporting guidance:
+
+- `../docs/authoring-guide.md`
+- `../docs/source-of-truth-editing-policy.md`

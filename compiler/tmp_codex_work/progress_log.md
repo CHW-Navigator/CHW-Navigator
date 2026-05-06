@@ -31,3 +31,10 @@
 - Re-ran focused regression with:
   - `python -m unittest tests.test_bundles tests.test_staged_lint -v`
   - the run passed with the shared `.venv` interpreter
+- Checked DOB/age support boundaries and recorded a blocker:
+  - validator/lint know helper names like `date_diff_days` and `age_months_from_date`
+  - end-to-end execution support is not yet confirmed across evaluator, XLSForm, and Z3
+- Added process docs:
+  - `docs/authoring-guide.md`
+  - `docs/source-of-truth-editing-policy.md`
+- Linked the new process docs from `README.md` and `contracts/README.md`.
