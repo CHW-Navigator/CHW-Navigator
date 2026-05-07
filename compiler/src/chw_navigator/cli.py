@@ -33,6 +33,7 @@ from .staged_lint import (
 )
 from .validator import validate_document
 from .xlsform_import import XLSFormImportError, import_xlsform_files_detailed
+from .xlsform_proof import build_xlsform_roundtrip_proof
 from .z3_backend import (
     Z3BackendUnavailable,
     Z3LoweringError,
@@ -105,6 +106,17 @@ def main(argv: list[str] | None = None) -> int:
     xlsform_import_parser.add_argument("choices_path")
     xlsform_import_parser.add_argument("--guideline-id", dest="guideline_id")
     xlsform_import_parser.add_argument("--output", dest="output_path")
+
+    xlsform_proof_parser = subparsers.add_parser(
+        "prove-xlsform",
+        help="import a supported XLSForm, compare it to the original workbook and optional reference IR, and write a round-trip proof package",
+    )
+    xlsform_proof_parser.add_argument("survey_path")
+    xlsform_proof_parser.add_argument("choices_path")
+    xlsform_proof_parser.add_argument("output_dir")
+    xlsform_proof_parser.add_argument("--guideline-id", dest="guideline_id")
+    xlsform_proof_parser.add_argument("--reference-ir", dest="reference_ir_path")
+    xlsform_proof_parser.add_argument("--patients", dest="patient_path")
 
     dmn_parser = subparsers.add_parser("import-dmn", help="replace decisions in a base Clinical IR with decisions parsed from DMN")
     dmn_parser.add_argument("base_ir_path")
@@ -226,6 +238,15 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.choices_path),
             args.guideline_id,
             args.output_path,
+        )
+    if args.command == "prove-xlsform":
+        return _handle_prove_xlsform(
+            Path(args.survey_path),
+            Path(args.choices_path),
+            Path(args.output_dir),
+            args.guideline_id,
+            args.reference_ir_path,
+            args.patient_path,
         )
     if args.command == "import-dmn":
         return _handle_import_dmn(Path(args.base_ir_path), Path(args.dmn_path), args.output_path)
@@ -458,6 +479,63 @@ def _handle_import_xlsform(
             )
         )
     return 0
+
+
+def _handle_prove_xlsform(
+    survey_path: Path,
+    choices_path: Path,
+    output_dir: Path,
+    guideline_id: str | None,
+    reference_ir_path: str | None,
+    patient_path: str | None,
+) -> int:
+    try:
+        reference_document = _load_document(Path(reference_ir_path)) if reference_ir_path else None
+        patient_cases = load_patient_cases(patient_path) if patient_path else None
+    except (CLIError, ComparisonError) as exc:
+        print(f"xlsform proof setup failed: {exc}")
+        return 1
+
+    try:
+        built = build_xlsform_roundtrip_proof(
+            survey_path=survey_path,
+            choices_path=choices_path,
+            output_dir=output_dir,
+            guideline_id=guideline_id,
+            reference_document=reference_document,
+            patient_cases=patient_cases,
+        )
+    except (XLSFormImportError, ComparisonError, XLSFormBuildError, Z3BackendUnavailable, Z3LoweringError) as exc:
+        print(f"xlsform proof failed: {exc}")
+        return 1
+
+    workbook_pairwise = json.loads(built.workbook_pairwise_report_path.read_text(encoding="utf-8"))
+    backend_compare = json.loads(built.backend_compare_path.read_text(encoding="utf-8"))
+    ir_lint = json.loads(built.ir_lint_path.read_text(encoding="utf-8"))
+    z3_checks = json.loads(built.z3_checks_path.read_text(encoding="utf-8"))
+    workbook_source_lint = json.loads((built.root_dir / "source_workbook.lint.json").read_text(encoding="utf-8"))
+    reference_pairwise = (
+        json.loads(built.reference_equivalence_report_path.read_text(encoding="utf-8"))
+        if built.reference_equivalence_report_path is not None
+        else None
+    )
+
+    print(f"wrote proof summary to {built.summary_path}")
+    print(f"wrote imported IR to {built.imported_ir_path}")
+    print(f"wrote import report to {built.import_report_path}")
+    print(f"wrote workbook pairwise report to {built.workbook_pairwise_report_path}")
+    print(f"wrote backend comparison report to {built.backend_compare_path}")
+    print(f"wrote z3 checks report to {built.z3_checks_path}")
+    if built.reference_equivalence_report_path is not None:
+        print(f"wrote reference pairwise report to {built.reference_equivalence_report_path}")
+
+    has_ir_lint_errors = any(item["level"] == "ERROR" for item in ir_lint.get("issues", []))
+    has_source_lint_errors = any(item["level"] == "ERROR" for item in workbook_source_lint.get("issues", []))
+    backend_ok = all(item.get("ok") for item in backend_compare.get("results", []))
+    z3_ok = all(item.get("ok", False) for item in z3_checks.get("results", []))
+    workbook_ok = workbook_pairwise.get("equivalent_on_case_suite", False)
+    reference_ok = reference_pairwise is None or reference_pairwise.get("equivalent_on_case_suite", False)
+    return 0 if all((not has_ir_lint_errors, not has_source_lint_errors, backend_ok, z3_ok, workbook_ok, reference_ok)) else 1
 
 
 def _handle_import_dmn(base_ir_path: Path, dmn_path: Path, output_path: str | None) -> int:

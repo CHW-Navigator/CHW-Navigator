@@ -14,6 +14,7 @@ from .compare import (
     compare_backends,
     compare_document_pair,
     compare_workbook_pair,
+    derive_comparison_cases,
     load_patient_cases,
 )
 from .evaluator import EvaluationError, EvaluationResult, evaluate_document
@@ -48,6 +49,7 @@ from .xlsform_import import (
     import_xlsform_files_detailed,
     import_xlsform_workbook,
 )
+from .xlsform_proof import XLSFormProofArtifacts, build_xlsform_roundtrip_proof
 from .z3_backend import (
     SmtLibComparisonResult,
     Z3AnalysisReport,
@@ -81,6 +83,7 @@ __all__ = [
     "HeadlessEvaluationResult",
     "HeadlessRunnerError",
     "ImportedXLSForm",
+    "XLSFormProofArtifacts",
     "build_json_schema",
     "XLSFormImportFinding",
     "XLSFormImportReport",
@@ -111,6 +114,7 @@ __all__ = [
     "compose_document_from_catalogs",
     "create_change_review_package",
     "create_bundle",
+    "derive_comparison_cases",
     "evaluate_document",
     "evaluate_workbook_headless",
     "evaluate_patient",
@@ -121,6 +125,7 @@ __all__ = [
     "import_xlsform_files",
     "import_xlsform_files_detailed",
     "import_xlsform_workbook",
+    "build_xlsform_roundtrip_proof",
     "lint_ir_document",
     "lint_mermaid_artifact",
     "lint_smt_artifact",

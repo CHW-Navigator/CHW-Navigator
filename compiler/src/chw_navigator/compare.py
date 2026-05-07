@@ -102,7 +102,7 @@ def compare_backends(
     built = build_xlsform(document)
     mermaid = build_mermaid_artifact(document)
     dmn_document = import_dmn_decisions(document, dmn_path) if dmn_path else None
-    cases = patient_cases or _derive_comparison_cases(document)
+    cases = patient_cases or derive_comparison_cases(document)
 
     if not cases:
         raise ComparisonError("no comparison cases are available")
@@ -358,7 +358,7 @@ def compare_workbook_pair(
     return results
 
 
-def _derive_comparison_cases(document: ClinicalIRDocument) -> list[ComparisonCase]:
+def derive_comparison_cases(document: ClinicalIRDocument) -> list[ComparisonCase]:
     generated_cases = generate_test_patients(document)
     return [_comparison_case_from_generated(item) for item in generated_cases]
 

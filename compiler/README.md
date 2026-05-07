@@ -231,6 +231,21 @@ The regression suite now treats imported XLSForms as proof targets, not just par
 - the imported IR is validated
 - the imported IR is compared across interpreter, generated XLSForm runtime, headless runner, and Z3 on explicit patient cases
 
+## Build an XLSForm round-trip proof package
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli prove-xlsform generated\pneumonia\survey.csv generated\pneumonia\choices.csv generated\xlsform_proof --reference-ir examples\pneumonia.ir.json --patients examples\pneumonia.cases.json
+```
+
+This command is the stronger quality-proof path for the supported XLSForm subset:
+
+- it imports the XLSForm back into Clinical IR
+- it writes the imported IR and import report
+- it compares the imported IR against the original workbook on a patient suite
+- it optionally compares the imported IR against a supplied reference IR
+- it runs backend comparison and Z3 checks on the imported IR
+- it writes a short proof summary plus machine-readable evidence files
+
 ## Check Z3 lowering
 
 ```bash
@@ -340,7 +355,9 @@ This report is intentionally scoped:
 
 ## Team Docs
 
+- [Start here](./docs/start-here.md)
 - [Authoring guide](./docs/authoring-guide.md)
+- [Contribute DMN for testing](./docs/contribute-dmn.md)
 - [User types manual](./docs/user-types-manual.md)
 - [DMN intake runbook](./docs/dmn-intake-runbook.md)
 - [Source-of-truth editing policy](./docs/source-of-truth-editing-policy.md)
@@ -381,6 +398,15 @@ $env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compare examp
 ## Why this comes first
 
 The validator and canonical IR are the semantic core of the project. DMN ingest, XLSForm generation, Mermaid output, and Z3 lowering will all be safer and simpler if they target the same explicit typed representation from the beginning.
+
+## New contributors
+
+If you are landing in this repo for the first time:
+
+1. start with [Start here](./docs/start-here.md)
+2. if you want to submit or revise a table, read [Contribute DMN for testing](./docs/contribute-dmn.md)
+3. if you need the exact file contracts, use `contracts/`
+4. if you want working examples, use `examples/`
 
 ## Supported subset today
 

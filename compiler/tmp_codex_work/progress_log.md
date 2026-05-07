@@ -254,3 +254,13 @@
   - new `docs/use-cases.md`
   - captures current, near-term, and future compiler use cases
   - makes the "other use cases?" backlog item concrete enough for team review
+- Added a stronger XLSForm round-trip proof path:
+  - new `src/chw_navigator/xlsform_proof.py`
+  - new CLI command: `prove-xlsform`
+  - proof package now captures imported IR, import report, workbook-pairwise parity, optional reference-IR pairwise parity, backend comparison, and Z3 checks
+  - this turns the supported XLSForm importer into a reviewable quality-case workflow instead of only a parser/runtime test
+- Improved newcomer orientation docs:
+  - new `docs/start-here.md`
+  - new `docs/contribute-dmn.md`
+  - README now points directly to those docs
+  - this makes it easier for a new student or clinician to find the right manual, contracts, examples, and commands quickly

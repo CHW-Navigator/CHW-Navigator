@@ -50,10 +50,13 @@ Execution rule:
   - common failures and where they should be fixed
 
 - Write a manual for user types.
+  - initial manual now exists in `docs/user-types-manual.md`
+  - start-here and contribution routing now exist for new contributors
   - especially authors adding DMN, predicate catalogs, phrase banks, and related XLS-based source artifacts
   - include clear pointers to the input rules and where each kind of fix belongs
 
 - Define the intake runbook for "new DMN arrives".
+  - initial runbook now exists in `docs/dmn-intake-runbook.md`
   - where files go
   - which commands run
   - what bundle is produced
@@ -75,6 +78,8 @@ Execution rule:
   - prove the diff workflow is understandable to reviewers
 
 - Strengthen the XLSForm-to-IR-to-Z3 proof path.
+  - initial round-trip proof command now exists: `prove-xlsform`
+  - remaining work is broader use on more imported sources and richer reviewer-facing summaries
   - take XLSForm artifacts back into IR
   - use Z3 to prove consistency and surface gaps
   - make this part of the quality case for supported XLSForm ingest
