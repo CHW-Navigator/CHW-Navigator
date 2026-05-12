@@ -426,6 +426,64 @@ class PydanticAndLintTests(unittest.TestCase):
         warnings = [issue.message for issue in lint_document(document) if issue.level == "WARNING"]
         self.assertTrue(any("points to entity 'o_tx_demo' instead of 'a_task_followup'" in message for message in warnings))
 
+    def test_decision_relevant_variable_without_collection_path_emits_warning(self) -> None:
+        payload = {
+            "metadata": {"ir_version": 1, "guideline_id": "demo", "sources": [{"source_id": "SRC"}]},
+            "variables": {
+                "v_lab_rdt_result": {
+                    "type": "string_key",
+                    "allowed_missingness": False,
+                    "multivalue": False,
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+            "predicates": {
+                "p_lab_positive": {
+                    "inputs_used": ["v_lab_rdt_result"],
+                    "expression": {
+                        "kind": "=",
+                        "left": {"kind": "var", "id": "v_lab_rdt_result"},
+                        "right": {"kind": "literal", "value": "positive"},
+                    },
+                    "missingness_policy": "require_inputs",
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+            "decisions": {
+                "d_lab_logic": {
+                    "hit_policy": "FIRST",
+                    "inputs_used": ["p_lab_positive"],
+                    "rules": [
+                        {
+                            "id": "r_lab_yes",
+                            "when": {"kind": "pred", "id": "p_lab_positive"},
+                            "then": {"o_lab_branch": True},
+                            "provenance": [{"source_id": "SRC"}],
+                        },
+                        {
+                            "id": "r_lab_no",
+                            "when": {"kind": "else"},
+                            "then": {"o_lab_branch": False},
+                            "provenance": [{"source_id": "SRC"}],
+                        },
+                    ],
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+            "outputs": {
+                "o_lab_branch": {
+                    "type": "bool",
+                    "provenance": [{"source_id": "SRC"}],
+                }
+            },
+            "phrases": {},
+            "invariants": {},
+            "phrase_bindings": {},
+        }
+        document = ClinicalIRDocument.from_dict(payload)
+        warnings = [issue.message for issue in lint_document(document) if issue.level == "WARNING"]
+        self.assertTrue(any("no documented collection path" in message for message in warnings))
+
     def test_cht_adapter_stub_writer_emits_expected_files(self) -> None:
         payload = json.loads((EXAMPLES / "pneumonia.ir.json").read_text(encoding="utf-8"))
         document = ClinicalIRDocument.from_dict(payload)

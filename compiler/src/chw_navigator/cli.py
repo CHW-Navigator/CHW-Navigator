@@ -22,6 +22,7 @@ from .evaluator import EvaluationError, evaluate_document
 from .equivalence import build_case_suite_equivalence_report
 from .json_schema_export import write_json_schemas
 from .mermaid_backend import MermaidOptions, build_mermaid_artifact
+from .quality_checks import run_quality_checks
 from .staged_lint import (
     lint_ir_document,
     lint_mermaid_artifact,
@@ -146,6 +147,14 @@ def main(argv: list[str] | None = None) -> int:
     xlsform_parser.add_argument("ir_path")
     xlsform_parser.add_argument("output_dir")
 
+    quality_parser = subparsers.add_parser(
+        "quality-check",
+        help="compile XLSForm, Mermaid, and SMT artifacts from IR and write a local quality-check package",
+    )
+    quality_parser.add_argument("ir_path")
+    quality_parser.add_argument("output_dir")
+    quality_parser.add_argument("--patients", dest="patient_path")
+
     xlsform_lint_parser = subparsers.add_parser("lint-xlsform", help="run backend-specific lint on survey.csv and choices.csv")
     xlsform_lint_parser.add_argument("survey_path")
     xlsform_lint_parser.add_argument("choices_path")
@@ -262,6 +271,8 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_compare_smt2(Path(args.ir_path), args.smt2_path, args.patient_path)
     if args.command == "build-xlsform":
         return _handle_build_xlsform(Path(args.ir_path), args.output_dir)
+    if args.command == "quality-check":
+        return _handle_quality_check(Path(args.ir_path), Path(args.output_dir), args.patient_path)
     if args.command == "lint-xlsform":
         return _handle_lint_xlsform(Path(args.survey_path), Path(args.choices_path), args.output_path)
     if args.command == "build-mermaid":
@@ -685,6 +696,28 @@ def _handle_build_xlsform(ir_path: Path, output_dir: str) -> int:
     return 0
 
 
+def _handle_quality_check(ir_path: Path, output_dir: Path, patient_path: str | None) -> int:
+    try:
+        document = _load_document(ir_path)
+    except CLIError as exc:
+        print(f"quality check failed: {exc}")
+        return 1
+    try:
+        patient_cases = load_patient_cases(patient_path) if patient_path else None
+        artifacts = run_quality_checks(
+            document,
+            output_dir=output_dir,
+            source_ir_path=ir_path,
+            patient_cases=patient_cases,
+        )
+    except (XLSFormBuildError, ComparisonError, Z3BackendUnavailable, Z3LoweringError) as exc:
+        print(f"quality check failed: {exc}")
+        return 1
+
+    print(json.dumps(_clean(artifacts), indent=2, sort_keys=True))
+    return 0
+
+
 def _handle_lint_xlsform(survey_path: Path, choices_path: Path, output_path: str | None) -> int:
     report = lint_xlsform_artifacts(survey_path, choices_path)
     rendered = render_stage_lint_report(report)
@@ -948,6 +981,8 @@ def _clean(value: object) -> object:
         return {key: _clean(item) for key, item in value.items()}
     if isinstance(value, list):
         return [_clean(item) for item in value]
+    if isinstance(value, Path):
+        return str(value)
     if hasattr(value, "__dataclass_fields__"):
         return {
             key: _clean(getattr(value, key))

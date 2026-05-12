@@ -29,6 +29,7 @@ from .mermaid_backend import (
     build_mermaid_artifact,
     compare_mermaid_text,
 )
+from .quality_checks import QualityCheckArtifacts, run_quality_checks
 from .staged_lint import (
     StageLintIssue,
     StageLintReport,
@@ -91,6 +92,7 @@ __all__ = [
     "MermaidComparisonResult",
     "MismatchEntry",
     "PairwiseCaseResult",
+    "QualityCheckArtifacts",
     "SmtLibComparisonResult",
     "StageLintIssue",
     "StageLintReport",
@@ -112,6 +114,7 @@ __all__ = [
     "compare_smt2_text",
     "compare_workbook_pair",
     "compose_document_from_catalogs",
+    "run_quality_checks",
     "create_change_review_package",
     "create_bundle",
     "derive_comparison_cases",

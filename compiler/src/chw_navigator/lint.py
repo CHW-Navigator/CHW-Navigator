@@ -21,6 +21,7 @@ def lint_document(
     _lint_dead_variables(document, issues)
     _lint_history_variables(document, issues)
     _lint_decision_graph(document, issues)
+    _lint_collection_paths(document, issues)
     _lint_phrase_coverage(document, issues)
     _lint_actions(document, issues)
     _lint_age_normalization(document, issues)
@@ -168,6 +169,51 @@ def _lint_decision_graph(document: ClinicalIRDocument, issues: list[LintIssue]) 
 
     for node in graph:
         visit(node)
+
+
+def _lint_collection_paths(document: ClinicalIRDocument, issues: list[LintIssue]) -> None:
+    decision_relevant_variables: set[str] = set()
+    for predicate in document.predicates.values():
+        decision_relevant_variables.update(predicate.inputs_used)
+        decision_relevant_variables |= collect_refs(predicate.expression, {"var"})
+    for decision in document.decisions.values():
+        decision_relevant_variables.update(item for item in decision.inputs_used if item.startswith(("v_", "h_", "st_")))
+        for rule in decision.rules:
+            decision_relevant_variables |= collect_refs(rule.when, {"var"})
+            for assignment in rule.then.values():
+                if isinstance(assignment, dict):
+                    decision_relevant_variables |= collect_refs(assignment, {"var"})
+
+    action_targets: set[str] = set()
+    for action in document.actions.values():
+        action_targets.update(item for item in action.outputs if item in document.variables)
+        for mapping in action.mappings:
+            action_targets.add(mapping.target_var)
+            if mapping.recorded_at_target_var is not None:
+                action_targets.add(mapping.recorded_at_target_var)
+
+    for variable_id in sorted(decision_relevant_variables):
+        variable = document.variables.get(variable_id)
+        if variable is None:
+            continue
+        if variable.id.startswith("st_"):
+            continue
+        if variable.source_kind is not None:
+            continue
+        if variable.id in action_targets:
+            continue
+        if variable.history_binding is not None:
+            continue
+        issues.append(
+            LintIssue(
+                level="WARNING",
+                path=f"variables.{variable.id}",
+                message=(
+                    "decision-relevant variable has no documented collection path; "
+                    "declare source_kind, add a read_history/ask/compute action, or accept an explicit workflow warning"
+                ),
+            )
+        )
 
 
 def _lint_phrase_coverage(document: ClinicalIRDocument, issues: list[LintIssue]) -> None:

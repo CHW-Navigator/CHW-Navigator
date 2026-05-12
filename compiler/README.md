@@ -246,6 +246,22 @@ This command is the stronger quality-proof path for the supported XLSForm subset
 - it runs backend comparison and Z3 checks on the imported IR
 - it writes a short proof summary plus machine-readable evidence files
 
+## Run post-compile quality checks
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli quality-check examples\pneumonia.ir.json generated\quality_check --patients examples\pneumonia.cases.json
+```
+
+This command writes a local quality package for a compiled IR:
+
+- it compiles XLSForm, Mermaid, and SMT-LIB artifacts
+- it runs IR lint plus backend-specific lint
+- it runs the XLSForm round-trip proof against the generated workbook
+- it runs backend comparison and Z3 checks
+- it marks release blockers such as decision-relevant variables with no documented collection path
+
+If you also want an external upload-based confirmation, the quality package points to [XLSForm Online](https://getodk.org/xlsform/), which ODK documents as a temporary preview path for XLSForms.
+
 ## Check Z3 lowering
 
 ```bash
