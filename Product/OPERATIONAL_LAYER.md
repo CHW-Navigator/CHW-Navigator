@@ -63,8 +63,8 @@ infer versions from mutable deployment configuration.
 Topology is separately versioned deployment configuration, never a property
 of a clinical artifact. A reviewed clinical topology need names only one of
 the canonical relations: `contact.responsible-area`,
-`patient.assigned-chw`, `patient.supervising-entity`, or
-`referral.eligible-facilities`. It must name its required cardinality,
+`patient.primary-caregiver`, `patient.assigned-chw`,
+`patient.supervising-entity`, or `referral.eligible-facilities`. It must name its required cardinality,
 technical registry binding, subject class, and source quotation/page; it may
 not carry a facility, person, platform, or deployment identifier.
 
@@ -89,22 +89,33 @@ resources.
 
 ## Prompt 10 seam
 
-External effects are planning-only requests that require a source quotation,
-abstract recipient relation, template, adapter, and policy version. Direct
-phone numbers, addresses, URLs, credentials, and delivery claims are
-rejected.
+Prompt 10 is now integrated as a planning-only companion. Each request must
+bind a source quotation, exact resolved capability, abstract recipient
+relation, approved template/policy/catalog version, topology snapshot, and
+typed template variables. The compiler rejects direct phone numbers,
+addresses, URLs, credentials, secrets, raw destinations, unapproved
+templates/locales, unresolved capabilities, mismatched topology, wrong value
+types, and template values above the policy's channel-sensitivity ceiling.
+The generic Prompt 8--10 companion package applies the same no-direct-data
+check before it writes `operational_requirements.json`, so a rejected Prompt
+10 request cannot leak a raw destination into an otherwise generic planning
+artifact while the exact catalog and topology lock are being assembled.
 
-`planned` and `queued` are the only compile-time external-effect states. A
-future governed runtime must record provider acceptance, network dispatch,
-device delivery, and human acknowledgment as separate append-only evidence.
+The emitted `external_effect_package.json` is explicitly
+`runtime_status: planning_only`: its requests have the `requested` state and
+a deterministic identity/version lock, but it cannot queue, render, send,
+accept a provider result, or receive an acknowledgment. A future governed
+runtime must record authorization, queueing, provider acceptance, network
+dispatch, device delivery, and human acknowledgment as separate append-only
+evidence.
 
 ## Prompt 10 reviewer reconciliation and admission gate
 
-Prompt 10 is not yet implemented in this repository. Its reviewed source
-archive is a local contract and planning library, not a deployed provider
-worker, webhook receiver, secret store, or durable outbox. No current Gen 8
-run can send a message, accept a provider callback, or claim that a message
-was delivered.
+Prompt 10's reviewed source archive is a local contract and planning library,
+not a deployed provider worker, webhook receiver, secret store, or durable
+outbox. The companion layer implements only the same local planning boundary.
+No current Gen 8 run can send a message, accept a provider callback, or claim
+that a message was delivered.
 
 The following were confirmed while reviewing the current Prompt 10 handoff:
 
@@ -137,8 +148,8 @@ The following were confirmed while reviewing the current Prompt 10 handoff:
   class and a stronger structural control must be recorded in the next
   reviewed handoff.
 
-Prompt 10 may enter this companion layer only after its reviewed source and
-integration design provide all of the following:
+A dispatch-capable Prompt 10 runtime may enter this companion layer only after
+its reviewed source and integration design provide all of the following:
 
 1. A deployment-owned ingress verifier that validates a documented provider
    signature or equivalent authenticated callback contract before constructing

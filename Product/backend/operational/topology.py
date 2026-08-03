@@ -23,6 +23,7 @@ TOPOLOGY_RELATIONS = {
     "patient.assigned-chw",
     "patient.supervising-entity",
     "referral.eligible-facilities",
+    "patient.primary-caregiver",
 }
 TOPOLOGY_BACKENDS = {"cht", "fhir-r4"}
 FORBIDDEN_NODE_FIELDS = {
@@ -410,6 +411,7 @@ def validate_topology_package(
         if not any(item.get("capability_code") == code and _active_at(item, evaluation_time) for item in capabilities):
             diagnostics.append(_diagnostic("H-CAP", f"Capability {code} has no active implementing facility", related_ids=[code], severity="error" if deployment else "warning"))
 
+    caregiver_references: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for index, cross_reference in enumerate(_mapping(item) for item in _list(package.get("cross_references"))):
         source = _string(cross_reference.get("from_external_id"))
         target = _string(cross_reference.get("to_external_id"))
@@ -420,6 +422,25 @@ def validate_topology_package(
             diagnostics.append(_diagnostic("H-REF", "Cross-reference cannot create a parent or responsibility relation", path=f"cross_references[{index}].relation"))
         if not _valid_interval(cross_reference):
             diagnostics.append(_diagnostic("H-EFFECTIVE", "Cross-reference has an invalid effective interval", path=f"cross_references[{index}]"))
+        if relation == "patient.primary-caregiver":
+            source_type = types.get(str(nodes.get(source, {}).get("contact_type", "")))
+            target_type = types.get(str(nodes.get(target, {}).get("contact_type", "")))
+            if source_type is None or source_type.get("semantic") != "patient":
+                diagnostics.append(_diagnostic("H-CAREGIVER", "Primary-caregiver relation must originate from a patient", path=f"cross_references[{index}]"))
+            if target_type is None or target_type.get("kind") != "person":
+                diagnostics.append(_diagnostic("H-CAREGIVER", "Primary-caregiver relation must target a person", path=f"cross_references[{index}]"))
+            if source:
+                caregiver_references[source].append(cross_reference)
+    for subject, references in caregiver_references.items():
+        for left_index, left in enumerate(references):
+            for right in references[left_index + 1 :]:
+                if _overlaps(left, right):
+                    diagnostics.append(_diagnostic(
+                        "H-CAREGIVER",
+                        "Concurrent primary-caregiver references remain resolvable only as ambiguous",
+                        related_ids=[subject, str(left.get("to_external_id", "")), str(right.get("to_external_id", ""))],
+                        severity="warning",
+                    ))
 
     access_policy = _mapping(package.get("access_policy"))
     if access_policy.get("default_deny") is not True:
@@ -662,6 +683,17 @@ def resolve_topology_relation(package: dict[str, Any], request: dict[str, Any]) 
     resolved_subject = _resolve_external_id(package, subject) if isinstance(subject, str) else None
     if not resolved_subject or resolved_subject not in nodes or not _active_at(nodes[resolved_subject], at):
         return _resolution(package, request, "not-found", (), reason="Subject is unknown or inactive")
+    if relation == "patient.primary-caregiver":
+        caregivers = [
+            str(reference["to_external_id"])
+            for raw_reference in _list(package.get("cross_references"))
+            if (reference := _mapping(raw_reference)).get("relation") == relation
+            and reference.get("from_external_id") == resolved_subject
+            and reference.get("to_external_id") in nodes
+            and _active_at(reference, at)
+            and _active_at(nodes[reference["to_external_id"]], at)
+        ]
+        return _apply_cardinality(package, request, caregivers)
     area = _responsible_area(package, resolved_subject, at)
     if not area:
         return _resolution(package, request, "unassigned", (), reason="Subject has no responsible service area")

@@ -23,6 +23,7 @@ class OperationalValidationError(ValueError):
 
 ALLOWED_TOPOLOGY_RELATIONS = {
     "contact.responsible-area",
+    "patient.primary-caregiver",
     "patient.assigned-chw",
     "patient.supervising-entity",
     "referral.eligible-facilities",
@@ -522,6 +523,9 @@ def build_operational_package(
     definitions = _require_list(requirements.get("lifecycle_definitions", []), "lifecycle_definitions")
     topology = _require_list(requirements.get("topology_requirements", []), "topology_requirements")
     effects = _require_list(requirements.get("external_effect_intents", []), "external_effect_intents")
+    effect_requests = _require_list(
+        requirements.get("external_effect_requests", []), "external_effect_requests"
+    )
 
     resolutions = [resolve_capability(candidate, entries) for candidate in candidates]
     candidate_ids = [resolution["candidate_id"] for resolution in resolutions]
@@ -544,6 +548,14 @@ def build_operational_package(
     }
     _validate_topology_requirements(topology, resolved_registry_versions)
     _validate_external_effect_intents(effects)
+    if effect_requests:
+        # Do this before callers persist the generic operational package.
+        # Full Prompt 10 validation waits for the separately reviewed catalog
+        # and exact topology lock, but direct contact or destination data is
+        # unsafe at every stage.
+        from .external_effects import assert_external_effect_requests_are_symbolic
+
+        assert_external_effect_requests_are_symbolic(effect_requests)
 
     version_lock = {
         "schema_version": "1.0",
@@ -587,5 +599,9 @@ def build_operational_package(
         "version_lock": version_lock,
         "topology_requirements": topology,
         "external_effect_intents": effects,
+        # Prompt 10 validates these after an exact topology lock and reviewed
+        # catalog are available.  Keep the opaque typed request sidecar out of
+        # the clinical artifact and do not treat it as a delivery instruction.
+        "external_effect_requests": effect_requests,
     }
     return package

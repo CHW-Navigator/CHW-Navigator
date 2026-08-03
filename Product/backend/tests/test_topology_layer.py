@@ -33,6 +33,7 @@ TOPOLOGY = {
             {"id": "service_area", "kind": "place", "semantic": "service-area", "allowed_parents": ["facility"]},
             {"id": "household", "kind": "place", "semantic": "household", "allowed_parents": ["service_area"]},
             {"id": "patient", "kind": "person", "semantic": "patient", "allowed_parents": ["household"]},
+            {"id": "caregiver", "kind": "person", "semantic": "caregiver", "allowed_parents": ["household"]},
             {"id": "chw", "kind": "person", "semantic": "practitioner", "allowed_parents": ["facility"]},
             {"id": "supervisor", "kind": "person", "semantic": "supervisor", "allowed_parents": ["facility"]},
         ],
@@ -43,6 +44,7 @@ TOPOLOGY = {
         {"external_id": "area-a", "contact_type": "service_area", "name": "Area A", "active_from": "2025-01-01T00:00:00Z"},
         {"external_id": "household-a", "contact_type": "household", "name": "Household A", "active_from": "2025-01-01T00:00:00Z"},
         {"external_id": "patient-a", "contact_type": "patient", "name": "Patient A", "aliases": ["patient-a-old"], "active_from": "2025-01-01T00:00:00Z"},
+        {"external_id": "caregiver-a", "contact_type": "caregiver", "name": "Caregiver A", "active_from": "2025-01-01T00:00:00Z"},
         {"external_id": "chw-old", "contact_type": "chw", "name": "CHW Old", "active_from": "2025-01-01T00:00:00Z"},
         {"external_id": "chw-new", "contact_type": "chw", "name": "CHW New", "active_from": "2025-01-01T00:00:00Z"},
         {"external_id": "supervisor-a", "contact_type": "supervisor", "name": "Supervisor A", "active_from": "2025-01-01T00:00:00Z"},
@@ -52,6 +54,7 @@ TOPOLOGY = {
         {"id": "p-area", "child_external_id": "area-a", "parent_external_id": "facility-a", "active_from": "2025-01-01T00:00:00Z", "approved_by": "ops"},
         {"id": "p-household", "child_external_id": "household-a", "parent_external_id": "area-a", "active_from": "2025-01-01T00:00:00Z", "approved_by": "ops"},
         {"id": "p-patient", "child_external_id": "patient-a", "parent_external_id": "household-a", "active_from": "2025-01-01T00:00:00Z", "approved_by": "ops"},
+        {"id": "p-caregiver", "child_external_id": "caregiver-a", "parent_external_id": "household-a", "active_from": "2025-01-01T00:00:00Z", "approved_by": "ops"},
         {"id": "p-chw-old", "child_external_id": "chw-old", "parent_external_id": "facility-a", "active_from": "2025-01-01T00:00:00Z", "approved_by": "ops"},
         {"id": "p-chw-new", "child_external_id": "chw-new", "parent_external_id": "facility-a", "active_from": "2025-01-01T00:00:00Z", "approved_by": "ops"},
         {"id": "p-supervisor", "child_external_id": "supervisor-a", "parent_external_id": "facility-a", "active_from": "2025-01-01T00:00:00Z", "approved_by": "ops"},
@@ -64,7 +67,9 @@ TOPOLOGY = {
     "facility_capabilities": [
         {"id": "cap-emergency", "facility_external_id": "facility-a", "capability_code": "emergency-care", "active_from": "2025-01-01T00:00:00Z"},
     ],
-    "cross_references": [],
+    "cross_references": [
+        {"from_external_id": "patient-a", "to_external_id": "caregiver-a", "relation": "patient.primary-caregiver", "active_from": "2025-01-01T00:00:00Z"}
+    ],
     "users": [
         {"username": "chw.new", "person_external_id": "chw-new", "role": "chw", "assigned_place_external_ids": ["area-a"], "active_from": "2026-08-01T00:00:00Z"},
     ],
@@ -81,8 +86,9 @@ TOPOLOGY = {
                 "allowed_relations": [
                     "contact.responsible-area",
                     "patient.assigned-chw",
-                    "patient.supervising-entity",
-                    "referral.eligible-facilities",
+                "patient.supervising-entity",
+                "referral.eligible-facilities",
+                "patient.primary-caregiver",
                 ],
                 "max_descendant_depth": 3,
                 "include_ancestors": False,
@@ -95,6 +101,7 @@ TOPOLOGY = {
         {"relation": "patient.assigned-chw", "cardinality": "one", "supported_backends": ["cht", "fhir-r4"]},
         {"relation": "patient.supervising-entity", "cardinality": "one", "supported_backends": ["cht", "fhir-r4"]},
         {"relation": "referral.eligible-facilities", "cardinality": "collection", "supported_backends": ["cht", "fhir-r4"]},
+        {"relation": "patient.primary-caregiver", "cardinality": "one", "supported_backends": ["cht", "fhir-r4"]},
     ],
 }
 
@@ -238,6 +245,18 @@ class TestTopologyResolution(unittest.TestCase):
         })
         self.assertEqual((eligible["status"], eligible["matches"]), ("resolved", ["facility-a"]))
         self.assertEqual((missing["status"], missing["matches"]), ("unassigned", []))
+
+    def test_caregiver_requires_an_explicit_effective_dated_reference(self):
+        resolved = resolve_topology_relation(package(), {
+            "relation": "patient.primary-caregiver", "cardinality": "one", "subject_external_id": "patient-a", "at": "2026-08-03T00:00:00Z", "target_backend": "cht"
+        })
+        missing = package()
+        missing["cross_references"] = []
+        unresolved = resolve_topology_relation(missing, {
+            "relation": "patient.primary-caregiver", "cardinality": "one", "subject_external_id": "patient-a", "at": "2026-08-03T00:00:00Z", "target_backend": "cht"
+        })
+        self.assertEqual((resolved["status"], resolved["matches"]), ("resolved", ["caregiver-a"]))
+        self.assertEqual((unresolved["status"], unresolved["matches"]), ("unassigned", []))
 
 
 class TestTopologyAccess(unittest.TestCase):

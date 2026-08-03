@@ -22,6 +22,7 @@ from .topology import (
     validate_topology_requirements_against_package,
     validate_topology_package,
 )
+from .external_effects import build_external_effect_package
 
 __all__ = [
     "OperationalValidationError",
@@ -37,4 +38,5 @@ __all__ = [
     "simulate_topology_access",
     "validate_topology_requirements_against_package",
     "validate_topology_package",
+    "build_external_effect_package",
 ]

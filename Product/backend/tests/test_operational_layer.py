@@ -297,8 +297,29 @@ class TestOperationalPackage(unittest.TestCase):
                 requirements, REGISTRY, clinical_logic_content_sha256="a" * 64
             )
 
+    def test_rejects_destination_data_before_the_generic_operational_package_can_be_written(self):
+        requirements = {
+            "external_effect_requests": [
+                {"template": {"variables": {"caregiver_name": "Contact +15551234567"}}}
+            ]
+        }
+        with self.assertRaisesRegex(OperationalValidationError, "forbidden direct data"):
+            build_operational_package(
+                requirements, REGISTRY, clinical_logic_content_sha256="a" * 64
+            )
+
 
 class TestGen8IntegrationBoundary(unittest.TestCase):
+    def test_prompt10_native_planning_contract_remains_reviewable(self):
+        """Keep the planning core readable while imported sources await their own gate."""
+        contract = Path(__file__).parents[1] / "operational" / "external_effects.py"
+        long_lines = [
+            number
+            for number, text in enumerate(contract.read_text(encoding="utf-8").splitlines(), start=1)
+            if len(text) > 120
+        ]
+        self.assertEqual(long_lines, [], f"Prompt 10 planning contract has overlong lines: {long_lines}")
+
     def test_prompt10_admission_gates_prevent_overclaiming_a_local_library(self):
         """Preserve the review gate until a real external-effect runtime exists."""
         operational_layer = Path(__file__).parents[2] / "OPERATIONAL_LAYER.md"
@@ -328,6 +349,9 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
             "topology-requirement.schema.json",
             "topology-relation-request.schema.json",
             "topology-lock.schema.json",
+            "external-effect-request.schema.json",
+            "external-effect-catalog.schema.json",
+            "external-effect-version-lock.schema.json",
         }
         self.assertEqual({path.name for path in schemas.glob("*.schema.json")}, expected)
         for path in schemas.glob("*.schema.json"):
@@ -342,8 +366,9 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
         self.assertIn("operational_requirements: dict | None = None", source)
         self.assertIn("registry_snapshot: dict | None = None", source)
         self.assertIn("topology_package: dict | None = None", source)
+        self.assertIn("external_effect_catalog: dict | None = None", source)
         self.assertIn("operational_requirements require an exact registry_snapshot", source)
-        self.assertIn("topology requirements require an exact topology_package", source)
+        self.assertIn("topology or external-effect requirements require an exact topology_package", source)
         for artifact in (
             "operational_requirements.json",
             "registry_snapshot.json",
@@ -356,6 +381,10 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
             "topology_package.json",
             "topology_validation.json",
             "topology_lock.json",
+            "external_effect_requests.json",
+            "external_effect_catalog.json",
+            "external_effect_version_lock.json",
+            "external_effect_package.json",
         ):
             self.assertIn(artifact, source)
 
