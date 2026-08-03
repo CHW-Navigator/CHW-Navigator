@@ -67,9 +67,17 @@ current `Product/backend/gen8` pipeline. Integrating into that folder would
 have made review, regression comparison, and provenance claims unreliable.
 
 Guardrail: all operational integration starts from a clean checkout of the
-authoritative default-branch SHA, records that SHA in the run manifest, and
-keeps clinical artifacts and operational packages as separately checksummed
-outputs.
+approved baseline SHA, records that SHA in the run manifest, and keeps
+clinical artifacts and operational packages as separately checksummed outputs.
+Before selecting that baseline, inventory every remote branch and compare each
+one with the default branch. The default branch alone is not evidence that it
+contains the latest intended work.
+
+At the time this layer was first committed, `codex/recover-best-version` was
+30 commits ahead of `main` and one commit behind it. The operational-layer
+commit therefore requires an explicit rebase or port onto the selected
+baseline before review or release; no claim is made that `main` was the most
+complete branch.
 
 The reviewed Prompt 8 archive was verified against all 855 entries in its
 internal `SHA256SUMS.txt`; no digest mismatches were found.
