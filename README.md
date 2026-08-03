@@ -92,6 +92,7 @@ git clone --recurse-submodules <repo-url>
 |---------------------|--------|
 | **`ARCHITECTURE.md`** | Gen 7 v2: ingest vs extraction, labeling, REPL, SSE, sessions, reference run. |
 | **`PIPELINE.md`** | Staged artifact vocabulary, quality gates, long-horizon research pipeline. |
+| **`OPERATIONAL_LAYER.md`** | Prompts 8-10 capability, lifecycle, topology, and external-effect companion contracts. |
 | **`ORCHESTRATOR.md`** | RLM/REPL rationale and loop design. |
 | **`CHW Navigator v1 (1).md`** | “Gold master” philosophy: MOH gates, red team, Z3, synthetic patients. |
 

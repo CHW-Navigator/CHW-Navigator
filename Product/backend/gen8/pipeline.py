@@ -458,8 +458,16 @@ async def run(
     labeler: str = "opus",
     run_verifier: bool = True,
     source_guide_meta: dict | None = None,
+    operational_requirements: dict | None = None,
+    registry_snapshot: dict | None = None,
 ) -> dict[str, Any]:
-    """Run gen8 (labeler=opus) or gen8.5 (labeler=sonnet7way) end-to-end."""
+    """Run gen8 (labeler=opus) or gen8.5 (labeler=sonnet7way) end-to-end.
+
+    ``operational_requirements`` is an optional, separately reviewed sidecar.
+    It is intentionally not inferred from clinical output: a source-grounded
+    capability scan must supply it, and its registry snapshot must be pinned.
+    Omitting both arguments preserves the existing clinical-only pipeline.
+    """
     if output_dir is None:
         raise ValueError("output_dir is required")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -728,6 +736,55 @@ async def run(
     # Now persist the four reconcile reports with the post-reconcile SHA.
     _write_reconcile_reports(reports, output_dir, base_prov, clinical_logic_sha)
 
+    # ---------- Prompts 8--10 operational companion package ----------
+    # This happens after the clinical artifact has been finalized and never
+    # mutates it.  It deliberately produces a plan, not a task, topology
+    # assignment, message, or deployment write.
+    operational_package: dict | None = None
+    if operational_requirements is not None:
+        if registry_snapshot is None:
+            raise ValueError(
+                "operational_requirements require an exact registry_snapshot; "
+                "the pipeline will not guess capability bindings"
+            )
+        from backend.operational import build_operational_package
+
+        operational_package = build_operational_package(
+            operational_requirements,
+            registry_snapshot,
+        )
+        requirements_sha = write_with_provenance(
+            output_dir / "operational_requirements.json",
+            operational_requirements,
+            artifact_kind="operational_requirements",
+            parents=[ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha)],
+            **base_prov,
+        )
+        registry_snapshot_sha = write_with_provenance(
+            output_dir / "registry_snapshot.json",
+            registry_snapshot,
+            artifact_kind="registry_snapshot",
+            **base_prov,
+        )
+        write_with_provenance(
+            output_dir / "capability_candidates.json",
+            operational_requirements.get("capability_candidates", []),
+            artifact_kind="capability_candidates",
+            parents=[ParentRef(kind="operational_requirements", content_sha256=requirements_sha)],
+            **base_prov,
+        )
+        write_with_provenance(
+            output_dir / "operational_package.json",
+            operational_package,
+            artifact_kind="operational_package",
+            parents=[
+                ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+                ParentRef(kind="registry_snapshot", content_sha256=registry_snapshot_sha),
+            ],
+            **base_prov,
+        )
+
     # ---------- Converters ----------
     try:
         from backend.converters import convert_to_dmn, convert_to_csv
@@ -927,6 +984,7 @@ async def run(
         "container_sha": container_sha,
         "verification_summary": verification_summary,
         "reports": reports,
+        "operational_package": operational_package,
     }
 
 
