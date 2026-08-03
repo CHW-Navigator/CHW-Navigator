@@ -307,6 +307,10 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
             "lifecycle-definition.schema.json",
             "episode-event.schema.json",
             "operational-version-lock.schema.json",
+            "topology-package.schema.json",
+            "topology-requirement.schema.json",
+            "topology-relation-request.schema.json",
+            "topology-lock.schema.json",
         }
         self.assertEqual({path.name for path in schemas.glob("*.schema.json")}, expected)
         for path in schemas.glob("*.schema.json"):
@@ -320,7 +324,9 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
         source = pipeline.read_text(encoding="utf-8")
         self.assertIn("operational_requirements: dict | None = None", source)
         self.assertIn("registry_snapshot: dict | None = None", source)
+        self.assertIn("topology_package: dict | None = None", source)
         self.assertIn("operational_requirements require an exact registry_snapshot", source)
+        self.assertIn("topology requirements require an exact topology_package", source)
         for artifact in (
             "operational_requirements.json",
             "registry_snapshot.json",
@@ -329,6 +335,10 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
             "lifecycle_definitions.json",
             "operational_version_lock.json",
             "operational_package.json",
+            "topology_requirements.json",
+            "topology_package.json",
+            "topology_validation.json",
+            "topology_lock.json",
         ):
             self.assertIn(artifact, source)
 

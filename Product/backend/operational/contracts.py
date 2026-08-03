@@ -22,6 +22,10 @@ class OperationalValidationError(ValueError):
 
 
 ALLOWED_TOPOLOGY_RELATIONS = {
+    "contact.responsible-area",
+    "patient.assigned-chw",
+    "patient.supervising-entity",
+    "referral.eligible-facilities",
     "patient.assigned_worker",
     "patient.household",
     "patient.service_area",
@@ -404,16 +408,59 @@ def project_lifecycle(
     }
 
 
-def _validate_topology_requirements(requirements: list[Any]) -> None:
+def _validate_topology_requirements(
+    requirements: list[Any], resolved_registry_versions: set[str]
+) -> None:
     for raw_requirement in requirements:
         requirement = _require_mapping(raw_requirement, "topology requirement")
         _require_string(requirement.get("id"), "topology requirement.id")
         relation = _require_string(requirement.get("relation"), "topology requirement.relation")
         if relation not in ALLOWED_TOPOLOGY_RELATIONS:
             raise OperationalValidationError(f"unsupported abstract topology relation: {relation}")
-        for field in ("requester", "purpose", "topology_package", "topology_version"):
-            _require_string(requirement.get(field), f"topology requirement.{field}")
-        if "resolved_id" in requirement or "facility_id" in requirement or "actor_id" in requirement:
+        if "registry" in requirement:
+            registry = _require_string(requirement.get("registry"), "topology requirement.registry")
+            if registry not in resolved_registry_versions:
+                raise OperationalValidationError(
+                    f"topology requirement {requirement['id']} is not bound to an exact resolved registry entry"
+                )
+            if requirement.get("cardinality") not in {"one", "collection"}:
+                raise OperationalValidationError("topology requirement.cardinality must be one or collection")
+            _require_string(requirement.get("subject"), "topology requirement.subject")
+            evidence = _require_list(requirement.get("evidence"), "topology requirement.evidence")
+            if not evidence:
+                raise OperationalValidationError("topology requirement.evidence must not be empty")
+            for item in evidence:
+                evidence_item = _require_mapping(item, "topology requirement evidence")
+                _require_string(evidence_item.get("quotation"), "topology requirement evidence.quotation")
+                page = evidence_item.get("page")
+                if not ((isinstance(page, int) and page > 0) or (isinstance(page, str) and page.strip())):
+                    raise OperationalValidationError("topology requirement evidence.page must identify a source page")
+            direct_identity_fields = [
+                field
+                for field in requirement
+                if field != "id" and field.lower().replace("-", "_").endswith("_id")
+            ]
+            if direct_identity_fields:
+                raise OperationalValidationError(
+                    "clinical topology requirements cannot name deployment identities: "
+                    + ", ".join(sorted(direct_identity_fields))
+                )
+        else:
+            # Compatibility shape for the Prompt 8 planning seam. Prompt 9
+            # requirements should use the exact resolved ``registry`` form above.
+            for field in ("requester", "purpose", "topology_package", "topology_version"):
+                _require_string(requirement.get(field), f"topology requirement.{field}")
+        forbidden = {
+            "resolved_id",
+            "facility_id",
+            "actor_id",
+            "worker_external_id",
+            "facility_external_id",
+            "service_area_external_id",
+            "platform_id",
+            "_id",
+        }
+        if forbidden.intersection(requirement):
             raise OperationalValidationError("clinical operational requirements cannot name deployment identities")
 
 
@@ -492,7 +539,10 @@ def build_operational_package(
         if key in definition_keys:
             raise OperationalValidationError("lifecycle definition IDs and versions must be unique")
         definition_keys.add(key)
-    _validate_topology_requirements(topology)
+    resolved_registry_versions = {
+        f"{item['entry_id']}@{item['entry_version']}" for item in resolutions
+    }
+    _validate_topology_requirements(topology, resolved_registry_versions)
     _validate_external_effect_intents(effects)
 
     version_lock = {

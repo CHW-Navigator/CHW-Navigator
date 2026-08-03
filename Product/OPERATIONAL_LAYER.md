@@ -16,7 +16,8 @@ source-grounded clinical pipeline
   -> capability candidates (non-authoritative)
   -> exact registry resolution (deterministic)
   -> operational package (planned only)
-  -> later CHT / FHIR / topology / effect adapters
+  -> topology validation and abstract relation resolution
+  -> later CHT / FHIR / external-effect adapters
 ```
 
 The capability scan may propose needs from quoted source material. It cannot
@@ -57,14 +58,41 @@ infer versions from mutable deployment configuration.
 - Validation that all states are reachable and every nonterminal state has a
   path to a terminal endpoint.
 
-## Prompt 9 and 10 seams
+## Implemented Prompt 9 topology core
 
-Topology is expressed only as an abstract relation such as
-`patient.assigned_worker` or `eligible_referral_facility`; clinical artifacts
-cannot name a facility, person, or deployment identifier. External effects are
-planning-only requests that require a source quotation, abstract recipient
-relation, template, adapter, and policy version. Direct phone numbers,
-addresses, URLs, credentials, and delivery claims are rejected.
+Topology is separately versioned deployment configuration, never a property
+of a clinical artifact. A reviewed clinical topology need names only one of
+the canonical relations: `contact.responsible-area`,
+`patient.assigned-chw`, `patient.supervising-entity`, or
+`referral.eligible-facilities`. It must name its required cardinality,
+technical registry binding, subject class, and source quotation/page; it may
+not carry a facility, person, platform, or deployment identifier.
+
+When those typed requirements are present, pass `topology_package` to
+`backend.gen8.pipeline.run`. The pipeline validates it before use and writes
+checksummed `topology_requirements.json`, `topology_package.json`,
+`topology_validation.json`, and `topology_lock.json`. It rejects a topology
+package without a reviewed relation need and rejects a relation need without
+an exact package. The topology lock binds the entire reviewed package content,
+schema, access policy, and capability vocabulary rather than relying on a
+mutable package label or version alone.
+
+The first implementation increment validates effective-dated placement trees,
+exclusive responsibility, approved assignment and coverage, facility
+capability vocabulary, default-deny role/place access, and supported relation
+rules. It resolves current or historical relations by the supplied effective
+time; it returns `ambiguous` or `unassigned` rather than selecting an array
+order or guessing a facility. Access simulation uses only replicated external
+IDs and can test persona isolation. It does not contact CHT, FHIR, identity,
+replication, facility, or device systems, and it does not create deployment
+resources.
+
+## Prompt 10 seam
+
+External effects are planning-only requests that require a source quotation,
+abstract recipient relation, template, adapter, and policy version. Direct
+phone numbers, addresses, URLs, credentials, and delivery claims are
+rejected.
 
 `planned` and `queued` are the only compile-time external-effect states. A
 future governed runtime must record provider acceptance, network dispatch,
@@ -102,8 +130,10 @@ review package as a source-code transplant and missing its claims boundary.
 Guardrail: before modifying a reviewed phase, read its package `README.md`,
 `CODEX_MASTER_HANDOFF.md`, pipeline-integration prompt, phase prompt, report,
 and red-team disposition in that order. Record the resulting implementation
-boundary before adding code. Prompt 9 begins only after the Prompt 8 version
-lock and lifecycle guard evidence controls are present.
+boundary before adding code. Prompt 9 began only after the Prompt 8 version
+lock and lifecycle guard evidence controls were present. Its reviewed archive
+was checked against all 950 entries in its internal `SHA256SUMS.txt`; no
+digest mismatches were found.
 
 ## Upstream handoff verification caveat
 

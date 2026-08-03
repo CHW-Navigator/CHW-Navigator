@@ -12,6 +12,16 @@ from .contracts import (
     resolve_capability,
     validate_lifecycle_definition,
 )
+from .topology import (
+    assert_persona_isolation,
+    assert_topology_valid,
+    build_topology_lock,
+    resolve_topology_relation,
+    resolve_topology_relation_for_user,
+    simulate_topology_access,
+    validate_topology_requirements_against_package,
+    validate_topology_package,
+)
 
 __all__ = [
     "OperationalValidationError",
@@ -19,4 +29,12 @@ __all__ = [
     "project_lifecycle",
     "resolve_capability",
     "validate_lifecycle_definition",
+    "assert_persona_isolation",
+    "assert_topology_valid",
+    "build_topology_lock",
+    "resolve_topology_relation",
+    "resolve_topology_relation_for_user",
+    "simulate_topology_access",
+    "validate_topology_requirements_against_package",
+    "validate_topology_package",
 ]

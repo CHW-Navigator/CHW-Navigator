@@ -460,13 +460,17 @@ async def run(
     source_guide_meta: dict | None = None,
     operational_requirements: dict | None = None,
     registry_snapshot: dict | None = None,
+    topology_package: dict | None = None,
 ) -> dict[str, Any]:
     """Run gen8 (labeler=opus) or gen8.5 (labeler=sonnet7way) end-to-end.
 
     ``operational_requirements`` is an optional, separately reviewed sidecar.
     It is intentionally not inferred from clinical output: a source-grounded
     capability scan must supply it, and its registry snapshot must be pinned.
-    Omitting both arguments preserves the existing clinical-only pipeline.
+    ``topology_package`` is separately versioned deployment configuration; it
+    is validated and locked only when typed topology requirements are present.
+    Omitting all companion arguments preserves the existing clinical-only
+    pipeline.
     """
     if output_dir is None:
         raise ValueError("output_dir is required")
@@ -817,6 +821,66 @@ async def run(
                 ParentRef(kind="operational_version_lock", content_sha256=version_lock_sha),
             ],
             **base_prov,
+        )
+        topology_requirements = operational_package["topology_requirements"]
+        if topology_requirements:
+            if topology_package is None:
+                raise ValueError(
+                    "topology requirements require an exact topology_package; "
+                    "the pipeline will not resolve deployment relationships by guesswork"
+                )
+            from backend.operational import (
+                assert_topology_valid,
+                build_topology_lock,
+                validate_topology_requirements_against_package,
+            )
+
+            topology_diagnostics = assert_topology_valid(topology_package, deployment=True)
+            validate_topology_requirements_against_package(topology_requirements, topology_package)
+            topology_requirements_sha = write_with_provenance(
+                output_dir / "topology_requirements.json",
+                topology_requirements,
+                artifact_kind="topology_requirements",
+                parents=[
+                    ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                    ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+                    ParentRef(kind="registry_resolution", content_sha256=resolutions_sha),
+                ],
+                **base_prov,
+            )
+            topology_package_sha = write_with_provenance(
+                output_dir / "topology_package.json",
+                topology_package,
+                artifact_kind="topology_package",
+                parents=[ParentRef(kind="topology_requirements", content_sha256=topology_requirements_sha)],
+                **base_prov,
+            )
+            write_with_provenance(
+                output_dir / "topology_validation.json",
+                {"diagnostics": topology_diagnostics},
+                artifact_kind="topology_validation",
+                parents=[ParentRef(kind="topology_package", content_sha256=topology_package_sha)],
+                **base_prov,
+            )
+            topology_lock = build_topology_lock(topology_package)
+            write_with_provenance(
+                output_dir / "topology_lock.json",
+                topology_lock,
+                artifact_kind="topology_lock",
+                parents=[
+                    ParentRef(kind="topology_package", content_sha256=topology_package_sha),
+                    ParentRef(kind="topology_requirements", content_sha256=topology_requirements_sha),
+                ],
+                **base_prov,
+            )
+        elif topology_package is not None:
+            raise ValueError(
+                "topology_package requires typed topology requirements; "
+                "deployment configuration cannot be attached without an approved clinical relation need"
+            )
+    elif topology_package is not None:
+        raise ValueError(
+            "topology_package requires operational_requirements and an exact registry_snapshot"
         )
 
     # ---------- Converters ----------

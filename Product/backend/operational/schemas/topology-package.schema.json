@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/topology-package/1.0.0",
+  "title": "Versioned deployment topology package",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "snapshot_id",
+    "generated_at",
+    "schema",
+    "nodes",
+    "placements",
+    "assignments",
+    "facility_capabilities",
+    "users",
+    "access_policy",
+    "capability_vocabulary",
+    "relation_rules"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "minLength": 1},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "schema": {"type": "object"},
+    "nodes": {"type": "array", "items": {"type": "object"}},
+    "placements": {"type": "array", "items": {"type": "object"}},
+    "assignments": {"type": "array", "items": {"type": "object"}},
+    "facility_capabilities": {"type": "array", "items": {"type": "object"}},
+    "cross_references": {"type": "array", "items": {"type": "object"}},
+    "users": {"type": "array", "items": {"type": "object"}},
+    "access_policy": {"type": "object"},
+    "capability_vocabulary": {"type": "object"},
+    "relation_rules": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}
