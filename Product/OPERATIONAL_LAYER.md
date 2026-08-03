@@ -28,10 +28,17 @@ block compilation.
 Pass a reviewed sidecar to `backend.gen8.pipeline.run` as
 `operational_requirements` together with an exact `registry_snapshot`. The
 pipeline then emits checksummed `operational_requirements.json`,
-`registry_snapshot.json`, `capability_candidates.json`, and
-`operational_package.json` beside, but independently from,
+`registry_snapshot.json`, `capability_candidates.json`,
+`registry_resolution.json`, `lifecycle_definitions.json`,
+`operational_version_lock.json`, and `operational_package.json` beside, but independently from,
 `clinical_logic.json`. Supplying requirements without the snapshot is an
 error; supplying neither retains the established clinical-only behavior.
+
+The public contract shapes live in `backend/operational/schemas/`. The
+version lock binds the exact finalized `clinical_logic.json` digest, reviewed
+registry snapshot, every resolved capability version, and every lifecycle
+definition/predicate/DMN version. A compiler must read the lock rather than
+infer versions from mutable deployment configuration.
 
 ## Implemented Prompt 8 controls
 
@@ -40,9 +47,13 @@ error; supplying neither retains the established clinical-only behavior.
   variants, foreign episodes, stale clinical versions, and post-terminal
   events.
 - Recovery only from a clinical event with a passing guard evaluated against
-  the lifecycle definition's pinned predicate and DMN versions.
+  the lifecycle definition's pinned predicate and DMN versions, the exact
+  declared guard ID, and an offset-aware timestamp that does not postdate the
+  event record.
 - Timers, task expiry, silence, and absent synchronization cannot establish
   recovery.
+- Malformed events and causal-sequence collisions are quarantined as evidence;
+  they cannot change state or make unrelated valid events unreplayable.
 - Validation that all states are reachable and every nonterminal state has a
   path to a terminal endpoint.
 
@@ -81,6 +92,18 @@ complete branch.
 
 The reviewed Prompt 8 archive was verified against all 855 entries in its
 internal `SHA256SUMS.txt`; no digest mismatches were found.
+
+## Handoff reading order guardrail
+
+The first integration pass began with technical implementation files instead
+of the handoff's prescribed entry documents. That risks treating a conditional
+review package as a source-code transplant and missing its claims boundary.
+
+Guardrail: before modifying a reviewed phase, read its package `README.md`,
+`CODEX_MASTER_HANDOFF.md`, pipeline-integration prompt, phase prompt, report,
+and red-team disposition in that order. Record the resulting implementation
+boundary before adding code. Prompt 9 begins only after the Prompt 8 version
+lock and lifecycle guard evidence controls are present.
 
 ## Upstream handoff verification caveat
 

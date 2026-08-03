@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/operational-version-lock/1.0.0",
+  "title": "Operational companion exact-version lock",
+  "type": "object",
+  "required": ["schema_version", "clinical_logic_content_sha256", "registry_snapshot", "capability_resolutions", "lifecycle_definitions"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "clinical_logic_content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "registry_snapshot": {
+      "type": "object",
+      "required": ["id", "version", "entries_digest"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "entries_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "capability_resolutions": {"type": "array"},
+    "lifecycle_definitions": {"type": "array"}
+  },
+  "additionalProperties": false
+}

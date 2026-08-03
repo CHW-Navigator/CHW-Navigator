@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/registry-resolution/1.0.0",
+  "title": "Deterministic capability resolution",
+  "type": "object",
+  "required": ["candidate_id", "status"],
+  "properties": {
+    "candidate_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["resolved", "blocked"]},
+    "entry_id": {"type": "string", "minLength": 1},
+    "entry_version": {"type": "string", "minLength": 1},
+    "reason": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

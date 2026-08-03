@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from copy import deepcopy
+from datetime import datetime
 import hashlib
 import json
 from typing import Any, Iterable
@@ -86,6 +87,28 @@ def _require_list(value: Any, label: str) -> list[Any]:
     if not isinstance(value, list):
         raise OperationalValidationError(f"{label} must be a list")
     return value
+
+
+def _require_sha256(value: Any, label: str) -> str:
+    """Require the exact content digest used by Gen 8 provenance sidecars."""
+    digest = _require_string(value, label)
+    if len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest.lower()):
+        raise OperationalValidationError(f"{label} must be a SHA-256 hex digest")
+    return digest.lower()
+
+
+def _parse_timestamp(value: Any, label: str) -> datetime:
+    """Parse an offset-aware RFC 3339 timestamp without using local time."""
+    text = _require_string(value, label)
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError as exc:
+        raise OperationalValidationError(f"{label} must be an RFC 3339 timestamp") from exc
+    if parsed.tzinfo is None:
+        raise OperationalValidationError(f"{label} must include a timezone offset")
+    return parsed
 
 
 def _require_source(candidate: dict[str, Any], label: str) -> None:
@@ -201,6 +224,8 @@ def validate_lifecycle_definition(definition: dict[str, Any]) -> None:
             raise OperationalValidationError("lifecycle transition references an unknown state")
         if state_map[from_state]["terminal"]:
             raise OperationalValidationError(f"terminal state {from_state} cannot transition")
+        if transition.get("requires_guard"):
+            _require_string(transition.get("guard_id"), "lifecycle transition.guard_id")
         if state_map[to_state].get("recovery"):
             if transition.get("event_category") != "clinical" or not transition.get("requires_guard"):
                 raise OperationalValidationError(
@@ -263,8 +288,14 @@ def project_lifecycle(
     event_variants: dict[str, list[dict[str, Any]]] = defaultdict(list)
     quarantined: list[dict[str, str]] = []
     for raw_event in events:
-        event = _require_mapping(raw_event, "episode event")
-        event_id = _require_string(event.get("id"), "episode event.id")
+        if not isinstance(raw_event, dict):
+            quarantined.append({"event_id": "unknown", "reason": "malformed_event"})
+            continue
+        event = deepcopy(raw_event)
+        event_id = event.get("id")
+        if not isinstance(event_id, str) or not event_id.strip():
+            quarantined.append({"event_id": "unknown", "reason": "malformed_event"})
+            continue
         event_variants[event_id].append(deepcopy(event))
 
     unique: dict[str, dict[str, Any]] = {}
@@ -281,23 +312,45 @@ def project_lifecycle(
                 for _ in variants
             )
 
-    ordered: list[dict[str, Any]] = []
-    occupied_sequences: set[int] = set()
+    by_sequence: dict[int, list[dict[str, Any]]] = defaultdict(list)
     for event in unique.values():
         sequence = event.get("causal_sequence")
         if not isinstance(sequence, int) or sequence < 0:
-            quarantined.append({"event_id": str(event.get("id", "unknown")), "reason": "invalid_causal_sequence"})
+            quarantined.append({"event_id": str(event["id"]), "reason": "invalid_causal_sequence"})
             continue
-        if sequence in occupied_sequences:
-            raise OperationalValidationError("lifecycle events have a causal-sequence collision")
-        occupied_sequences.add(sequence)
-        ordered.append(event)
-    ordered.sort(key=lambda event: event["causal_sequence"])
+        by_sequence[sequence].append(event)
+
+    # A shared causal sequence cannot be resolved with arrival order, timestamps,
+    # or identifiers.  Quarantine every collision instead of allowing one bad
+    # event to prevent deterministic replay of unrelated evidence.
+    ordered: list[dict[str, Any]] = []
+    for sequence in sorted(by_sequence):
+        items = by_sequence[sequence]
+        if len(items) > 1:
+            quarantined.extend(
+                {"event_id": str(item["id"]), "reason": "conflicting_causal_sequence"}
+                for item in items
+            )
+            continue
+        ordered.append(items[0])
 
     current_state = definition["initial_state"]
     applied: list[str] = []
     for event in ordered:
         event_id = str(event["id"])
+        required_strings = ("episode_id", "event_type", "event_category", "predicate_set_version", "dmn_version")
+        if any(not isinstance(event.get(field), str) or not event[field].strip() for field in required_strings):
+            quarantined.append({"event_id": event_id, "reason": "malformed_event"})
+            continue
+        if event["event_category"] not in {"clinical", "timer", "external"}:
+            quarantined.append({"event_id": event_id, "reason": "invalid_event_category"})
+            continue
+        try:
+            _parse_timestamp(event.get("recorded_at"), "episode event.recorded_at")
+            _parse_timestamp(event.get("occurred_at"), "episode event.occurred_at")
+        except OperationalValidationError:
+            quarantined.append({"event_id": event_id, "reason": "invalid_event_timestamp"})
+            continue
         if event.get("episode_id") != episode_id:
             quarantined.append({"event_id": event_id, "reason": "foreign_episode"})
             continue
@@ -315,6 +368,20 @@ def project_lifecycle(
             quarantined.append({"event_id": event_id, "reason": "unsupported_transition"})
             continue
         next_state = transition["to"]
+        if transition.get("requires_guard"):
+            try:
+                guard_id = _require_string(event.get("guard_id"), "episode event.guard_id")
+                expected_guard_id = _require_string(transition.get("guard_id"), "lifecycle transition.guard_id")
+                guard_evaluated_at = _parse_timestamp(
+                    event.get("guard_evaluated_at"), "episode event.guard_evaluated_at"
+                )
+                recorded_at = _parse_timestamp(event.get("recorded_at"), "episode event.recorded_at")
+            except OperationalValidationError:
+                quarantined.append({"event_id": event_id, "reason": "invalid_guard_evidence"})
+                continue
+            if guard_id != expected_guard_id or guard_evaluated_at > recorded_at:
+                quarantined.append({"event_id": event_id, "reason": "invalid_guard_evidence"})
+                continue
         if state_map[next_state].get("recovery"):
             if (
                 event.get("event_category") != "clinical"
@@ -384,7 +451,10 @@ def _validate_external_effect_intents(intents: list[Any]) -> None:
 
 
 def build_operational_package(
-    requirements: dict[str, Any], registry_snapshot: dict[str, Any]
+    requirements: dict[str, Any],
+    registry_snapshot: dict[str, Any],
+    *,
+    clinical_logic_content_sha256: str,
 ) -> dict[str, Any]:
     """Validate and compile an operational companion package.
 
@@ -397,6 +467,9 @@ def build_operational_package(
     entries = _require_list(registry_snapshot.get("entries"), "registry snapshot.entries")
     _require_string(registry_snapshot.get("id"), "registry snapshot.id")
     _require_string(registry_snapshot.get("version"), "registry snapshot.version")
+    clinical_logic_content_sha256 = _require_sha256(
+        clinical_logic_content_sha256, "clinical_logic_content_sha256"
+    )
 
     candidates = _require_list(requirements.get("capability_candidates", []), "capability_candidates")
     definitions = _require_list(requirements.get("lifecycle_definitions", []), "lifecycle_definitions")
@@ -404,15 +477,51 @@ def build_operational_package(
     effects = _require_list(requirements.get("external_effect_intents", []), "external_effect_intents")
 
     resolutions = [resolve_capability(candidate, entries) for candidate in candidates]
+    candidate_ids = [resolution["candidate_id"] for resolution in resolutions]
+    if len(candidate_ids) != len(set(candidate_ids)):
+        raise OperationalValidationError("capability candidate IDs must be unique")
     blocked = [resolution for resolution in resolutions if resolution["status"] != "resolved"]
     if blocked:
         reasons = ", ".join(f"{item['candidate_id']}:{item['reason']}" for item in blocked)
         raise OperationalValidationError(f"unresolved operational capabilities: {reasons}")
 
+    definition_keys: set[tuple[str, str]] = set()
     for definition in definitions:
         validate_lifecycle_definition(_require_mapping(definition, "lifecycle definition"))
+        key = (definition["id"], definition["version"])
+        if key in definition_keys:
+            raise OperationalValidationError("lifecycle definition IDs and versions must be unique")
+        definition_keys.add(key)
     _validate_topology_requirements(topology)
     _validate_external_effect_intents(effects)
+
+    version_lock = {
+        "schema_version": "1.0",
+        "clinical_logic_content_sha256": clinical_logic_content_sha256,
+        "registry_snapshot": {
+            "id": registry_snapshot["id"],
+            "version": registry_snapshot["version"],
+            "entries_digest": _digest(entries),
+        },
+        "capability_resolutions": [
+            {
+                "candidate_id": item["candidate_id"],
+                "entry_id": item["entry_id"],
+                "entry_version": item["entry_version"],
+            }
+            for item in sorted(resolutions, key=lambda item: item["candidate_id"])
+        ],
+        "lifecycle_definitions": [
+            {
+                "id": definition["id"],
+                "version": definition["version"],
+                "predicate_set_version": definition["predicate_set_version"],
+                "dmn_version": definition["dmn_version"],
+                "digest": _digest(definition),
+            }
+            for definition in sorted(definitions, key=lambda item: (item["id"], item["version"]))
+        ],
+    }
 
     package = {
         "schema_version": "1.0",
@@ -425,6 +534,7 @@ def build_operational_package(
         },
         "capability_resolutions": resolutions,
         "lifecycle_definitions": definitions,
+        "version_lock": version_lock,
         "topology_requirements": topology,
         "external_effect_intents": effects,
     }

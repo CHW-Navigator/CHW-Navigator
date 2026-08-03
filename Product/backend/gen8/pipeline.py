@@ -752,6 +752,7 @@ async def run(
         operational_package = build_operational_package(
             operational_requirements,
             registry_snapshot,
+            clinical_logic_content_sha256=clinical_logic_sha,
         )
         requirements_sha = write_with_provenance(
             output_dir / "operational_requirements.json",
@@ -773,6 +774,38 @@ async def run(
             parents=[ParentRef(kind="operational_requirements", content_sha256=requirements_sha)],
             **base_prov,
         )
+        resolutions_sha = write_with_provenance(
+            output_dir / "registry_resolution.json",
+            operational_package["capability_resolutions"],
+            artifact_kind="registry_resolution",
+            parents=[
+                ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+                ParentRef(kind="registry_snapshot", content_sha256=registry_snapshot_sha),
+            ],
+            **base_prov,
+        )
+        lifecycle_definitions_sha = write_with_provenance(
+            output_dir / "lifecycle_definitions.json",
+            operational_package["lifecycle_definitions"],
+            artifact_kind="lifecycle_definitions",
+            parents=[
+                ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+            ],
+            **base_prov,
+        )
+        version_lock_sha = write_with_provenance(
+            output_dir / "operational_version_lock.json",
+            operational_package["version_lock"],
+            artifact_kind="operational_version_lock",
+            parents=[
+                ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                ParentRef(kind="registry_snapshot", content_sha256=registry_snapshot_sha),
+                ParentRef(kind="registry_resolution", content_sha256=resolutions_sha),
+                ParentRef(kind="lifecycle_definitions", content_sha256=lifecycle_definitions_sha),
+            ],
+            **base_prov,
+        )
         write_with_provenance(
             output_dir / "operational_package.json",
             operational_package,
@@ -781,6 +814,7 @@ async def run(
                 ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
                 ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
                 ParentRef(kind="registry_snapshot", content_sha256=registry_snapshot_sha),
+                ParentRef(kind="operational_version_lock", content_sha256=version_lock_sha),
             ],
             **base_prov,
         )

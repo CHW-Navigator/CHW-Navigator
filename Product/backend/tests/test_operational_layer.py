@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import unittest
 from pathlib import Path
 
@@ -72,6 +73,7 @@ LIFECYCLE = {
             "event_type": "clinical_reassessment",
             "event_category": "clinical",
             "requires_guard": True,
+            "guard_id": "recovery-guard-v1",
         },
         {
             "from": "overdue",
@@ -79,6 +81,7 @@ LIFECYCLE = {
             "event_type": "clinical_reassessment",
             "event_category": "clinical",
             "requires_guard": True,
+            "guard_id": "recovery-guard-v1",
         },
         {
             "from": "overdue",
@@ -116,6 +119,8 @@ class TestEpisodeLifecycle(unittest.TestCase):
                     "causal_sequence": 1,
                     "predicate_set_version": "predicates@2",
                     "dmn_version": "dmn@4",
+                    "recorded_at": "2026-08-03T09:00:00Z",
+                    "occurred_at": "2026-08-03T09:00:00Z",
                 },
                 {
                     "id": "event-2",
@@ -126,8 +131,12 @@ class TestEpisodeLifecycle(unittest.TestCase):
                     "predicate_set_version": "predicates@2",
                     "dmn_version": "dmn@4",
                     "guard_passed": True,
+                    "guard_id": "recovery-guard-v1",
                     "guard_predicate_set_version": "predicates@2",
                     "guard_dmn_version": "dmn@4",
+                    "guard_evaluated_at": "2026-08-03T09:01:00Z",
+                    "recorded_at": "2026-08-03T09:02:00Z",
+                    "occurred_at": "2026-08-03T09:02:00Z",
                 },
             ],
             "episode-1",
@@ -147,8 +156,12 @@ class TestEpisodeLifecycle(unittest.TestCase):
                     "predicate_set_version": "predicates@old",
                     "dmn_version": "dmn@4",
                     "guard_passed": True,
+                    "guard_id": "recovery-guard-v1",
                     "guard_predicate_set_version": "predicates@old",
                     "guard_dmn_version": "dmn@4",
+                    "guard_evaluated_at": "2026-08-03T09:00:00Z",
+                    "recorded_at": "2026-08-03T09:01:00Z",
+                    "occurred_at": "2026-08-03T09:01:00Z",
                 }
             ],
             "episode-1",
@@ -165,6 +178,8 @@ class TestEpisodeLifecycle(unittest.TestCase):
             "causal_sequence": 1,
             "predicate_set_version": "predicates@2",
             "dmn_version": "dmn@4",
+            "recorded_at": "2026-08-03T09:00:00Z",
+            "occurred_at": "2026-08-03T09:00:00Z",
         }
         conflicting = dict(common, event_type="clinical_reassessment", event_category="clinical")
         result = project_lifecycle(LIFECYCLE, [common, conflicting], "episode-1")
@@ -181,6 +196,47 @@ class TestEpisodeLifecycle(unittest.TestCase):
         ]
         with self.assertRaisesRegex(OperationalValidationError, "endpoint path"):
             validate_lifecycle_definition(invalid)
+
+    def test_rejects_a_guard_evaluated_after_the_event_was_recorded(self):
+        event = {
+            "id": "event-late-guard",
+            "episode_id": "episode-1",
+            "event_type": "clinical_reassessment",
+            "event_category": "clinical",
+            "causal_sequence": 1,
+            "predicate_set_version": "predicates@2",
+            "dmn_version": "dmn@4",
+            "guard_passed": True,
+            "guard_id": "recovery-guard-v1",
+            "guard_predicate_set_version": "predicates@2",
+            "guard_dmn_version": "dmn@4",
+            "guard_evaluated_at": "2026-08-03T09:02:00Z",
+            "recorded_at": "2026-08-03T09:01:00Z",
+            "occurred_at": "2026-08-03T09:01:00Z",
+        }
+        result = project_lifecycle(LIFECYCLE, [event], "episode-1")
+        self.assertEqual(result["state"], "active")
+        self.assertEqual(result["quarantined_events"][0]["reason"], "invalid_guard_evidence")
+
+    def test_quarantines_same_sequence_events_without_aborting_replay(self):
+        collided = {
+            "id": "event-collision-a",
+            "episode_id": "episode-1",
+            "event_type": "task_expired",
+            "event_category": "timer",
+            "causal_sequence": 1,
+            "predicate_set_version": "predicates@2",
+            "dmn_version": "dmn@4",
+            "recorded_at": "2026-08-03T09:00:00Z",
+            "occurred_at": "2026-08-03T09:00:00Z",
+        }
+        other = dict(collided, id="event-collision-b")
+        result = project_lifecycle(LIFECYCLE, [collided, other], "episode-1")
+        self.assertEqual(result["state"], "active")
+        self.assertEqual(
+            [item["reason"] for item in result["quarantined_events"]],
+            ["conflicting_causal_sequence", "conflicting_causal_sequence"],
+        )
 
 
 class TestOperationalPackage(unittest.TestCase):
@@ -214,9 +270,11 @@ class TestOperationalPackage(unittest.TestCase):
                 ],
             },
             REGISTRY,
+            clinical_logic_content_sha256="a" * 64,
         )
         self.assertEqual(package["compile_status"], "planned")
         self.assertEqual(package["external_effect_intents"][0]["state"], "planned")
+        self.assertEqual(package["version_lock"]["clinical_logic_content_sha256"], "a" * 64)
 
     def test_rejects_direct_delivery_address(self):
         requirements = {
@@ -235,10 +293,27 @@ class TestOperationalPackage(unittest.TestCase):
             ]
         }
         with self.assertRaisesRegex(OperationalValidationError, "direct-delivery"):
-            build_operational_package(requirements, REGISTRY)
+            build_operational_package(
+                requirements, REGISTRY, clinical_logic_content_sha256="a" * 64
+            )
 
 
 class TestGen8IntegrationBoundary(unittest.TestCase):
+    def test_published_operational_schemas_are_valid_json_contracts(self):
+        schemas = Path(__file__).parents[1] / "operational" / "schemas"
+        expected = {
+            "capability-candidate.schema.json",
+            "registry-resolution.schema.json",
+            "lifecycle-definition.schema.json",
+            "episode-event.schema.json",
+            "operational-version-lock.schema.json",
+        }
+        self.assertEqual({path.name for path in schemas.glob("*.schema.json")}, expected)
+        for path in schemas.glob("*.schema.json"):
+            document = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(document["$schema"], "https://json-schema.org/draft/2020-12/schema")
+            self.assertTrue(document["$id"].startswith("https://chw-navigator.org/schema/gen8/"))
+
     def test_pipeline_exposes_only_gated_operational_sidecars(self):
         """Keep the optional companion boundary visible without loading API deps."""
         pipeline = Path(__file__).parents[1] / "gen8" / "pipeline.py"
@@ -250,6 +325,9 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
             "operational_requirements.json",
             "registry_snapshot.json",
             "capability_candidates.json",
+            "registry_resolution.json",
+            "lifecycle_definitions.json",
+            "operational_version_lock.json",
             "operational_package.json",
         ):
             self.assertIn(artifact, source)

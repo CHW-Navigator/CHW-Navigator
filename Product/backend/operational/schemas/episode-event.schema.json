@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/episode-event/1.0.0",
+  "title": "Append-only episode event",
+  "type": "object",
+  "required": ["id", "episode_id", "event_type", "event_category", "causal_sequence", "recorded_at", "occurred_at", "predicate_set_version", "dmn_version"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "event_type": {"type": "string", "minLength": 1},
+    "event_category": {"enum": ["clinical", "timer", "external"]},
+    "causal_sequence": {"type": "integer", "minimum": 0},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "predicate_set_version": {"type": "string", "minLength": 1},
+    "dmn_version": {"type": "string", "minLength": 1},
+    "guard_id": {"type": "string", "minLength": 1},
+    "guard_passed": {"type": "boolean"},
+    "guard_predicate_set_version": {"type": "string", "minLength": 1},
+    "guard_dmn_version": {"type": "string", "minLength": 1},
+    "guard_evaluated_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": true
+}
