@@ -47,6 +47,12 @@ eligible manuals and requires an already configured Anthropic key.  It does
 not authorize real-world messaging or task delivery.
 
 The selected Python environment must also have the project-declared
-`anthropic` and `rlms` packages installed.  The harness checks that before it
+`anthropic`, `rlms`, and `z3-solver` packages installed.  The harness checks that before it
 starts a live run and reports an environment-readiness block rather than
 misclassifying a manual or silently downgrading the pipeline.
+
+On Windows, the RLM compiler can start a child Python process.  That child
+must use a runtime with the same declared compiler dependencies.  Local test
+artifact generation deliberately does **not** require a generated Prisma
+client or a reachable database: database persistence remains best-effort and
+is loaded only when an application run elects to persist an artifact.

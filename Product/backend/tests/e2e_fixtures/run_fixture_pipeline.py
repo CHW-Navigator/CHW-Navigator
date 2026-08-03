@@ -147,7 +147,7 @@ async def run_live(fixture_id: str, output_dir: Path) -> dict[str, Any]:
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         raise RuntimeError("ANTHROPIC_API_KEY is required for --live")
-    missing = [name for name in ("anthropic", "rlm") if importlib.util.find_spec(name) is None]
+    missing = [name for name in ("anthropic", "rlm", "z3") if importlib.util.find_spec(name) is None]
     if missing:
         raise RuntimeError(
             "live extraction environment is incomplete; missing "
