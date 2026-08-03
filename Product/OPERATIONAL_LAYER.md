@@ -98,6 +98,75 @@ rejected.
 future governed runtime must record provider acceptance, network dispatch,
 device delivery, and human acknowledgment as separate append-only evidence.
 
+## Prompt 10 reviewer reconciliation and admission gate
+
+Prompt 10 is not yet implemented in this repository. Its reviewed source
+archive is a local contract and planning library, not a deployed provider
+worker, webhook receiver, secret store, or durable outbox. No current Gen 8
+run can send a message, accept a provider callback, or claim that a message
+was delivered.
+
+The following were confirmed while reviewing the current Prompt 10 handoff:
+
+- Its receipt normalizer checks a caller-supplied `authenticated` flag but
+  does not cryptographically verify a provider signature. That is an
+  incomplete ingress boundary, not authentication. A future integration must
+  never accept this Boolean from an HTTP request or untrusted caller.
+- Its outbox functions decide whether a dispatch attempt is permitted and
+  derive stable identifiers, but do not persist, schedule, transport, or
+  receive effects. The handoff's local-only and no-live-provider claims are
+  therefore appropriate; any wording that says it *delivers messaging* is
+  not.
+- The external-effects source is too densely formatted for safe handoff
+  review (currently about 330 characters per line, with a longest line near
+  3,000 characters). A formatter and enforced maximum line length are part
+  of the source intake, not optional polish.
+- The named golden artifacts are protected by the current Prompt 9 baseline,
+  contrary to the finding that they are wholly unprotected. But their test
+  writes new output instead of reading and comparing the checked-in expected
+  file, so it provides no golden-file regression protection. Both facts must
+  be fixed or preserved when the source package changes.
+- The standalone generated-artifact QA script duplicates a weaker blacklist
+  rather than using the compiler's `validateChtGeneratedSafety` validator.
+  The checks must converge so a stronger compiler rule cannot be skipped by a
+  separate QA route.
+- The current release ledger calls generated-clinical-derivation protection
+  `repaired`. Its present checks are pattern-based, so the justified status is
+  *mitigated*: they catch known unsafe forms but cannot prove that all
+  equivalent clinical derivation has been excluded. The residual evasion
+  class and a stronger structural control must be recorded in the next
+  reviewed handoff.
+
+Prompt 10 may enter this companion layer only after its reviewed source and
+integration design provide all of the following:
+
+1. A deployment-owned ingress verifier that validates a documented provider
+   signature or equivalent authenticated callback contract before constructing
+   a receipt input; it must use safe comparison, bounded clock-skew handling,
+   replay storage, key/secret rotation, and a test corpus of invalid,
+   replayed, and stale callbacks.
+2. A durable server-side outbox worker with transactional attempt persistence,
+   explicit ownership/concurrency behavior, crash recovery, status lookup for
+   unknown outcomes, bounded retry, and an adapter that can use only secret
+   references. Device-side clinical code must remain offline and transport
+   free.
+3. Read-then-compare golden tests, protected expected artifacts, and an
+   enforced formatter/line-length check for the imported source.
+4. One generated-CHT safety implementation used by both compiler and QA
+   paths, with regression tests for each banned pattern.
+5. Operator procedures for secret lifecycle, webhook setup, worker lifecycle,
+   topology data loading, monitoring/alerts, opt-out and retention handling,
+   incident response, and manual review. These procedures require program,
+   privacy, security, and deployment ownership before any live transport.
+6. A reproducible root-level test gate that does not depend on the caller's
+   current working directory, plus a claims ledger that labels pattern-based
+   clinical-derivation checks as mitigations rather than complete repairs.
+
+Until those gates are satisfied, Prompt 10 can contribute only typed,
+source-grounded planning artifacts. It cannot change clinical state and it
+cannot make external-effect, provider-acceptance, delivery, acknowledgment,
+or production-readiness claims.
+
 ## Root cause and guardrail
 
 The previous workspace was an uninitialized Git folder containing an older

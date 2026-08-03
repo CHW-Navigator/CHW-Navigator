@@ -299,6 +299,23 @@ class TestOperationalPackage(unittest.TestCase):
 
 
 class TestGen8IntegrationBoundary(unittest.TestCase):
+    def test_prompt10_admission_gates_prevent_overclaiming_a_local_library(self):
+        """Preserve the review gate until a real external-effect runtime exists."""
+        operational_layer = Path(__file__).parents[2] / "OPERATIONAL_LAYER.md"
+        source = " ".join(operational_layer.read_text(encoding="utf-8").split())
+        for gate in (
+            "receipt normalizer checks a caller-supplied `authenticated` flag",
+            "not a deployed provider worker, webhook receiver, secret store, or durable outbox",
+            "formatter and enforced maximum line length",
+            "Read-then-compare golden tests",
+            "One generated-CHT safety implementation",
+            "justified status is *mitigated*",
+            "Operator procedures for secret lifecycle",
+            "does not depend on the caller's current working directory",
+            "cannot make external-effect, provider-acceptance, delivery, acknowledgment, or production-readiness claims",
+        ):
+            self.assertIn(gate, source)
+
     def test_published_operational_schemas_are_valid_json_contracts(self):
         schemas = Path(__file__).parents[1] / "operational" / "schemas"
         expected = {
