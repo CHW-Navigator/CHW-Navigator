@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "registry_id": "synthetic-e2e-extension-registry",
+  "registry_version": "1.0.0",
+  "scope": "test_only",
+  "boundary": "No entry in this registry authorizes network, SMS, email, provider, queue, scheduler, or production task effects.",
+  "functions": [
+    {"id": "core.age-band@1.0.0", "aliases": ["age_band"], "state": "available", "kind": "native_expression", "purpose": "Select a declared age band from supplied numeric input."},
+    {"id": "core.numeric-compare@1.0.0", "aliases": ["numeric_compare", "boolean_compare", "unit_check", "boolean_or", "rule_priority", "required_input_guard"], "state": "available", "kind": "native_expression", "purpose": "Compare supplied numeric input against a declared threshold or explicit boolean condition."},
+    {"id": "topology.resolve-relation@1.0.0", "aliases": ["referral.eligible-facilities", "patient.assigned-chw", "patient.primary-caregiver"], "state": "available", "kind": "topology_lookup", "purpose": "Resolve only approved Prompt 9 synthetic topology relations."},
+    {"id": "external-effect.plan-request@1.0.0", "aliases": ["external_effect_request", "version_lock"], "state": "planning_only", "kind": "prompt10_planning", "purpose": "Create a version-locked Prompt 10 planning record with no delivery."},
+    {"id": "calendar-exact@1.0.0", "aliases": ["add_calendar_month", "weekday", "local_date"], "state": "unavailable", "kind": "unsupported_extension", "purpose": "Exact-calendar calculation is deliberately absent to test a release block."}
+  ],
+  "task_types": [
+    {"id": "local.review-follow-up@1.0.0", "state": "available", "sink": "local_file", "purpose": "Record a test-only follow-up task in the run directory."}
+  ],
+  "message_types": [
+    {"id": "local.screen-notice@1.0.0", "state": "available", "sink": "screen", "purpose": "Render a test-only notice to standard output."},
+    {"id": "local.file-notice@1.0.0", "state": "available", "sink": "local_file", "purpose": "Record a test-only notice in the run directory."}
+  ]
+}

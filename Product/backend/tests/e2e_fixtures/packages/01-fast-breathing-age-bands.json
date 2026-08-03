@@ -8,6 +8,7 @@
     "library": "navigator-core@1.0",
     "functions": ["numeric_compare", "age_band"]
   },
+  "clarifying_memos": ["NOG-CLIN-001-fast-breathing"],
   "manual_pages": [
     {"page": 1, "title": "Purpose and inputs", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "A CHW records age in completed months and respiratory rate in breaths per minute for a child with cough.", "If either required value is absent, stop this screen and record an incomplete assessment. Do not classify the child as not fast breathing."]},
     {"page": 2, "title": "Age-banded rule", "sections": ["For age 2 months up to but not including 12 months, fast breathing means respiratory rate greater than or equal to 50 breaths per minute.", "For age 12 months up to but not including 60 months, fast breathing means respiratory rate greater than or equal to 40 breaths per minute.", "Age below 2 months or age 60 months and older is outside this synthetic manual and requires review."]},

@@ -70,3 +70,7 @@ matrix_medical.egg-info/
 # Compiler local test run scratch outputs
 compiler/generated/t/
 compiler/generated/test_runs/
+
+# Synthetic end-to-end fixture run evidence (regenerated locally)
+Product/backend/tests/e2e_fixtures/runs/
+Product/.e2e-venv/

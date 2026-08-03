@@ -8,6 +8,7 @@
     "library": "navigator-core@1.0",
     "functions": ["numeric_compare", "boolean_or", "unit_check"]
   },
+  "clarifying_memos": ["NOG-CLIN-002-anthropometry"],
   "manual_pages": [
     {"page": 1, "title": "Purpose and inputs", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "For a synthetic child age 6 through 59 completed months, record mid-upper-arm circumference in millimetres and whether swelling of both feet is present.", "Do not convert a value with an unknown or missing unit. Mark the assessment incomplete instead."]},
     {"page": 2, "title": "Synthetic classification", "sections": ["Record SYNTHETIC_RED when bilateral foot swelling is present or MUAC is less than 115 millimetres.", "Record SYNTHETIC_YELLOW when MUAC is 115 through 124 millimetres and bilateral foot swelling is absent.", "Record SYNTHETIC_GREEN when MUAC is 125 millimetres or more and bilateral foot swelling is absent."]},

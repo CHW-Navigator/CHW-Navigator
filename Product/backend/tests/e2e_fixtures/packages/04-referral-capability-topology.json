@@ -8,6 +8,7 @@
     "library": "gen8.operational.topology@1.0",
     "functions": ["referral.eligible-facilities", "patient.assigned-chw"]
   },
+  "clarifying_memos": ["NOG-OPS-001-referral-role"],
   "manual_pages": [
     {"page": 1, "title": "Purpose and assignment", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "The assigned CHW records a synthetic referral need for the current patient.", "The CHW assignment and facility selection must come from an approved deployment topology, not from a manual, patient note, or array order."]},
     {"page": 2, "title": "Capability selection", "sections": ["For a SYNTHETIC_EMERGENCY need, select facilities with the emergency-care capability.", "For a SYNTHETIC_NUTRITION need, select facilities with the nutrition-support capability.", "If no eligible facility is returned, record unassigned and request operational review."]},

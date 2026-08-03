@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
 from backend.operational import validate_topology_package
+from backend.tests.e2e_fixtures.local_extensions import LocalRunRecorder
 from backend.tests.e2e_fixtures.reference_oracle import evaluate_fixture_case
+from backend.tests.e2e_fixtures.run_fixture_pipeline import _admission, _registry_findings
 
 
 FIXTURE_ROOT = Path(__file__).parent / "e2e_fixtures"
@@ -113,6 +116,48 @@ class TestSyntheticE2EFixtureCorpus(unittest.TestCase):
             packages["conflicting-disposition"]["source_oracle"]["required_finding"],
             "conflicting_dispositions",
         )
+
+    def test_extension_registry_covers_every_declared_function_and_blocks_calendar(self):
+        registry = _load(FIXTURE_ROOT / "common" / "extension-registry.json")
+        for path, package in _packages():
+            findings = _registry_findings(package, registry)
+            if package["fixture_status"] == "source_blocked":
+                self.assertNotIn("unregistered", {item["state"] for item in findings}, path)
+                self.assertEqual(_admission(package, registry)["reason"], package["source_oracle"]["required_finding"])
+                continue
+            self.assertTrue(findings, path)
+            self.assertNotIn("unregistered", {item["state"] for item in findings}, path)
+            admission = _admission(package, registry)
+            if package["fixture_id"] == "exact-calendar-extension":
+                self.assertEqual(admission["reason"], "extension_not_available")
+            elif package["fixture_status"] == "setup_blocked":
+                self.assertEqual(admission["reason"], "setup_validation_error")
+            else:
+                self.assertEqual(admission["status"], "eligible", path)
+
+    def test_clarifying_memos_are_explicit_and_cannot_repair_source_blocks(self):
+        memo_dir = FIXTURE_ROOT / "clarifying_memos"
+        memo_ids = {path.stem for path in memo_dir.glob("NOG-*.md")}
+        for path, package in _packages():
+            attached = package.get("clarifying_memos", [])
+            if package["fixture_status"] == "source_blocked":
+                self.assertEqual(attached, [], f"{path}: a memo cannot repair a source-blocked manual")
+            for memo_id in attached:
+                self.assertIn(memo_id, memo_ids, path)
+
+    def test_local_test_sinks_are_local_only_and_reject_delivery_fields(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            recorder = LocalRunRecorder(Path(temporary))
+            task = recorder.create_task(
+                fixture_id="fixture", case_id="case", task_type="local.review-follow-up@1.0.0", status="planned_not_queued"
+            )
+            notice = recorder.write_message_file(
+                fixture_id="fixture", case_id="case", message_type="local.file-notice@1.0.0", text="Synthetic only"
+            )
+            self.assertEqual(task["execution"], "not_queued")
+            self.assertEqual(notice["execution"], "rendered_not_sent")
+            with self.assertRaises(ValueError):
+                recorder._append("local_messages.jsonl", {"phone": "+15551212"})
 
     def test_derived_guides_match_the_three_source_pages(self):
         for package_path, package in _packages():

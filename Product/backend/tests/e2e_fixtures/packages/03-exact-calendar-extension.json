@@ -9,6 +9,7 @@
     "functions": ["add_calendar_month", "weekday", "local_date"],
     "required_extension": "calendar-exact@1.0"
   },
+  "clarifying_memos": ["NOG-OPS-003-calendar-gap"],
   "manual_pages": [
     {"page": 1, "title": "Purpose and inputs", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "Record a local calendar visit date in ISO date format and the facility time-zone name.", "This manual uses calendar months, not a fixed number of days."]},
     {"page": 2, "title": "Calendar-exact rule", "sections": ["Set the follow-up due date to one calendar month after the visit date.", "If that calendar day does not exist in the due month, use the final calendar day of that month.", "If the due date is Sunday in the named facility time zone, move it to Monday."]},

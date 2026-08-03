@@ -8,6 +8,7 @@
     "library": "gen8.operational.external-effects@1.0",
     "functions": ["patient.primary-caregiver", "external_effect_request", "version_lock"]
   },
+  "clarifying_memos": ["NOG-OPS-002-local-effect-boundary"],
   "manual_pages": [
     {"page": 1, "title": "Purpose and trigger", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "After a SYNTHETIC_YELLOW result, create a follow-up plan for the current patient's primary caregiver.", "The plan must retain the source quotation, trigger identifier, and requested time."]},
     {"page": 2, "title": "Recipient and content", "sections": ["Resolve the recipient only through the patient.primary-caregiver topology relation.", "Use the approved synthetic follow-up template, policy, and adapter versions.", "Do not put a phone number, email address, provider endpoint, secret, or raw destination in the clinical or planning request."]},
