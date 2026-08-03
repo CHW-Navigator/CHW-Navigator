@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Capability-Based Referral",
+    "fixture_id": "referral-capability-topology",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose and assignment",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose and assignment\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nThe assigned CHW records a synthetic referral need for the current patient.\n\nThe CHW assignment and facility selection must come from an approved deployment topology, not from a manual, patient note, or array order.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose and assignment"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The assigned CHW records a synthetic referral need for the current patient."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The CHW assignment and facility selection must come from an approved deployment topology, not from a manual, patient note, or array order."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Capability selection",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Capability selection\n\nFor a SYNTHETIC_EMERGENCY need, select facilities with the emergency-care capability.\n\nFor a SYNTHETIC_NUTRITION need, select facilities with the nutrition-support capability.\n\nIf no eligible facility is returned, record unassigned and request operational review.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Capability selection"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "For a SYNTHETIC_EMERGENCY need, select facilities with the emergency-care capability."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "For a SYNTHETIC_NUTRITION need, select facilities with the nutrition-support capability."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "If no eligible facility is returned, record unassigned and request operational review."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "No guessing",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "No guessing\n\nDo not name a facility identifier in the clinical artifact.\n\nDo not use an inactive CHW or a facility without the required capability.\n\nRecord the topology snapshot, relation, and capability code with the referral plan.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "No guessing"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Do not name a facility identifier in the clinical artifact."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Do not use an inactive CHW or a facility without the required capability."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Record the topology snapshot, relation, and capability code with the referral plan."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose and assignment\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nThe assigned CHW records a synthetic referral need for the current patient.\n\nThe CHW assignment and facility selection must come from an approved deployment topology, not from a manual, patient note, or array order."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Capability selection\n\nFor a SYNTHETIC_EMERGENCY need, select facilities with the emergency-care capability.\n\nFor a SYNTHETIC_NUTRITION need, select facilities with the nutrition-support capability.\n\nIf no eligible facility is returned, record unassigned and request operational review."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "No guessing\n\nDo not name a facility identifier in the clinical artifact.\n\nDo not use an inactive CHW or a facility without the required capability.\n\nRecord the topology snapshot, relation, and capability code with the referral plan."
+    }
+  }
+}

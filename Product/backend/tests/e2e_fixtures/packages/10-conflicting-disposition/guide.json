@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Conflicting Action Rule",
+    "fixture_id": "conflicting-disposition",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nA CHW records whether synthetic marker X is present.\n\nThe marker is the only clinical input in this manual.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "A CHW records whether synthetic marker X is present."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The marker is the only clinical input in this manual."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Conflicting instructions",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Conflicting instructions\n\nIf synthetic marker X is present, record SYNTHETIC_HOME and finish the visit.\n\nIf synthetic marker X is present, record SYNTHETIC_IMMEDIATE_REFERRAL and finish the visit.\n\nThe manual gives no priority, exception, or tie-breaking instruction.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Conflicting instructions"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "If synthetic marker X is present, record SYNTHETIC_HOME and finish the visit."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "If synthetic marker X is present, record SYNTHETIC_IMMEDIATE_REFERRAL and finish the visit."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "The manual gives no priority, exception, or tie-breaking instruction."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Review expectation",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Review expectation\n\nThis contradictory source is a negative fixture.\n\nDo not choose one action by array order or by external knowledge.\n\nRecord manual_review_required with conflict_resolution_priority missing.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Review expectation"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "This contradictory source is a negative fixture."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Do not choose one action by array order or by external knowledge."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Record manual_review_required with conflict_resolution_priority missing."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nA CHW records whether synthetic marker X is present.\n\nThe marker is the only clinical input in this manual."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Conflicting instructions\n\nIf synthetic marker X is present, record SYNTHETIC_HOME and finish the visit.\n\nIf synthetic marker X is present, record SYNTHETIC_IMMEDIATE_REFERRAL and finish the visit.\n\nThe manual gives no priority, exception, or tie-breaking instruction."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Review expectation\n\nThis contradictory source is a negative fixture.\n\nDo not choose one action by array order or by external knowledge.\n\nRecord manual_review_required with conflict_resolution_priority missing."
+    }
+  }
+}

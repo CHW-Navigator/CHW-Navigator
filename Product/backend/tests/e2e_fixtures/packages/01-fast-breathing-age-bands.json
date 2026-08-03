@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "fast-breathing-age-bands",
+  "title": "Synthetic Training Manual: Age-Banded Breathing Screen",
+  "fixture_status": "complete",
+  "function_profile": {
+    "kind": "native_expression",
+    "library": "navigator-core@1.0",
+    "functions": ["numeric_compare", "age_band"]
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Purpose and inputs", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "A CHW records age in completed months and respiratory rate in breaths per minute for a child with cough.", "If either required value is absent, stop this screen and record an incomplete assessment. Do not classify the child as not fast breathing."]},
+    {"page": 2, "title": "Age-banded rule", "sections": ["For age 2 months up to but not including 12 months, fast breathing means respiratory rate greater than or equal to 50 breaths per minute.", "For age 12 months up to but not including 60 months, fast breathing means respiratory rate greater than or equal to 40 breaths per minute.", "Age below 2 months or age 60 months and older is outside this synthetic manual and requires review."]},
+    {"page": 3, "title": "Disposition", "sections": ["If fast breathing is present, record SYNTHETIC_FAST and request facility review.", "If fast breathing is absent and both inputs are present, record SYNTHETIC_NOT_FAST.", "Record the input values and the rule quotation used for the result."]}
+  ],
+  "source_oracle": {
+    "must_include": ["completed months", "greater than or equal to 50", "greater than or equal to 40", "incomplete assessment"],
+    "must_not_invent": ["antibiotic", "dose", "phone number"],
+    "expected_integration_status": "eligible_for_artifact_and_behavior_test"
+  },
+  "setup": {"topology": "../common/topology-package.json", "registry": "../common/registry-snapshot.json", "required_roles": ["chw"], "required_context": ["patient.age_months", "patient.respiratory_rate_bpm"]},
+  "patient_cases": [
+    {"id": "below-younger-threshold", "inputs": {"patient_id": "patient-edge", "age_months": 11, "respiratory_rate_bpm": 49}, "expected": {"status": "classified", "classification": "SYNTHETIC_NOT_FAST"}},
+    {"id": "at-younger-threshold", "inputs": {"patient_id": "patient-edge", "age_months": 11, "respiratory_rate_bpm": 50}, "expected": {"status": "classified", "classification": "SYNTHETIC_FAST", "referral": "facility_review"}},
+    {"id": "age-band-boundary", "inputs": {"patient_id": "patient-edge", "age_months": 12, "respiratory_rate_bpm": 40}, "expected": {"status": "classified", "classification": "SYNTHETIC_FAST", "referral": "facility_review"}},
+    {"id": "missing-rate", "inputs": {"patient_id": "patient-edge", "age_months": 12}, "expected": {"status": "blocked", "reason": "missing_required_data"}}
+  ]
+}

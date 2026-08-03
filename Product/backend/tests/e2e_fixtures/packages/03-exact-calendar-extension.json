@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "exact-calendar-extension",
+  "title": "Synthetic Training Manual: Calendar-Exact Follow-Up",
+  "fixture_status": "extension_blocked",
+  "function_profile": {
+    "kind": "unsupported_extension",
+    "library": "calendar-exact@1.0",
+    "functions": ["add_calendar_month", "weekday", "local_date"],
+    "required_extension": "calendar-exact@1.0"
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Purpose and inputs", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "Record a local calendar visit date in ISO date format and the facility time-zone name.", "This manual uses calendar months, not a fixed number of days."]},
+    {"page": 2, "title": "Calendar-exact rule", "sections": ["Set the follow-up due date to one calendar month after the visit date.", "If that calendar day does not exist in the due month, use the final calendar day of that month.", "If the due date is Sunday in the named facility time zone, move it to Monday."]},
+    {"page": 3, "title": "Release boundary", "sections": ["This synthetic rule requires an exact calendar function with local time-zone semantics.", "A day-serial approximation is not acceptable for this manual.", "If the named calendar function is unavailable, block release and record extension_not_available."]}
+  ],
+  "source_oracle": {
+    "must_include": ["one calendar month", "final calendar day", "Sunday", "extension_not_available"],
+    "must_not_invent": ["30 days", "UTC approximation", "message delivery"],
+    "expected_integration_status": "extension_not_available"
+  },
+  "setup": {"topology": "../common/topology-package.json", "required_context": ["patient.visit_date", "facility.time_zone"], "required_extension": "calendar-exact@1.0"},
+  "patient_cases": [
+    {"id": "leap-day-input", "inputs": {"patient_id": "patient-edge", "visit_date": "2024-02-29", "facility_time_zone": "Africa/Harare"}, "expected": {"status": "blocked", "reason": "extension_not_available"}},
+    {"id": "month-end-input", "inputs": {"patient_id": "patient-edge", "visit_date": "2025-01-31", "facility_time_zone": "Africa/Harare"}, "expected": {"status": "blocked", "reason": "extension_not_available"}},
+    {"id": "missing-time-zone", "inputs": {"patient_id": "patient-edge", "visit_date": "2025-01-31"}, "expected": {"status": "blocked", "reason": "missing_required_data"}}
+  ]
+}

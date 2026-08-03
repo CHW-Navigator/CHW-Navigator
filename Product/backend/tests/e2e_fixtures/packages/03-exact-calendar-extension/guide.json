@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Calendar-Exact Follow-Up",
+    "fixture_id": "exact-calendar-extension",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose and inputs",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nRecord a local calendar visit date in ISO date format and the facility time-zone name.\n\nThis manual uses calendar months, not a fixed number of days.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose and inputs"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "Record a local calendar visit date in ISO date format and the facility time-zone name."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "This manual uses calendar months, not a fixed number of days."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Calendar-exact rule",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Calendar-exact rule\n\nSet the follow-up due date to one calendar month after the visit date.\n\nIf that calendar day does not exist in the due month, use the final calendar day of that month.\n\nIf the due date is Sunday in the named facility time zone, move it to Monday.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Calendar-exact rule"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Set the follow-up due date to one calendar month after the visit date."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "If that calendar day does not exist in the due month, use the final calendar day of that month."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "If the due date is Sunday in the named facility time zone, move it to Monday."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Release boundary",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Release boundary\n\nThis synthetic rule requires an exact calendar function with local time-zone semantics.\n\nA day-serial approximation is not acceptable for this manual.\n\nIf the named calendar function is unavailable, block release and record extension_not_available.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Release boundary"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "This synthetic rule requires an exact calendar function with local time-zone semantics."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "A day-serial approximation is not acceptable for this manual."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "If the named calendar function is unavailable, block release and record extension_not_available."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nRecord a local calendar visit date in ISO date format and the facility time-zone name.\n\nThis manual uses calendar months, not a fixed number of days."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Calendar-exact rule\n\nSet the follow-up due date to one calendar month after the visit date.\n\nIf that calendar day does not exist in the due month, use the final calendar day of that month.\n\nIf the due date is Sunday in the named facility time zone, move it to Monday."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Release boundary\n\nThis synthetic rule requires an exact calendar function with local time-zone semantics.\n\nA day-serial approximation is not acceptable for this manual.\n\nIf the named calendar function is unavailable, block release and record extension_not_available."
+    }
+  }
+}

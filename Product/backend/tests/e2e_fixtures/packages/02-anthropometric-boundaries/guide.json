@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: MUAC and Swelling Classifier",
+    "fixture_id": "anthropometric-boundaries",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose and inputs",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nFor a synthetic child age 6 through 59 completed months, record mid-upper-arm circumference in millimetres and whether swelling of both feet is present.\n\nDo not convert a value with an unknown or missing unit. Mark the assessment incomplete instead.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose and inputs"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "For a synthetic child age 6 through 59 completed months, record mid-upper-arm circumference in millimetres and whether swelling of both feet is present."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "Do not convert a value with an unknown or missing unit. Mark the assessment incomplete instead."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Synthetic classification",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Synthetic classification\n\nRecord SYNTHETIC_RED when bilateral foot swelling is present or MUAC is less than 115 millimetres.\n\nRecord SYNTHETIC_YELLOW when MUAC is 115 through 124 millimetres and bilateral foot swelling is absent.\n\nRecord SYNTHETIC_GREEN when MUAC is 125 millimetres or more and bilateral foot swelling is absent.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Synthetic classification"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Record SYNTHETIC_RED when bilateral foot swelling is present or MUAC is less than 115 millimetres."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Record SYNTHETIC_YELLOW when MUAC is 115 through 124 millimetres and bilateral foot swelling is absent."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Record SYNTHETIC_GREEN when MUAC is 125 millimetres or more and bilateral foot swelling is absent."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Disposition",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Disposition\n\nSYNTHETIC_RED requests immediate facility review.\n\nSYNTHETIC_YELLOW requests a nutrition-support capability lookup.\n\nSYNTHETIC_GREEN records routine synthetic follow-up. Values outside the stated age range require manual review.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Disposition"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "SYNTHETIC_RED requests immediate facility review."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "SYNTHETIC_YELLOW requests a nutrition-support capability lookup."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "SYNTHETIC_GREEN records routine synthetic follow-up. Values outside the stated age range require manual review."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nFor a synthetic child age 6 through 59 completed months, record mid-upper-arm circumference in millimetres and whether swelling of both feet is present.\n\nDo not convert a value with an unknown or missing unit. Mark the assessment incomplete instead."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Synthetic classification\n\nRecord SYNTHETIC_RED when bilateral foot swelling is present or MUAC is less than 115 millimetres.\n\nRecord SYNTHETIC_YELLOW when MUAC is 115 through 124 millimetres and bilateral foot swelling is absent.\n\nRecord SYNTHETIC_GREEN when MUAC is 125 millimetres or more and bilateral foot swelling is absent."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Disposition\n\nSYNTHETIC_RED requests immediate facility review.\n\nSYNTHETIC_YELLOW requests a nutrition-support capability lookup.\n\nSYNTHETIC_GREEN records routine synthetic follow-up. Values outside the stated age range require manual review."
+    }
+  }
+}

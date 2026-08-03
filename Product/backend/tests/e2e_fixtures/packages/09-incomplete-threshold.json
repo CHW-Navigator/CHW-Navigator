@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "incomplete-threshold",
+  "title": "Synthetic Training Manual: Missing Fast-Breathing Cutoff",
+  "fixture_status": "source_blocked",
+  "function_profile": {
+    "kind": "native_expression",
+    "library": "navigator-core@1.0",
+    "functions": ["numeric_compare"],
+    "missing_definition": "age_band_threshold"
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Purpose", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "A CHW records age in months and respiratory rate in breaths per minute.", "The manual calls a rate fast when it is high for the child's age."]},
+    {"page": 2, "title": "Deliberate omission", "sections": ["This manual gives no numeric threshold for any age band.", "This manual gives no lower or upper age-band boundary.", "This manual gives no safe fallback disposition for an unclassified rate."]},
+    {"page": 3, "title": "Review expectation", "sections": ["This incomplete source is a negative fixture.", "Do not invent a threshold from another manual, model knowledge, or a previous fixture.", "Record manual_review_required and the missing age_band_threshold definition."]}
+  ],
+  "source_oracle": {
+    "must_include": ["high for the child's age", "no numeric threshold", "Do not invent a threshold"],
+    "must_not_invent": ["50 breaths", "40 breaths", "p_fast_breathing"],
+    "expected_integration_status": "manual_review_required",
+    "required_finding": "missing_age_band_threshold"
+  },
+  "setup": {"topology": "../common/topology-package.json", "required_context": ["patient.age_months", "patient.respiratory_rate_bpm"]},
+  "patient_cases": [
+    {"id": "plausible-but-undefined", "inputs": {"patient_id": "patient-edge", "age_months": 11, "respiratory_rate_bpm": 50}, "expected": {"status": "blocked", "reason": "missing_age_band_threshold"}},
+    {"id": "other-age-still-undefined", "inputs": {"patient_id": "patient-edge", "age_months": 24, "respiratory_rate_bpm": 40}, "expected": {"status": "blocked", "reason": "missing_age_band_threshold"}}
+  ]
+}

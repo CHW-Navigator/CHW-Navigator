@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Missing Fast-Breathing Cutoff",
+    "fixture_id": "incomplete-threshold",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nA CHW records age in months and respiratory rate in breaths per minute.\n\nThe manual calls a rate fast when it is high for the child's age.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "A CHW records age in months and respiratory rate in breaths per minute."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The manual calls a rate fast when it is high for the child's age."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Deliberate omission",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Deliberate omission\n\nThis manual gives no numeric threshold for any age band.\n\nThis manual gives no lower or upper age-band boundary.\n\nThis manual gives no safe fallback disposition for an unclassified rate.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Deliberate omission"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "This manual gives no numeric threshold for any age band."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "This manual gives no lower or upper age-band boundary."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "This manual gives no safe fallback disposition for an unclassified rate."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Review expectation",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Review expectation\n\nThis incomplete source is a negative fixture.\n\nDo not invent a threshold from another manual, model knowledge, or a previous fixture.\n\nRecord manual_review_required and the missing age_band_threshold definition.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Review expectation"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "This incomplete source is a negative fixture."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Do not invent a threshold from another manual, model knowledge, or a previous fixture."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Record manual_review_required and the missing age_band_threshold definition."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nA CHW records age in months and respiratory rate in breaths per minute.\n\nThe manual calls a rate fast when it is high for the child's age."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Deliberate omission\n\nThis manual gives no numeric threshold for any age band.\n\nThis manual gives no lower or upper age-band boundary.\n\nThis manual gives no safe fallback disposition for an unclassified rate."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Review expectation\n\nThis incomplete source is a negative fixture.\n\nDo not invent a threshold from another manual, model knowledge, or a previous fixture.\n\nRecord manual_review_required and the missing age_band_threshold definition."
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "id": "synthetic-district-topology",
+  "version": "1.0.0",
+  "snapshot_id": "synthetic-2026-08-03",
+  "generated_at": "2026-08-03T00:00:00Z",
+  "schema": {
+    "id": "synthetic-chw-model",
+    "version": "1.0.0",
+    "service_area_type_id": "service_area",
+    "contact_types": [
+      {"id": "district", "kind": "place", "semantic": "administrative-area", "allowed_parents": []},
+      {"id": "facility", "kind": "place", "semantic": "facility", "allowed_parents": ["district"], "capabilities": true},
+      {"id": "service_area", "kind": "place", "semantic": "service-area", "allowed_parents": ["facility"]},
+      {"id": "household", "kind": "place", "semantic": "household", "allowed_parents": ["service_area"]},
+      {"id": "patient", "kind": "person", "semantic": "patient", "allowed_parents": ["household"]},
+      {"id": "caregiver", "kind": "person", "semantic": "caregiver", "allowed_parents": ["household"]},
+      {"id": "chw", "kind": "person", "semantic": "practitioner", "allowed_parents": ["facility"]},
+      {"id": "supervisor", "kind": "person", "semantic": "supervisor", "allowed_parents": ["facility"]}
+    ]
+  },
+  "nodes": [
+    {"external_id": "district-test", "contact_type": "district", "name": "Test District", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "facility-alpha", "contact_type": "facility", "name": "Facility Alpha", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "facility-beta", "contact_type": "facility", "name": "Facility Beta", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "area-alpha", "contact_type": "service_area", "name": "Area Alpha", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "household-edge", "contact_type": "household", "name": "Household Edge", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "patient-edge", "contact_type": "patient", "name": "Synthetic Patient", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "caregiver-edge", "contact_type": "caregiver", "name": "Synthetic Caregiver", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "chw-alpha", "contact_type": "chw", "name": "Synthetic CHW Alpha", "active_from": "2025-01-01T00:00:00Z"},
+    {"external_id": "supervisor-alpha", "contact_type": "supervisor", "name": "Synthetic Supervisor Alpha", "active_from": "2025-01-01T00:00:00Z"}
+  ],
+  "placements": [
+    {"id": "place-facility-alpha", "child_external_id": "facility-alpha", "parent_external_id": "district-test", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "place-facility-beta", "child_external_id": "facility-beta", "parent_external_id": "district-test", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "place-area", "child_external_id": "area-alpha", "parent_external_id": "facility-alpha", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "place-household", "child_external_id": "household-edge", "parent_external_id": "area-alpha", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "place-patient", "child_external_id": "patient-edge", "parent_external_id": "household-edge", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "place-caregiver", "child_external_id": "caregiver-edge", "parent_external_id": "household-edge", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "place-chw", "child_external_id": "chw-alpha", "parent_external_id": "facility-alpha", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "place-supervisor", "child_external_id": "supervisor-alpha", "parent_external_id": "facility-alpha", "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"}
+  ],
+  "assignments": [
+    {"id": "serve-alpha", "service_area_external_id": "area-alpha", "assignee_external_id": "chw-alpha", "relation": "serves", "primary": true, "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"},
+    {"id": "supervise-alpha", "service_area_external_id": "area-alpha", "assignee_external_id": "supervisor-alpha", "relation": "supervises", "primary": true, "active_from": "2025-01-01T00:00:00Z", "approved_by": "fixture"}
+  ],
+  "facility_capabilities": [
+    {"id": "cap-emergency-alpha", "facility_external_id": "facility-alpha", "capability_code": "emergency-care", "active_from": "2025-01-01T00:00:00Z"},
+    {"id": "cap-nutrition-beta", "facility_external_id": "facility-beta", "capability_code": "nutrition-support", "active_from": "2025-01-01T00:00:00Z"}
+  ],
+  "cross_references": [
+    {"from_external_id": "patient-edge", "to_external_id": "caregiver-edge", "relation": "patient.primary-caregiver", "active_from": "2025-01-01T00:00:00Z"}
+  ],
+  "users": [
+    {"username": "fixture.chw.alpha", "person_external_id": "chw-alpha", "role": "chw", "assigned_place_external_ids": ["area-alpha"], "active_from": "2025-01-01T00:00:00Z"}
+  ],
+  "access_policy": {
+    "id": "synthetic-access", "version": "1.0.0", "default_deny": true,
+    "roles": [{
+      "role": "chw", "placement_scope": "assigned-subtree",
+      "allowed_contact_types": ["service_area", "household", "patient"],
+      "allowed_record_kinds": ["report", "task", "referral", "episode-event"],
+      "allowed_relations": ["contact.responsible-area", "patient.assigned-chw", "patient.supervising-entity", "referral.eligible-facilities", "patient.primary-caregiver"],
+      "max_descendant_depth": 3, "include_ancestors": false
+    }]
+  },
+  "capability_vocabulary": {"id": "synthetic-capabilities", "version": "1.0.0", "codes": ["emergency-care", "nutrition-support"]},
+  "relation_rules": [
+    {"relation": "contact.responsible-area", "cardinality": "one", "supported_backends": ["cht", "fhir-r4"]},
+    {"relation": "patient.assigned-chw", "cardinality": "one", "supported_backends": ["cht", "fhir-r4"]},
+    {"relation": "patient.supervising-entity", "cardinality": "one", "supported_backends": ["cht", "fhir-r4"]},
+    {"relation": "referral.eligible-facilities", "cardinality": "collection", "supported_backends": ["cht", "fhir-r4"]},
+    {"relation": "patient.primary-caregiver", "cardinality": "one", "supported_backends": ["cht", "fhir-r4"]}
+  ]
+}

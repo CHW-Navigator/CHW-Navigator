@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "referral-capability-topology",
+  "title": "Synthetic Training Manual: Capability-Based Referral",
+  "fixture_status": "complete",
+  "function_profile": {
+    "kind": "topology_lookup",
+    "library": "gen8.operational.topology@1.0",
+    "functions": ["referral.eligible-facilities", "patient.assigned-chw"]
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Purpose and assignment", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "The assigned CHW records a synthetic referral need for the current patient.", "The CHW assignment and facility selection must come from an approved deployment topology, not from a manual, patient note, or array order."]},
+    {"page": 2, "title": "Capability selection", "sections": ["For a SYNTHETIC_EMERGENCY need, select facilities with the emergency-care capability.", "For a SYNTHETIC_NUTRITION need, select facilities with the nutrition-support capability.", "If no eligible facility is returned, record unassigned and request operational review."]},
+    {"page": 3, "title": "No guessing", "sections": ["Do not name a facility identifier in the clinical artifact.", "Do not use an inactive CHW or a facility without the required capability.", "Record the topology snapshot, relation, and capability code with the referral plan."]}
+  ],
+  "source_oracle": {
+    "must_include": ["approved deployment topology", "emergency-care capability", "nutrition-support capability", "record unassigned"],
+    "must_not_invent": ["facility-alpha", "patient phone", "fallback facility"],
+    "expected_integration_status": "eligible_for_artifact_and_behavior_test"
+  },
+  "setup": {"topology": "../common/topology-package.json", "registry": "../common/registry-snapshot.json", "required_roles": ["chw"], "required_context": ["patient_id", "referral_need", "topology_snapshot_id"]},
+  "patient_cases": [
+    {"id": "emergency-capability", "inputs": {"patient_id": "patient-edge", "referral_need": "SYNTHETIC_EMERGENCY", "topology_snapshot_id": "synthetic-2026-08-03"}, "expected": {"status": "resolved", "relation": "referral.eligible-facilities", "matches": ["facility-alpha"]}},
+    {"id": "nutrition-capability", "inputs": {"patient_id": "patient-edge", "referral_need": "SYNTHETIC_NUTRITION", "topology_snapshot_id": "synthetic-2026-08-03"}, "expected": {"status": "resolved", "relation": "referral.eligible-facilities", "matches": ["facility-beta"]}},
+    {"id": "unknown-capability", "inputs": {"patient_id": "patient-edge", "referral_need": "SYNTHETIC_UNKNOWN", "topology_snapshot_id": "synthetic-2026-08-03"}, "expected": {"status": "blocked", "reason": "unknown_capability"}},
+    {"id": "stale-topology", "inputs": {"patient_id": "patient-edge", "referral_need": "SYNTHETIC_EMERGENCY", "topology_snapshot_id": "stale"}, "expected": {"status": "blocked", "reason": "topology_lock_mismatch"}}
+  ]
+}

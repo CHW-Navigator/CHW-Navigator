@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Ambiguous Team Notification",
+    "fixture_id": "underspecified-responsibility",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Synthetic trigger",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Synthetic trigger\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nWhen the synthetic flag is present, notify the team soon.\n\nRecord that the flag was observed.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Synthetic trigger"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "When the synthetic flag is present, notify the team soon."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "Record that the flag was observed."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Deliberate omission",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Deliberate omission\n\nThis manual does not identify which team member receives the notification.\n\nThis manual does not name a facility, topology relation, priority, time limit, approved template, or policy.\n\nNo additional instruction appears in this synthetic manual.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Deliberate omission"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "This manual does not identify which team member receives the notification."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "This manual does not name a facility, topology relation, priority, time limit, approved template, or policy."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "No additional instruction appears in this synthetic manual."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Review expectation",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Review expectation\n\nThis incomplete source is a negative fixture.\n\nDo not infer that the assigned CHW, supervisor, caregiver, or any facility is the intended recipient.\n\nDo not create a task, referral, or external-effect request from this wording.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Review expectation"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "This incomplete source is a negative fixture."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Do not infer that the assigned CHW, supervisor, caregiver, or any facility is the intended recipient."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Do not create a task, referral, or external-effect request from this wording."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Synthetic trigger\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nWhen the synthetic flag is present, notify the team soon.\n\nRecord that the flag was observed."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Deliberate omission\n\nThis manual does not identify which team member receives the notification.\n\nThis manual does not name a facility, topology relation, priority, time limit, approved template, or policy.\n\nNo additional instruction appears in this synthetic manual."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Review expectation\n\nThis incomplete source is a negative fixture.\n\nDo not infer that the assigned CHW, supervisor, caregiver, or any facility is the intended recipient.\n\nDo not create a task, referral, or external-effect request from this wording."
+    }
+  }
+}
