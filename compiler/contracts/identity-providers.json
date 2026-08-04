@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1.0.0",
+  "entries": [
+    {
+      "id": "identity-provider.local-registry",
+      "version": "1.0.0",
+      "status": "reference_fixture_only",
+      "mode": "required",
+      "scope": "authorized_catchment",
+      "offlineScope": "local_replica_only",
+      "confirmationRequiredForNewRecord": true,
+      "candidateDisclosureProfile": "minimal-person-match",
+      "matchFeatures": [
+        "program_person_identifier",
+        "household_identifier",
+        "name",
+        "name_variants",
+        "sex",
+        "date_of_birth",
+        "estimated_age"
+      ],
+      "residualRisk": "Deterministic fixture comparison does not establish production matching accuracy or global duplicate detection."
+    },
+    {
+      "id": "identity-provider.unsupported-deployment",
+      "version": "1.0.0",
+      "status": "residual_risk_only",
+      "mode": "not_supported",
+      "scope": "authorized_catchment",
+      "offlineScope": "external_index_unavailable",
+      "confirmationRequiredForNewRecord": true,
+      "candidateDisclosureProfile": "minimal-person-match",
+      "matchFeatures": ["program_person_identifier"],
+      "residualRisk": "This profile cannot claim duplicate prevention and blocks duplicate-check assurance."
+    }
+  ]
+}

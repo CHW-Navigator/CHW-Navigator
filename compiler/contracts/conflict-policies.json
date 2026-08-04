@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "conflict-policy.person-administrative",
+  "version": "1.0.0",
+  "resolver": "canonical.mutable-field-resolver@1.0.0",
+  "orderingRules": [
+    "explicit_supersession",
+    "source_authority",
+    "authorized_workflow",
+    "platform_receipt",
+    "stable_event_id"
+  ],
+  "authorityClasses": [
+    { "id": "device_import", "rank": 10 },
+    { "id": "caregiver_report", "rank": 20 },
+    { "id": "chw_verified", "rank": 30 },
+    { "id": "facility_verified", "rank": 40 },
+    { "id": "data_steward", "rank": 50 }
+  ],
+  "fields": [
+    {
+      "field": "program_person_identifier",
+      "fieldClass": "demographic_identity",
+      "conflictPolicy": "immutable_after_creation",
+      "allowedAuthorityClasses": ["facility_verified", "data_steward"]
+    },
+    {
+      "field": "name",
+      "fieldClass": "demographic_identity",
+      "conflictPolicy": "flag_for_review",
+      "allowedAuthorityClasses": ["caregiver_report", "chw_verified", "facility_verified", "data_steward"]
+    },
+    {
+      "field": "date_of_birth",
+      "fieldClass": "demographic_identity",
+      "conflictPolicy": "append_correction",
+      "allowedAuthorityClasses": ["caregiver_report", "chw_verified", "facility_verified", "data_steward"]
+    },
+    {
+      "field": "sex",
+      "fieldClass": "demographic_identity",
+      "conflictPolicy": "append_correction",
+      "allowedAuthorityClasses": ["caregiver_report", "chw_verified", "facility_verified", "data_steward"]
+    },
+    {
+      "field": "telephone",
+      "fieldClass": "contact_information",
+      "conflictPolicy": "field_merge",
+      "sameFieldConflictFallback": "append_correction",
+      "allowedAuthorityClasses": ["caregiver_report", "chw_verified", "facility_verified", "data_steward"]
+    },
+    {
+      "field": "household_membership",
+      "fieldClass": "household_membership",
+      "conflictPolicy": "append_correction",
+      "allowedAuthorityClasses": ["chw_verified", "data_steward"]
+    },
+    {
+      "field": "geographic_assignment",
+      "fieldClass": "geographic_assignment",
+      "conflictPolicy": "field_merge",
+      "sameFieldConflictFallback": "flag_for_review",
+      "allowedAuthorityClasses": ["chw_verified", "data_steward"]
+    },
+    {
+      "field": "care_team_assignment",
+      "fieldClass": "care_team_assignment",
+      "conflictPolicy": "field_merge",
+      "sameFieldConflictFallback": "flag_for_review",
+      "allowedAuthorityClasses": ["facility_verified", "data_steward"]
+    },
+    {
+      "field": "administrative_status",
+      "fieldClass": "administrative_status",
+      "conflictPolicy": "append_correction",
+      "allowedAuthorityClasses": ["facility_verified", "data_steward"]
+    },
+    {
+      "field": "free_text_note",
+      "fieldClass": "free_text_note",
+      "conflictPolicy": "append_correction",
+      "allowedAuthorityClasses": ["caregiver_report", "chw_verified", "facility_verified", "data_steward"]
+    }
+  ]
+}

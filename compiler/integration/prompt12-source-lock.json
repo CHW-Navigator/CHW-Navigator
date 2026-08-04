@@ -1,0 +1,105 @@
+{
+  "schema_version": "2.0.0",
+  "prepared_at": "2026-08-04",
+  "status": "integration_in_progress",
+  "scope": "prompts_12a_12b_13_14",
+  "target": {
+    "repository": "CHW-Navigator/CHW-Navigator",
+    "base_branch": "codex/integrate-prompt8-operational-layer-recovered",
+    "base_commit": "f9d29ab057369a9c1f07c6ce5b912aec3975312d"
+  },
+  "source": {
+    "package_name": "@chw-navigator/prompt14-reviewed-handoff",
+    "package_version": "1.8.0",
+    "workspace_relative_path": "../generated/prompt12-execution/chw-prompt12",
+    "external_source_required": true,
+    "integration_mode": "semantic_translation_not_wholesale_copy"
+  },
+  "baseline_evidence": {
+    "compiler_unittest": { "status": "pass", "tests": 119, "preparation_baseline_tests": 93 },
+    "operational_focused_unittest": { "status": "pass", "tests": 41 },
+    "source_root_check": { "status": "pass" },
+    "source_core_coverage": {
+      "status": "pass",
+      "lines_percent": 95.08,
+      "branches_percent": 87.13,
+      "functions_percent": 95.67
+    },
+    "source_diagnostic_coverage": { "status": "pass", "declared_codes": 93 },
+    "source_cross_phase_audit": {
+      "status": "pass",
+      "protected_files": 447,
+      "authorized_migrations": 29,
+      "authorized_additions": 28
+    },
+    "source_official_cht_gate": {
+      "status": "pass_with_external_limits",
+      "prepared_bundles": 6,
+      "browser_harness_bundles_passed": 6,
+      "extension_bundles_archived": 2,
+      "extension_attachments_executed": 2,
+      "extension_xpath_forms_executed": 2
+    },
+    "python_prompt12b_integration_gate": {
+      "status": "pass_with_external_limits",
+      "compiler_tests_passed": 107,
+      "profiles": ["4.22.0", "5.2.0"],
+      "browser_assertions_passed": 8,
+      "real_extension_xpath": true
+    },
+    "python_prompt13_14_integration_gate": {
+      "status": "pass_with_external_limits",
+      "identity_and_conflict_tests_passed": 11,
+      "declared_diagnostic_codes": 17,
+      "live_registration_or_sync_adapter": false
+    }
+  },
+  "files": [
+    { "path": "docs/PROMPTS_12A_14_REVIEW.md", "sha256": "sha256:9036d79a30a74caa893cfd4b97fb1212d775717807e3b45fc7fe7322f984576e" },
+    { "path": "docs/PROMPT_12A.md", "sha256": "sha256:89d5dc40fdc494cdb4436026463fbb081255eae0a44c0f1b58535fb0272b6c20" },
+    { "path": "docs/PROMPT_12A_REPORT.md", "sha256": "sha256:f56d0af581e7c9bc663cd684a96afaf45092fd961a4109fa81d82618fdee4b6c" },
+    { "path": "docs/PROMPT_12B.md", "sha256": "sha256:abf4b3b032611d1ac7264a4949e4a77885250f2a947314792f8c5bbcbd4bcb60" },
+    { "path": "docs/PROMPT_12_REPORT.md", "sha256": "sha256:7485216b6084325dbb95f84eee5b359f9dd946c5ebc446f5ee48301f4e578702" },
+    { "path": "docs/SPECIAL_FUNCTION_CHT_LOWERING.md", "sha256": "sha256:544744ce0c3d37a69416d013a3ddfd31f073637abaf6e0e9deb5db3e634cdd1e" },
+    { "path": "docs/PROMPT_13.md", "sha256": "sha256:1e8cdbad19095c203c0e0b83e3dcbc5a3ecea17d652ee5d279137819eec78921" },
+    { "path": "docs/PROMPT_13_REPORT.md", "sha256": "sha256:87e1633dad90369735c404692d097d516b3721ab21ddbfd645f33c9aa5d1e965" },
+    { "path": "docs/PROMPT_14.md", "sha256": "sha256:e7f7b89c050f902b3a098200fdbea45dd69e287a2b117b2599e897ca5dd84177" },
+    { "path": "docs/PROMPT_14_REPORT.md", "sha256": "sha256:de5693a810a97efa7af92f3d329103db74a9701f2e8b1fc3e8f380843031275f" },
+    { "path": "reports/official-cht-harness-run.json", "sha256": "sha256:eceba06f42ab08e0db48e47312dbd7ca178b6ec46f77f6cc35a5e4bd7a8093f1" },
+    { "path": "reports/prompt12-protected-baseline.json", "sha256": "sha256:8883ac5c18d9b4ffb838d89a54317171a2245e9b1efee012f252ff8e68f26b93" },
+    { "path": "reports/prompt14-authorized-migrations.json", "sha256": "sha256:19cad213f6237dd2ad986b881437296666b41c1aac89fad059c8ec44f6eef03a" },
+    { "path": "reports/cross-phase-audit.json", "sha256": "sha256:820e485f4f5cbb6dc8ce0378dabd8284d204867f94535a3b8ffaaa470901e5bc" },
+    { "path": "packages/core-registry/src/clinical-vocabulary.ts", "sha256": "sha256:89f7532439f3548bd7f377e6e56cb537605ee6051fab34cf66155997bb31cfbe" },
+    { "path": "packages/core-registry/src/person-identity.ts", "sha256": "sha256:cedeff464e7046387025c9880ca139e0d2bc7f0dc5729a93b1ae033a469da04f" },
+    { "path": "packages/core-registry/src/mutable-conflicts.ts", "sha256": "sha256:937f4b3454feb799a9c41a3cc426585e39e429d176f639ce08afe72500a88331" },
+    { "path": "registry/identity-providers.json", "sha256": "sha256:cc06629741dc9d62ee95e97c320d51eb24ba028ae9e38040de9c27d9fa8b9dfa" },
+    { "path": "registry/conflict-policies.json", "sha256": "sha256:8a0aeee3543fd67eed6af5d69a4dc3b9060dedc4f8e8aabce2f6be5cb4439ebc" },
+    { "path": "scripts/verify-dead-contract-fields.mjs", "sha256": "sha256:664927148dbac31aed152186a23ca4aef2b6cd751d3f6036018ca47a9273a5f7" },
+    { "path": "scripts/verify-diagnostic-coverage.mjs", "sha256": "sha256:0d5eab78e965bdd0a68c130dc034d64e2b9374f5ab66186d51779148020eb7d4" },
+    { "path": "scripts/verify-prompt14-handoff.mjs", "sha256": "sha256:2a0ffa030eeeb135fb37906961b887202375c7da435a88e122973fb9653e904b" },
+    { "path": "packages/cht-backend/src/reports.ts", "sha256": "sha256:b0e7ce1085d5bd1967f4cc67d68e939155603f083891d0555fe0e53d4a0facc5" },
+    { "path": "packages/cht-backend/src/special-functions.ts", "sha256": "sha256:3818a12d61ebdb3d31e26f322b66dd2d6ed6de25f7a7376411a0953f644013ce" },
+    { "path": "packages/cht-backend/src/types.ts", "sha256": "sha256:01ed20347efacd465c187265d1194103430aa60b4575add251a46835aac78ee1" },
+    { "path": "packages/cht-backend/test/special-functions.test.mjs", "sha256": "sha256:398da8f42fa00a6c8f835b8f8e466e2ab657d6de03871e09f1b1498bf3e52933" },
+    { "path": "packages/cht-integration/src/extension-libs.ts", "sha256": "sha256:aaeae337d56043754f5e80e2aeeff0883714b740392acc72cafbccfcd12a2c78" },
+    { "path": "packages/special-functions/src/gestational-age.ts", "sha256": "sha256:0c0db93ca2f548be2523857ae057f537450a582d42eb0a0482baff844e382186" },
+    { "path": "packages/special-functions/examples/gestational-age-function.json", "sha256": "sha256:25d4bb5196c496162960934e9e174fd73d9495a3eaf776e1a562cbfab9b21e77" },
+    { "path": "packages/special-functions/reference/gestational-age-vectors.json", "sha256": "sha256:99697328a5c9502440359f5a821836ee1b7ab46cdfb14176dbd297ee185f9807" },
+    { "path": "packages/special-functions/reference/who-wfa-monthly-lms-0-60.json", "sha256": "sha256:d053fc4a36643a538a4fc0c784ab42110d27d1acb93d5ffa64a5d4429619066f" },
+    { "path": "integration/official-cht-harness/package-lock.json", "sha256": "sha256:0a73696e53cb8b193479dec62a5b5eecb1d6a219fe3f470264312ce4f2ccaf24" },
+    { "path": "integration/official-cht-harness/README.md", "sha256": "sha256:449aad0e1dc00a0048ea06c034a5053452901a23b75c32f72d35a114c4decb8c" },
+    { "path": "integration/official-cht-harness/archive-extension-libs.mjs", "sha256": "sha256:a38ddc0df56a745d86b31af4d6bc4624375812ea29daa756288f20cb488ccd6e" },
+    { "path": "integration/official-cht-harness/run-harness.mjs", "sha256": "sha256:0f67c0f41f33984f5110b8c19abc9bd8eb0d987324d6b20dc9d3c35c50e17a5f" },
+    { "path": "integration/official-cht-harness/run-extension-lib.mjs", "sha256": "sha256:dd1df7f3973a705af2ab75743a539c2b621d75b031e2780bb6dc44ac100d6eb9" },
+    { "path": "integration/official-cht-harness/verify-workspace.mjs", "sha256": "sha256:40bc7bf29392e1f69bc4d269f5980024a8dbec5ff65b02a0e35e1247a2440295" },
+    { "path": "integration/official-cht-harness/verify-workspace.test.mjs", "sha256": "sha256:58a721f1e10b7f50c9c3f318bcc1e1cfa40d292acd21ff2523ca53da26c1cbac" },
+    { "path": "scripts/update-prompt14-migrations.mjs", "sha256": "sha256:e544eae71875c085e5831207f30ce5cf44c212ca4910ae244dbd320fb5589cbb" }
+  ],
+  "external_limits": [
+    "Target CHT 4.22.0 and 5.2.0 runtime execution has not been performed.",
+    "No live CouchDB upload or offline-device execution has been performed.",
+    "Production identity matching, live authorization, and reconciliation have not been validated.",
+    "Live CouchDB/FHIR conflict handling and supervisor review-queue execution have not been performed.",
+    "The isolated pinned harness dependency tree requires explicit CI risk disposition."
+  ]
+}

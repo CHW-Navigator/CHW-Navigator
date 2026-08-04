@@ -7,6 +7,17 @@ These contracts define the recommended upstream authoring formats for:
 - phrase banks
 - DMN tables
 
+The directory also contains versioned platform registries that are not clinical
+authoring inputs:
+
+- `special-function-registry.json`
+- `identity-providers.json` and `identity-providers.schema.json`
+- `conflict-policies.json` and `conflict-policies.schema.json`
+
+Identity resolution and correction policy remain platform services outside Clinical
+IR. Their presence here does not authorize candidate lists or mutable clinical
+evidence in decision tables.
+
 Use them together with [authoring-json-contracts.md](../authoring-json-contracts.md).
 
 Authoring model:
@@ -28,6 +39,11 @@ Files:
 - `dmn.contract.md`
 - `simulated-patient-data.contract.md`
 - `engine-log.contract.md`
+- `special-function-registry.json`
+- `identity-providers.json`
+- `identity-providers.schema.json`
+- `conflict-policies.json`
+- `conflict-policies.schema.json`
 
 Supporting guidance:
 

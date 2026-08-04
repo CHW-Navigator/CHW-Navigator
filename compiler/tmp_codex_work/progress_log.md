@@ -264,3 +264,73 @@
   - new `docs/contribute-dmn.md`
   - README now points directly to those docs
   - this makes it easier for a new student or clinician to find the right manual, contracts, examples, and commands quickly
+
+## 2026-08-04 — Prompt 12A-14 integration preparation
+
+- Created `codex/integrate-prompt12-preparation` from the clean recovered Prompt 8 base at `f9d29ab`.
+- Identified the root integration risk: the reviewed handoff is a TypeScript package while this repository's authoritative compiler is Python; wholesale copying would create divergent compilers.
+- Added `integration/prompt12-source-lock.json` to bind the reviewed 1.8.0 Prompt 12A-14 handoff inputs and external-gate evidence by SHA-256.
+- Added `scripts/verify_prompt12_source_lock.py` so source provenance is an executable preparation gate rather than a documentary claim.
+- Added focused verifier tests covering the exact-source pass case, content drift, and path escape attempts.
+- Added `docs/prompt11b-prompt12-integration-plan.md` with the required prerequisite → 12A → 12B → 13 → 14 sequence, source-to-target map, acceptance gates, and explicit identity/conflict/target-runtime limits.
+- Repaired the existing root virtual environment's broken package installer, installed the compiler's declared dependencies, and established clean baselines: 93 compiler tests and 41 focused operational tests pass.
+- Generalized guardrail: integration work must translate locked contracts into existing ownership seams, retain prerequisite phase ordering, and rerun both baseline suites before advancing a slice.
+- Re-reviewed and improved the four source prompts, then implemented all still-relevant work in the TypeScript handoff:
+  - Prompt 12A removed the dead implementation-checksum declaration and added a permanent active-artifact reintroduction guard.
+  - Prompt 12B passed the full source check plus real archived extension-library and six-bundle official CHT harness execution.
+  - Prompt 13 added the governed `Create × Person` identity boundary, deterministic reference provider, minimal disclosure, provenance, and no-merge enforcement.
+  - Prompt 14 added the mutable-field policy registry, correction-event contract, pure resolver, and local CHT/FHIR conflict fixtures.
+- Repaired the source chain of custody so later phases derive from an immutable 447-file Prompt 12 baseline rather than invalidating historical Prompt 12 hashes.
+- Source evidence now passes the root check, formatting check, 93-code diagnostic coverage gate, core coverage thresholds, Prompt 14 handoff verifier, and a 14-phase cross-audit with no findings.
+- Refreshed the target source lock to package 1.8.0 and added identity, conflict, dead-declaration, cumulative-governance, and official-harness evidence hashes.
+- Replaced the extension-library harness staging check with a real browser execution path:
+  - official `cht-conf` archives the generated modules and verifies attachment bytes;
+  - the archived modules are installed into the pinned CHT Core 4.11 form engine's existing XPath module;
+  - both extension-bearing bundles fill and submit `technical_gestational_age` and assert status/version/result fields.
+- Generalized the official runner to accept external workspaces and declare its pinned Node package path. This repaired the hidden assumption that specs always lived below the harness directory.
+- Audited Prompt 12A applicability in the target Python compiler. No `implementationChecksum` or analogous dead checksum exists, so no cosmetic deletion was made; a source/contract reintroduction test now protects that boundary.
+- Integrated Prompt 12B into the authoritative Python compiler:
+  - shared versioned clinical vocabulary;
+  - seven-code declaration/emission/test-assertion guard;
+  - closed eight-status technical function contract and pinned vectors/digests;
+  - explicit CHT 4.22.0 and 5.2.0 profiles;
+  - native WFA `z-score()` with mandatory external-chart warning and no WFA JavaScript;
+  - dependency-free gestational-age extension module and XForm;
+  - non-clobbering output through the existing CHT plan/writer.
+- Fresh Python-generated output passed the external browser gate for both profiles (eight assertions total), including genuine `cht:extension-lib` XPath form execution. Generated module and XForm hashes exactly match the independently reviewed source artifacts.
+- Ran the full compiler suite: 107 tests passed. Re-ran the 41-test focused Product operational baseline: all passed.
+- Found a source-lock test design gap: the normal test suite tested the verifier against synthetic fixtures but did not invoke the repository's real lock. Added a real-lock regression so reviewed-source drift can no longer pass the normal suite unnoticed.
+- Integrated Prompt 13 into the authoritative Python package as a platform-owned
+  person-registration service. Authorization is applied before matching, candidate
+  disclosure is minimal, ambiguous matches defer, confirmed-new provenance must
+  agree with the actual candidates/search scope/offline state, and merge attempts
+  fail closed.
+- Integrated Prompt 14 as a pure mutable-field resolver plus a versioned ten-field
+  policy registry. It preserves distinct assertions, deterministically rejects
+  divergent event-ID reuse, separates projections from unresolved conflicts, and
+  keeps clinical evidence outside ordinary mutation.
+- Audited the target Product package for a live person-registration or backend
+  synchronization seam. None exists; the safe integration point is therefore the
+  compiler-neutral platform contract, with live CHT/FHIR/queue wiring retained as an
+  explicit external gate rather than an invented implementation.
+- Root cause found during the exhaustive source check: the shared clinical vocabulary
+  and CHT special-function implementation changed after the gestational function's
+  multi-file implementation digest was registered. The artifact verifier correctly
+  failed. Refreshed the digest, added that protected registry entry to the authorized
+  migration generator, and reran the cross-phase audit.
+- Generalized guardrails from that failure: identity-provider match features now use
+  the same shared clinical vocabulary (so renamed clinical fields cannot enter the
+  matcher); divergent correction events sort by canonical bytes as well as event ID;
+  governance treats digest refreshes as explicit protected migrations; and mutable
+  conflict resolution rejects reordered authority policy and cross-person
+  supersession chains.
+- Final integration evidence: 119 authoritative compiler tests, 41 Product
+  operational/synthetic tests, the full reviewed TypeScript `npm run check`, the
+  447-file/29-migration cross-phase audit, the six-bundle official CHT gate, and the
+  two-profile fresh Python-generation gate all passed. Both Python-generated forms
+  exercised the real CHT Core 4.11 XPath extension implementation with officially
+  archived attachment bytes.
+- A read-only merge simulation against local `main` reported zero textual conflicts.
+  The reviewed TypeScript handoff remains an explicit external integration input;
+  standalone clones transparently skip its real-lock assertion, while the dedicated
+  source-lock and official-harness commands remain required pre-merge evidence gates.

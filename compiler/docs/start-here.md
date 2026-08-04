@@ -10,6 +10,12 @@ Read these in order:
 4. [Contribute DMN for testing](./contribute-dmn.md)
 5. [DMN intake runbook](./dmn-intake-runbook.md)
 
+Active maintainers preparing the reviewed Prompt 12A-14 work should also read
+[the integration plan](./prompt11b-prompt12-integration-plan.md) and the
+[special-function CHT integration guide](./special-function-cht-integration.md).
+For the platform registration and correction seams, read
+[the identity and mutable-conflict guide](./platform-registration-and-conflicts.md).
+
 That sequence gives you:
 
 - what the compiler is for
@@ -54,6 +60,16 @@ That sequence gives you:
   - Mermaid generation
 - `src/chw_navigator/z3_backend.py`
   - Z3 lowering, analysis, and witness generation
+- `src/chw_navigator/clinical_vocabulary.py`
+  - shared versioned guard against generated clinical-policy derivation
+- `src/chw_navigator/special_functions.py`
+  - platform-neutral technical status and gestational-age contracts
+- `src/chw_navigator/cht_special_functions.py`
+  - reviewed CHT 4.22/5.2 native and extension-library lowering
+- `src/chw_navigator/person_identity.py`
+  - platform-owned person registration boundary and deterministic fixture provider
+- `src/chw_navigator/mutable_conflicts.py`
+  - assertion-preserving person/administrative correction resolver
 - `src/chw_navigator/compare.py`
   - cross-engine comparison
 - `src/chw_navigator/xlsform_proof.py`

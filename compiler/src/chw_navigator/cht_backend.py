@@ -5,6 +5,11 @@ import json
 from pathlib import Path
 
 from .clinical_ir import ClinicalIRDocument
+from .cht_special_functions import (
+    CHTSpecialFunctionBundle,
+    lower_reviewed_special_functions,
+    write_cht_special_function_bundle,
+)
 from .form_ir import SurveyRow
 from .xlsform_backend import BuiltXLSForm, build_xlsform
 
@@ -53,6 +58,7 @@ class CHTLoweringPlan:
     appearance_overrides: list[CHTAppearanceOverride] = field(default_factory=list)
     read_history_requests: list[CHTReadHistoryRequest] = field(default_factory=list)
     task_specs: list[CHTTaskSpec] = field(default_factory=list)
+    special_function_bundle: CHTSpecialFunctionBundle | None = None
     notes: list[str] = field(default_factory=list)
 
 
@@ -63,6 +69,7 @@ class CHTAdapterArtifacts:
     history_stub_path: Path
     tasks_stub_path: Path
     readme_path: Path
+    special_function_paths: tuple[Path, ...] = ()
 
 
 def default_cht_profile() -> CHTProfile:
@@ -74,6 +81,7 @@ def build_cht_lowering_plan(
     built: BuiltXLSForm | None = None,
     *,
     profile: CHTProfile | None = None,
+    special_function_target_cht_version: str | None = None,
 ) -> CHTLoweringPlan:
     active_profile = profile or default_cht_profile()
     workbook = built or build_xlsform(document)
@@ -149,6 +157,11 @@ def build_cht_lowering_plan(
     plan.notes.append(
         "read_history lowering is represented as a backend plan only; direct CHT code generation still needs an adapter implementation."
     )
+    if special_function_target_cht_version is not None:
+        plan.special_function_bundle = lower_reviewed_special_functions(special_function_target_cht_version)
+        plan.notes.append(
+            "Reviewed technical special functions are emitted as executable CHT XForms and an extension library; they do not derive clinical policy."
+        )
     return plan
 
 
@@ -207,6 +220,27 @@ def render_cht_adapter_stub(plan: CHTLoweringPlan) -> dict[str, object]:
             ],
             "status": "stub_only",
         },
+        "special_function_adapter": (
+            {
+                "status": "generated",
+                "target_cht_version": plan.special_function_bundle.profile.cht_version,
+                "files": [
+                    {"path": artifact.path, "sha256": artifact.sha256}
+                    for artifact in plan.special_function_bundle.files
+                ],
+                "diagnostics": [
+                    {
+                        "code": diagnostic.code,
+                        "severity": diagnostic.severity,
+                        "message": diagnostic.message,
+                        **({"path": diagnostic.path} if diagnostic.path is not None else {}),
+                    }
+                    for diagnostic in plan.special_function_bundle.diagnostics
+                ],
+            }
+            if plan.special_function_bundle is not None
+            else {"status": "not_requested"}
+        ),
         "notes": list(plan.notes),
     }
 
@@ -220,6 +254,11 @@ def write_cht_adapter_stub(plan: CHTLoweringPlan, output_dir: str | Path) -> CHT
     history_stub_path = target_dir / "cht_read_history_stub.json"
     tasks_stub_path = target_dir / "cht_task_stub.json"
     readme_path = target_dir / "README.md"
+    special_function_paths = (
+        write_cht_special_function_bundle(plan.special_function_bundle, target_dir)
+        if plan.special_function_bundle is not None
+        else ()
+    )
 
     plan_json_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     history_stub_path.write_text(
@@ -235,15 +274,24 @@ def write_cht_adapter_stub(plan: CHTLoweringPlan, output_dir: str | Path) -> CHT
             [
                 "# CHT Adapter Stub",
                 "",
-                "This folder contains non-executable adapter stubs derived from the CHT lowering plan.",
+                "This folder contains CHT adapter artifacts derived from the lowering plan.",
                 "",
                 "Files:",
                 "",
                 "- `cht_lowering_plan.json`: full lowering plan",
                 "- `cht_read_history_stub.json`: history-read adapter inputs",
                 "- `cht_task_stub.json`: task adapter inputs",
+                *(
+                    [
+                        "- `special-function-manifest.json`: reviewed target profile, diagnostics, and hashes",
+                        "- `forms/app/technical_*.xml`: executable technical special-function XForms",
+                        "- `extension-libs/gestational-age-from-lmp.js`: dependency-free CHT extension library",
+                    ]
+                    if plan.special_function_bundle is not None
+                    else []
+                ),
                 "",
-                "These are planning artifacts only. They are intended to make integration requirements explicit before production CHT code generation exists.",
+                "History and task files remain planning artifacts. Special-function files, when present, are executable candidates that still require official-harness and target-runtime evidence.",
                 "",
             ]
         ),
@@ -255,4 +303,5 @@ def write_cht_adapter_stub(plan: CHTLoweringPlan, output_dir: str | Path) -> CHT
         history_stub_path=history_stub_path,
         tasks_stub_path=tasks_stub_path,
         readme_path=readme_path,
+        special_function_paths=special_function_paths,
     )

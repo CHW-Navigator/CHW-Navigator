@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "function_id": "special.technical.gestational-age-and-edd-from-lmp",
+  "function_version": "1.0.0",
+  "reference_data_version": "calendar-280-day-v1",
+  "vectors": [
+    {
+      "name": "same-day baseline",
+      "input": {"lmp_date": "2026-01-01", "as_of_date": "2026-01-01"},
+      "expected_status": "ok",
+      "expected_technical": {"gestational_age_weeks": 0, "estimated_delivery_date": "2026-10-08"}
+    },
+    {
+      "name": "whole week",
+      "input": {"lmp_date": "2026-01-01", "as_of_date": "2026-01-08"},
+      "expected_status": "ok",
+      "expected_technical": {"gestational_age_weeks": 1, "estimated_delivery_date": "2026-10-08"}
+    },
+    {
+      "name": "fractional week and leap-day LMP",
+      "input": {"lmp_date": "2024-02-29", "as_of_date": "2024-05-31"},
+      "expected_status": "ok",
+      "expected_technical": {"gestational_age_weeks": 13.1, "estimated_delivery_date": "2024-12-05"}
+    },
+    {
+      "name": "missing LMP",
+      "input": {"lmp_date": null, "as_of_date": "2026-01-08"},
+      "expected_status": "input_missing"
+    },
+    {
+      "name": "invalid calendar date",
+      "input": {"lmp_date": "2026-02-30", "as_of_date": "2026-03-01"},
+      "expected_status": "input_invalid"
+    },
+    {
+      "name": "future LMP",
+      "input": {"lmp_date": "2026-01-09", "as_of_date": "2026-01-08"},
+      "expected_status": "outside_supported_domain"
+    },
+    {
+      "name": "implausibly old LMP",
+      "input": {"lmp_date": "2025-01-01", "as_of_date": "2026-01-08"},
+      "expected_status": "outside_supported_domain"
+    },
+    {
+      "name": "function pin mismatch",
+      "input": {
+        "lmp_date": "2026-01-01",
+        "as_of_date": "2026-01-08",
+        "function_version": "9.9.9"
+      },
+      "expected_status": "version_mismatch"
+    }
+  ]
+}

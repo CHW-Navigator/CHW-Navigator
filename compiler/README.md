@@ -46,6 +46,8 @@ Supporting process docs:
 - change-review package generation for baseline-vs-updated clinical deltas
 - example IR document
 - hardened DMN XML parsing via `defusedxml`
+- reviewed CHT 4.22/5.2 special-function lowering with an isolated official harness
+- platform-owned person registration and mutable administrative-conflict contracts
 
 ## Validation layers
 
@@ -88,6 +90,8 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `src/chw_navigator/change_control.py`: change-review package generation for clinician-facing delta review
 - `src/chw_navigator/cli.py`: command-line entry points
 - `src/chw_navigator/json_schema_export.py`: machine-checked JSON Schema export for supported JSON artifact families
+- `src/chw_navigator/person_identity.py`: four-outcome person-registration boundary and deterministic fixture provider
+- `src/chw_navigator/mutable_conflicts.py`: assertion-preserving mutable-field correction resolver
 - `tests/test_dmn_fail_loud.py`: fail-loud coverage for unsupported DMN inputs
 - `tests/test_artifact_drift.py`: mutated artifact drift detection across DMN, XLSForm, Mermaid, and IR
 - `tests/test_multi_module_router.py`: multi-table traffic-cop example with module priority and follow-on treatment/dosing tables
