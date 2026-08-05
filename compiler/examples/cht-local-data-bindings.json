@@ -1,0 +1,23 @@
+{
+  "schema_version": "cht-local-data-bindings@1.0.0",
+  "target_cht_version": "4.22.0",
+  "bindings": {
+    "local.person.date_of_birth@1.0.0": {
+      "semantic_name": "date_of_birth",
+      "description": "The current person's recorded Gregorian date of birth in YYYY-MM-DD form.",
+      "value_type": "string",
+      "subject": "current_person",
+      "adapter": {
+        "kind": "cht_contact_field",
+        "path": "date_of_birth"
+      },
+      "available_contexts": [
+        "contact",
+        "task"
+      ],
+      "freshness": {
+        "policy": "immutable"
+      }
+    }
+  }
+}

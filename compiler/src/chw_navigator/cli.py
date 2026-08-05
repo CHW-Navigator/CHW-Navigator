@@ -11,6 +11,7 @@ from .catalogs import CatalogLoadError, compose_document_from_catalogs
 from .change_control import ChangeReviewBuildError, create_change_review_package, load_change_memo
 from .clinical_ir import ClinicalIRDocument
 from .cht_backend import build_cht_lowering_plan, write_cht_adapter_bundle
+from .cht_local_data import CHTLocalDataLoweringError, load_cht_local_data_registry
 from .cht_tasks import CHTTaskLoweringError, load_cht_task_bindings
 from .compare import (
     ComparisonError,
@@ -161,6 +162,17 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="also emit reviewed special functions for the task-binding file's exact CHT version",
     )
+    cht_parser.add_argument(
+        "--local-data-bindings",
+        dest="local_data_bindings_path",
+        help="versioned CHT local-data binding registry used to lower read_local_data/read_history actions",
+    )
+    cht_parser.add_argument(
+        "--form-context",
+        choices=("contact", "task", "reports"),
+        default="contact",
+        help="how the generated app form will be launched; used to validate local-data availability",
+    )
 
     quality_parser = subparsers.add_parser(
         "quality-check",
@@ -292,6 +304,8 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.task_bindings_path),
             Path(args.output_dir),
             args.include_reviewed_special_functions,
+            args.local_data_bindings_path,
+            args.form_context,
         )
     if args.command == "quality-check":
         return _handle_quality_check(Path(args.ir_path), Path(args.output_dir), args.patient_path)
@@ -723,21 +737,36 @@ def _handle_build_cht(
     task_bindings_path: Path,
     output_dir: Path,
     include_reviewed_special_functions: bool,
+    local_data_bindings_path: str | None,
+    form_context: str,
 ) -> int:
     try:
         document = _load_document(ir_path)
         task_bindings = load_cht_task_bindings(task_bindings_path)
+        local_data_registry = (
+            load_cht_local_data_registry(local_data_bindings_path)
+            if local_data_bindings_path is not None
+            else None
+        )
         built = build_xlsform(document)
         plan = build_cht_lowering_plan(
             document,
             built,
             task_bindings=task_bindings,
+            local_data_registry=local_data_registry,
+            form_context=form_context,
             special_function_target_cht_version=(
                 task_bindings.target_cht_version if include_reviewed_special_functions else None
             ),
         )
         artifacts = write_cht_adapter_bundle(plan, output_dir)
-    except (CLIError, XLSFormBuildError, CHTTaskLoweringError, ValueError) as exc:
+    except (
+        CLIError,
+        XLSFormBuildError,
+        CHTTaskLoweringError,
+        CHTLocalDataLoweringError,
+        ValueError,
+    ) as exc:
         print(f"CHT build failed: {exc}")
         return 1
 
@@ -746,6 +775,8 @@ def _handle_build_cht(
         print(f"wrote executable CHT task rules to {artifacts.tasks_js_path}")
     if artifacts.form_survey_path is not None:
         print(f"wrote matching CHT XLSForm survey source to {artifacts.form_survey_path}")
+    if artifacts.form_xform_path is not None:
+        print(f"wrote executable CHT XForm to {artifacts.form_xform_path}")
     if artifacts.special_function_paths:
         print(f"wrote {len(artifacts.special_function_paths)} reviewed special-function files")
     return 0

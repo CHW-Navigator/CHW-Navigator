@@ -450,7 +450,7 @@ If you are landing in this repo for the first time:
 
 ## Current limitations
 
-- The current implementation is a stateless point-in-time engine. It does not yet model prior visits, longitudinal trends, or historical variables.
+- The decision engine remains point-in-time. Registered scalar values already present in supported CHT form contexts can be loaded into history variables, but report searches, longitudinal trends, and aggregated histories are not yet supported.
 - Scalar carry-forward state can be represented today with `st_` variables such as `st_fever_done`, but list-valued or longitudinal state is not yet first-class.
 - `FIRST` is enforced per decision, not globally. Multiple decisions may coexist. Clinical IR has a bounded `create_task` action that the CHT backend lowers to stored task-intent report fields plus report-based `tasks.js`; this is not an aggregated care-plan model.
 
@@ -475,12 +475,47 @@ role, icon, and priority. Missing task types, unsupported absolute due-date
 expressions, role mismatches, and generated identity collisions fail closed.
 
 The output contains executable `tasks.js`, matching XLSForm survey/choices source,
-task and history plans, hashes, and a bundle manifest. The `tasks.js` module is
+task and local-data plans, hashes, and a bundle manifest. The `tasks.js` module is
 accepted by the reviewed TypeScript AST composer, which inserts or replaces its
 managed block without overwriting unrelated destination rules. XLSForm conversion,
 target-project compilation, the official CHT harness, and exact target-runtime tests
-remain deployment gates. `read_history` remains a plan because the reviewed
-TypeScript package has no general history adapter to connect.
+remain deployment gates.
+
+## Read registered on-device CHT data
+
+The optional `cht-local-data-bindings@1.0.0` registry turns an IR
+`read_local_data` action (or its legacy `read_history` spelling) into an exact CHT
+form read. The IR names a versioned binding; it never contains an arbitrary CouchDB
+query or deployment XPath.
+
+```powershell
+chw-nav build-cht `
+  examples/cht_local_data_demo.ir.json `
+  examples/cht-task-bindings.json `
+  generated/cht-local-data-demo `
+  --local-data-bindings examples/cht-local-data-bindings.json `
+  --form-context contact
+```
+
+Registry version 1 supports three reviewed adapters:
+
+- `cht_contact_field`: a declared field under `inputs/contact`, available from a contact or task launch;
+- `cht_contact_summary`: a declared `instance('contact-summary')/context/...` value, available from a contact profile;
+- `cht_task_input`: a declared field under `inputs`, available from a task launch.
+
+Every binding declares its value type, meaning, subject, supported launch contexts,
+and either `immutable` freshness or an observation-date path plus `max_age_days`.
+The compiler rejects unknown binding IDs, XPath-like injected paths, context
+mismatches, type/unit mismatches, and conflicting freshness declarations. Runtime
+failure is explicit: `soft_missing`, `ask_if_missing`, or `hard_error`.
+
+The bundle contains CSV XLSForm source and a directly executable CHT XForm for
+registered reads. The official harness regression covers contact injection and the
+missing-value fallback when its browser and `xsltproc` prerequisites are present.
+Arbitrary local report/PouchDB search remains deliberately unsupported. See
+[`docs/local-data-authoring-handoff.md`](docs/local-data-authoring-handoff.md) for
+the exact upstream LLM handoff and the Product-to-Clinical-IR boundary that remains.
+
 - Form structure is intentionally minimal today. Groups, repeats, and multivalue variables are not yet supported by the current validator/runtime path.
 - The XLSForm importer is intentionally narrow. It does not yet support general question `relevant`, general `constraint`, repeats, groups, or arbitrary legacy production forms.
 - External lookup tables and nonlinear or lookup-backed math are not supported in the current Z3 boundary. Unsupported constructs should be rejected rather than approximated.

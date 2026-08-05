@@ -356,3 +356,45 @@
   may not be described as an implemented backend action.
 - Explicit limit: `read_history` is still plan-only because there is no TypeScript
   implementation to bridge and no target-approved CHT document/field lookup contract.
+
+## 2026-08-05 — Registered CHT local-data bridge
+
+- Root cause: `read_history.source: cht` identified a platform but not a field,
+  meaning, type, launch context, or freshness rule. A backend could not safely turn
+  that request into CHT code, so it stopped at a JSON stub.
+- Added `cht-local-data-bindings@1.0.0`. The LLM/IR selects an exact versioned
+  binding; deployment XPath and availability rules remain in compiler input owned by
+  the target deployment.
+- Added `read_local_data` while preserving `read_history` as a legacy alias. Unknown
+  bindings, unsafe paths, unsupported contexts, type/unit mismatches, inconsistent
+  freshness, output/mapping disagreement, and duplicate targets fail closed.
+- Lowered registered reads into standard CHT contact inputs, task inputs, or
+  contact-summary context. Generated status rows distinguish available, missing, and
+  stale values; failure behavior is `soft_missing`, `ask_if_missing`, or `hard_error`.
+- Connected the generated fields to both CSV XLSForm source and a directly executable
+  CHT XForm. Repaired the bundle writer so forms with local reads but no tasks still
+  emit their form source and XML.
+- Added a real codebook/IR example and eight focused tests. The official
+  `cht-conf-test-harness` runner reaches browser startup and XForm transformation;
+  this Windows environment's MSYS `xsltproc` is not executable, so that single
+  browser assertion skips with an explicit prerequisite. XML parsing, manifest
+  hashing, CLI generation, and all compiler-level lowering checks still run.
+- Generalized guardrail: generated backend code may read only exact registry IDs;
+  "present on device" never implies availability in every form context, and no LLM
+  output may contain an arbitrary local database query or deployment XPath.
+- Verification: the compiler suite collected 136 tests: 135 passed and the
+  local-data browser case skipped after its `xsltproc --version` prerequisite
+  failed; 35 focused Product operational,
+  topology, and synthetic end-to-end tests passed. A fresh rerun of the separate
+  two-profile extension-library browser gate exceeded its 120-second outer limit and
+  was terminated; the previously recorded passing gate remains historical evidence,
+  not a new result for this change.
+- Preserved `cht_read_history_stub.json` as a compatibility copy while making
+  `cht_local_data_plan.json` the accurately named bundle artifact. The focused
+  post-change regression run passed 28 tests with the same single harness skip, and
+  diagnostic coverage verified all 25 declared codes.
+- Audited the upstream Product seam. Gen7/Gen8 currently emits a seven-part
+  `clinical_logic` object rather than canonical Clinical IR, and its naming codebook
+  is not a CHT storage registry. Recorded the explicit adapter/handoff requirement in
+  `docs/local-data-authoring-handoff.md`; prompt-only registry instructions are not a
+  safe substitute for a deterministic consumer and contract tests.

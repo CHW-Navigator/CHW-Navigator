@@ -13,6 +13,14 @@ from .cht_special_functions import (
     write_cht_special_function_bundle,
 )
 from .cht_backend import build_cht_lowering_plan, write_cht_adapter_bundle
+from .cht_local_data import (
+    CHT_LOCAL_DATA_SCHEMA_VERSION,
+    CHTLocalDataBinding,
+    CHTLocalDataLoweringError,
+    CHTLocalDataRegistry,
+    load_cht_local_data_registry,
+    parse_cht_local_data_registry,
+)
 from .cht_tasks import (
     CHT_TASK_BINDING_SCHEMA_VERSION,
     CHTTaskBindingRegistry,
@@ -135,6 +143,10 @@ __all__ = [
     "CorrectionEvent",
     "CREATE_PERSON_IDENTITY_SERVICE",
     "CHTSpecialFunctionBundle",
+    "CHT_LOCAL_DATA_SCHEMA_VERSION",
+    "CHTLocalDataBinding",
+    "CHTLocalDataLoweringError",
+    "CHTLocalDataRegistry",
     "CHT_TASK_BINDING_SCHEMA_VERSION",
     "CHTTaskBindingRegistry",
     "CHTTaskIntentPlan",
@@ -218,11 +230,13 @@ __all__ = [
     "lower_reviewed_special_functions",
     "load_catalog_bundle",
     "load_cht_task_bindings",
+    "load_cht_local_data_registry",
     "load_change_memo",
     "load_xlsform_workbook",
     "load_patient_cases",
     "preflight_source_artifact",
     "parse_cht_task_bindings",
+    "parse_cht_local_data_registry",
     "render_stage_lint_report",
     "reject_clinical_derivation",
     "resolve_mutable_field_conflicts",

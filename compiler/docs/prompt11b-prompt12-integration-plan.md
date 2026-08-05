@@ -109,8 +109,9 @@ merged by treating TypeScript-package evidence as target-repository execution.
 - A bridge regression executes the generated module and passes it through the
   reviewed TypeScript AST composer, proving that unrelated destination task rules
   can still be preserved.
-- `read_history` remains separate: no reviewed TypeScript implementation exists to
-  connect, and a CHT document/field lookup contract must be specified first.
+- `read_history` remains plan-only without a registry. When supplied a versioned
+  local-data registry, the Python compiler lowers its legacy spelling through the
+  same reviewed form-input adapters as `read_local_data`.
 
 ### Completed slice: Prompt 13 person identity
 

@@ -104,30 +104,31 @@ st_age_months_effective = age_months_from_date(h_date_of_birth)
 
 instead of carrying a stale `h_age_months`.
 
-## 3. `read_history` action
+## 3. Registered local-data read action
 
 Add an explicit action to the IR:
 
 ```yaml
 actions:
-  a_read_growth_history:
-    kind: read_history
-    source: cht
-    outputs: [h_weight_kg, h_weight_kg_recorded_at, h_date_of_birth]
+  a_read_date_of_birth:
+    kind: read_local_data
+    source: local.person.date_of_birth@1.0.0
+    outputs: [st_date_of_birth_h]
     mappings:
-      - record_key: chw.weight_kg
-        target_var: h_weight_kg
-        recorded_at_target_var: h_weight_kg_recorded_at
-      - record_key: chw.date_of_birth
-        target_var: h_date_of_birth
-    fail_mode: soft_missing
+      - record_key: value
+        target_var: st_date_of_birth_h
+    fail_mode: ask_if_missing
 ```
 
 Intent:
 
-- request known fields from the external record
-- populate the `h_` variables
-- leave unavailable fields as missing when soft-fail is allowed
+- select one exact entry from the deployment's versioned local-data registry
+- populate the corresponding history variable without exposing deployment XPath to the LLM
+- ask, leave missing, or block according to the declared failure mode
+
+`read_history` remains a supported legacy spelling. With no registry, it produces a
+plan-only request. With a registry, it obeys the same binding and lowering rules as
+`read_local_data`.
 
 ## 4. `ask` and `compute` actions
 
@@ -164,7 +165,9 @@ actions:
 
 ## 5. Codebook-driven generation and manual authoring
 
-Assume the upstream codebook already knows which CHT fields are legal in the current deployment.
+The codebook is a machine-validated `cht-local-data-bindings@1.0.0` registry. It
+defines which CHT fields are legal in the current deployment, their meaning and type,
+their launch contexts, and their freshness contract.
 
 Automation rule:
 
@@ -225,5 +228,5 @@ For now, a graph-based acyclic rule is the right default.
 2. add decision dependency graph lint
 3. add `h_` and `history_binding` to variable-generation contracts
 4. add `read_history` to the IR
-5. lower `read_history` into CHT-specific preload code
+5. lower registered reads into CHT-specific form inputs and calculations
 6. later add Z3 analysis for chained workflow hazards

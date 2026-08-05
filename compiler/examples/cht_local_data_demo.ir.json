@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "registered_local_data_demo",
+    "sources": [
+      {
+        "source_id": "CHW_MANUAL"
+      },
+      {
+        "source_id": "LOCAL_DATA_CODEBOOK"
+      }
+    ]
+  },
+  "variables": {
+    "st_date_of_birth_h": {
+      "type": "string",
+      "allowed_missingness": false,
+      "multivalue": false,
+      "source_kind": "history",
+      "history_binding": {
+        "record_key": "local.person.date_of_birth@1.0.0"
+      },
+      "provenance": [
+        {
+          "source_id": "LOCAL_DATA_CODEBOOK",
+          "location": "local.person.date_of_birth@1.0.0"
+        }
+      ]
+    }
+  },
+  "constants": {},
+  "predicates": {},
+  "actions": {
+    "a_read_date_of_birth": {
+      "kind": "read_local_data",
+      "source": "local.person.date_of_birth@1.0.0",
+      "outputs": [
+        "st_date_of_birth_h"
+      ],
+      "mappings": [
+        {
+          "record_key": "value",
+          "target_var": "st_date_of_birth_h"
+        }
+      ],
+      "fail_mode": "ask_if_missing",
+      "provenance": [
+        {
+          "source_id": "CHW_MANUAL",
+          "location": "patient identification"
+        },
+        {
+          "source_id": "LOCAL_DATA_CODEBOOK",
+          "location": "local.person.date_of_birth@1.0.0"
+        }
+      ]
+    }
+  },
+  "phrases": {
+    "m_date_of_birth_label": {
+      "entity_id": "st_date_of_birth_h",
+      "role": "label",
+      "texts": {
+        "en": "Date of birth"
+      },
+      "provenance": [
+        {
+          "source_id": "CHW_MANUAL",
+          "location": "patient identification"
+        }
+      ]
+    }
+  },
+  "decisions": {},
+  "outputs": {},
+  "invariants": {},
+  "phrase_bindings": {}
+}

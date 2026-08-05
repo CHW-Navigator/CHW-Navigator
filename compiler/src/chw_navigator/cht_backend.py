@@ -7,6 +7,13 @@ import json
 from pathlib import Path
 
 from .clinical_ir import ClinicalIRDocument
+from .cht_local_data import (
+    CHTFormContext,
+    CHTLocalDataLoweringError,
+    CHTLocalDataReadPlan,
+    CHTLocalDataRegistry,
+    lower_cht_local_data_reads,
+)
 from .cht_special_functions import (
     CHTSpecialFunctionBundle,
     lower_reviewed_special_functions,
@@ -21,6 +28,7 @@ from .cht_tasks import (
     task_intent_rows,
     task_plan_payload,
 )
+from .cht_xform import generate_cht_xform
 from .diagnostics import Diagnostic, DiagnosticCode
 from .form_ir import SurveyRow
 from .xlsform_backend import BuiltXLSForm, build_xlsform, compile_xlsform_expression, write_xlsform_csvs
@@ -69,6 +77,9 @@ class CHTLoweringPlan:
     today_row: SurveyRow | None = None
     appearance_overrides: list[CHTAppearanceOverride] = field(default_factory=list)
     read_history_requests: list[CHTReadHistoryRequest] = field(default_factory=list)
+    local_data_reads: tuple[CHTLocalDataReadPlan, ...] = ()
+    local_data_registry: CHTLocalDataRegistry | None = None
+    form_context: CHTFormContext | None = None
     task_specs: list[CHTTaskSpec] = field(default_factory=list)
     task_intent_plans: tuple[CHTTaskIntentPlan, ...] = ()
     cht_xlsform: BuiltXLSForm | None = None
@@ -89,6 +100,8 @@ class CHTAdapterArtifacts:
     form_survey_path: Path | None = None
     form_choices_path: Path | None = None
     form_source_map_path: Path | None = None
+    form_xform_path: Path | None = None
+    legacy_history_stub_path: Path | None = None
     special_function_paths: tuple[Path, ...] = ()
 
     @property
@@ -108,6 +121,8 @@ def build_cht_lowering_plan(
     *,
     profile: CHTProfile | None = None,
     task_bindings: CHTTaskBindingRegistry | None = None,
+    local_data_registry: CHTLocalDataRegistry | None = None,
+    form_context: CHTFormContext = "contact",
     special_function_target_cht_version: str | None = None,
 ) -> CHTLoweringPlan:
     active_profile = profile or default_cht_profile()
@@ -145,7 +160,7 @@ def build_cht_lowering_plan(
 
     required_calculations: dict[str, str] = {}
     for action in document.actions.values():
-        if action.kind == "read_history":
+        if action.kind in {"read_history", "read_local_data"} and local_data_registry is None:
             plan.read_history_requests.append(
                 CHTReadHistoryRequest(
                     action_id=action.id,
@@ -206,6 +221,35 @@ def build_cht_lowering_plan(
                 ]
             )
         plan.target_cht_version = task_bindings.target_cht_version
+    if local_data_registry is not None:
+        from .cht_special_functions import reviewed_cht_profile
+
+        reviewed_cht_profile(local_data_registry.target_cht_version)
+        if plan.target_cht_version is not None and plan.target_cht_version != local_data_registry.target_cht_version:
+            raise CHTLocalDataLoweringError(
+                [
+                    Diagnostic(
+                        code=DiagnosticCode.CHT_LOCAL_DATA_REGISTRY_INVALID,
+                        severity="error",
+                        message=(
+                            "Task bindings and local-data bindings target different CHT versions: "
+                            f"{plan.target_cht_version} versus {local_data_registry.target_cht_version}."
+                        ),
+                        path="target_cht_version",
+                    )
+                ]
+            )
+        plan.target_cht_version = local_data_registry.target_cht_version
+        plan.local_data_registry = local_data_registry
+        plan.form_context = form_context
+        if plan.cht_xlsform is None:
+            raise AssertionError("Local-data lowering requires the matching XLSForm source.")
+        plan.local_data_reads = lower_cht_local_data_reads(
+            document,
+            plan.cht_xlsform,
+            local_data_registry,
+            form_context=form_context,
+        )
     plan.task_intent_plans = build_task_intent_plans(
         document,
         source_form_code=workbook.workbook.form_id,
@@ -230,7 +274,14 @@ def build_cht_lowering_plan(
     plan.notes.append(
         "Symptom-group field-list layout is a CHT form-construction convention and is not yet derived automatically from canonical Clinical IR."
     )
-    plan.notes.append("read_history remains a plan because the reviewed TypeScript implementation has no general history adapter.")
+    if plan.read_history_requests:
+        plan.notes.append(
+            "Unregistered read_history remains a plan; supply a versioned local-data binding registry to generate CHT form reads."
+        )
+    if plan.local_data_reads:
+        plan.notes.append(
+            "Registered local-data reads are lowered to context-specific CHT form inputs with explicit availability status and failure behavior."
+        )
     if plan.task_intent_plans:
         plan.notes.append(
             "create_task actions are lowered into stored form fields and deterministic report-based tasks.js rules compatible with the reviewed TypeScript composer."
@@ -282,7 +333,36 @@ def render_cht_adapter_plan(plan: CHTLoweringPlan) -> dict[str, object]:
                 }
                 for item in plan.read_history_requests
             ],
-            "status": "stub_only" if plan.read_history_requests else "not_requested",
+            "status": (
+                "generated"
+                if plan.local_data_reads
+                else "stub_only"
+                if plan.read_history_requests
+                else "not_requested"
+            ),
+            "schema_version": (
+                plan.local_data_registry.schema_version if plan.local_data_registry is not None else None
+            ),
+            "target_cht_version": (
+                plan.local_data_registry.target_cht_version
+                if plan.local_data_registry is not None
+                else None
+            ),
+            "form_context": plan.form_context,
+            "generated_reads": [
+                {
+                    "action_id": item.action_id,
+                    "binding_id": item.binding_id,
+                    "target_var": item.target_var,
+                    "source_xpath": item.source_xpath,
+                    "recorded_at_xpath": item.recorded_at_xpath,
+                    "status_row": item.status_row,
+                    "fallback_row": item.fallback_row,
+                    "fail_mode": item.fail_mode,
+                    "freshness_policy": item.freshness_policy,
+                }
+                for item in plan.local_data_reads
+            ],
         },
         "task_adapter": {
             "tasks": [task_plan_payload(item) for item in plan.task_intent_plans],
@@ -324,7 +404,8 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
 
     payload = render_cht_adapter_plan(plan)
     plan_json_path = target_dir / "cht_lowering_plan.json"
-    history_stub_path = target_dir / "cht_read_history_stub.json"
+    history_stub_path = target_dir / "cht_local_data_plan.json"
+    legacy_history_stub_path = target_dir / "cht_read_history_stub.json"
     task_plan_path = target_dir / "cht_task_plan.json"
     readme_path = target_dir / "README.md"
     manifest_path = target_dir / "cht-bundle-manifest.json"
@@ -342,6 +423,10 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
         json.dumps(payload["read_history_adapter"], indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    legacy_history_stub_path.write_text(
+        history_stub_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
     task_plan_path.write_text(
         json.dumps(payload["task_adapter"], indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -350,28 +435,39 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
     form_survey_path: Path | None = None
     form_choices_path: Path | None = None
     form_source_map_path: Path | None = None
-    if plan.task_intent_plans:
+    form_xform_path: Path | None = None
+    if plan.task_intent_plans or plan.local_data_reads:
         if plan.cht_xlsform is None:
-            raise ValueError("CHT task plans require the matching CHT XLSForm source.")
-        tasks_js_path = target_dir / "tasks.js"
-        tasks_js_path.write_text(generate_tasks_js(plan.task_intent_plans), encoding="utf-8")
-        form_code = plan.task_intent_plans[0].source_form_code
+            raise ValueError("CHT executable plans require the matching CHT XLSForm source.")
+        if plan.task_intent_plans:
+            tasks_js_path = target_dir / "tasks.js"
+            tasks_js_path.write_text(generate_tasks_js(plan.task_intent_plans), encoding="utf-8")
+        form_code = (
+            plan.task_intent_plans[0].source_form_code
+            if plan.task_intent_plans
+            else plan.cht_xlsform.workbook.form_id
+        )
         form_source_dir = target_dir / "forms" / "app" / f"{form_code}.xlsform"
         survey, choices, source_map = write_xlsform_csvs(plan.cht_xlsform, str(form_source_dir))
         form_survey_path = Path(survey)
         form_choices_path = Path(choices)
         form_source_map_path = Path(source_map)
+        if plan.local_data_reads:
+            form_xform_path = target_dir / "forms" / "app" / f"{form_code}.xml"
+            form_xform_path.write_text(generate_cht_xform(plan.cht_xlsform), encoding="utf-8")
 
     manifest_files = [
         path
         for path in (
             plan_json_path,
             history_stub_path,
+            legacy_history_stub_path,
             task_plan_path,
             tasks_js_path,
             form_survey_path,
             form_choices_path,
             form_source_map_path,
+            form_xform_path,
             *special_function_paths,
         )
         if path is not None
@@ -382,6 +478,10 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
         "task_binding_schema_version": (
             "cht-task-bindings@1.0.0" if plan.task_intent_plans else None
         ),
+        "local_data_binding_schema_version": (
+            plan.local_data_registry.schema_version if plan.local_data_registry is not None else None
+        ),
+        "form_context": plan.form_context,
         "task_composer_contract": (
             "@chw-navigator/cht-integration task-composer@1" if plan.task_intent_plans else None
         ),
@@ -424,7 +524,8 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
                 "Files:",
                 "",
                 "- `cht_lowering_plan.json`: full lowering plan",
-                "- `cht_read_history_stub.json`: unimplemented history-read adapter inputs",
+                "- `cht_local_data_plan.json`: registered generated reads or unimplemented legacy history-read requests",
+                "- `cht_read_history_stub.json`: compatibility copy of the local-data plan for older bundle consumers",
                 "- `cht_task_plan.json`: resolved task types and task-rule identities",
                 *(
                     [
@@ -432,6 +533,11 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
                         "- `forms/app/<form>.xlsform/`: survey/choices source with the exact task-intent fields read by `tasks.js`",
                     ]
                     if plan.task_intent_plans
+                    else []
+                ),
+                *(
+                    ["- `forms/app/<form>.xml`: executable CHT XForm containing the registered local-data reads"]
+                    if plan.local_data_reads
                     else []
                 ),
                 *(
@@ -444,7 +550,7 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
                     else []
                 ),
                 "",
-                "Task rules are executable candidates and the accompanying XLSForm source contains their report fields. Convert and test the form in the reviewed CHT build pipeline before deployment. History remains unimplemented. Special-function files, when present, also require official-harness and target-runtime evidence.",
+                "Task rules and registered local-data form reads are executable candidates. Convert and test the accompanying XLSForm in the reviewed CHT build pipeline before deployment. Unregistered legacy history reads remain unimplemented. Special-function files, when present, also require official-harness and target-runtime evidence.",
                 "",
             ]
         ),
@@ -461,6 +567,8 @@ def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> C
         form_survey_path=form_survey_path,
         form_choices_path=form_choices_path,
         form_source_map_path=form_source_map_path,
+        form_xform_path=form_xform_path,
+        legacy_history_stub_path=legacy_history_stub_path,
         special_function_paths=special_function_paths,
     )
 

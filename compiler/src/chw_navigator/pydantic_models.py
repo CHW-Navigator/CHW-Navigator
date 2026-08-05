@@ -429,12 +429,12 @@ class ActionMappingModel(StrictModel):
 
 class ActionModel(StrictModel):
     id: str
-    kind: Literal["read_history", "ask", "compute", "create_task"]
+    kind: Literal["read_history", "read_local_data", "ask", "compute", "create_task"]
     outputs: list[str] = Field(default_factory=list)
     when: ExprModel | None = None
     source: str | None = None
     mappings: list[ActionMappingModel] = Field(default_factory=list)
-    fail_mode: Literal["soft_missing", "hard_error"] | None = None
+    fail_mode: Literal["soft_missing", "ask_if_missing", "hard_error"] | None = None
     expression: ExprModel | None = None
     task_type: str | None = None
     due_in_days: int | None = None
@@ -458,14 +458,14 @@ class ActionModel(StrictModel):
 
     @model_validator(mode="after")
     def validate_action(self) -> "ActionModel":
-        if self.kind == "read_history":
+        if self.kind in {"read_history", "read_local_data"}:
             if not self.source:
-                raise ValueError("read_history actions require source")
+                raise ValueError("local-data read actions require source")
             if not self.mappings:
-                raise ValueError("read_history actions require mappings")
+                raise ValueError("local-data read actions require mappings")
             for output_name in self.outputs:
                 if not _is_history_id(output_name):
-                    raise ValueError("read_history output target must use legacy h_ ids or the newer _h suffix")
+                    raise ValueError("local-data read output target must use legacy h_ ids or the newer _h suffix")
         if self.kind == "compute" and self.expression is None:
             raise ValueError("compute actions require expression")
         if self.kind == "create_task" and self.task_type is None:

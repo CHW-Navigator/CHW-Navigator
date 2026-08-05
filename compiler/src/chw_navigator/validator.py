@@ -108,13 +108,13 @@ def _validate_actions(document: ClinicalIRDocument, errors: list[ValidationError
         if action.when is not None:
             _infer_expr_type(action.when, document, f"actions.{action.id}.when", errors)
 
-        if action.kind == "read_history":
+        if action.kind in {"read_history", "read_local_data"}:
             for output_name in action.outputs:
                 if output_name in document.variables and not _is_history_id(output_name):
                     errors.append(
                         ValidationError(
                             f"actions.{action.id}.outputs",
-                            "read_history outputs must target legacy h_ ids or variables with the _h suffix",
+                            "local-data read outputs must target legacy h_ ids or variables with the _h suffix",
                         )
                     )
             for index, mapping in enumerate(action.mappings):
