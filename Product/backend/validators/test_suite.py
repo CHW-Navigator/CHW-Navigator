@@ -185,6 +185,9 @@ def _guide_content_hash(guide_json: dict) -> str:
 class TestItem:
     """One frozen test: the guide requires this item in the artifact."""
 
+    # This is a domain model, not a pytest test class. Keep the public name for
+    # compatibility while preventing collection warnings in the complete gate.
+    __test__ = False
     __slots__ = ("suggested_id", "guide_quote", "section",
                  "artifact_type", "description", "repair_instruction",
                  "voter_count")
@@ -222,6 +225,8 @@ class TestItem:
 
 class TestSuite:
     """Frozen test suite for one guide."""
+
+    __test__ = False
 
     def __init__(self, guide_hash: str, items: list[TestItem]):
         self.guide_hash = guide_hash

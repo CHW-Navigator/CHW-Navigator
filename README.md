@@ -1,6 +1,6 @@
 # CHW Navigator — ChatCHW
 
-**ChatCHW** is the umbrella repository for **CHW Navigator**: a verification-oriented pipeline that turns **MOH/WHO CHW clinical manuals** into **deterministic decision logic** (DMN, JSON) and **deployment-ready artifacts** (XLSForm, Mermaid, CSVs). AI is used in the **build** phase; the **runtime** story targets familiar, offline-first forms—not generative advice at the bedside.
+**ChatCHW** is the umbrella repository for **CHW Navigator**: a verification-oriented pipeline that turns **MOH/WHO CHW clinical manuals** into **deterministic decision logic** (DMN, JSON) and **deployment-candidate artifacts** (XLSForm, Mermaid, CSVs). AI is used in the **build** phase; the **runtime** story targets familiar, offline-first forms—not generative advice at the bedside. Deployment readiness additionally requires the evidence gates defined in `compiler/docs/evidence-levels.md`.
 
 ---
 
@@ -143,4 +143,11 @@ Deprecated frontend/backend sketches. **Out of scope** for current architecture;
 
 ## Source of truth
 
-If umbrella docs and **`Product/`** disagree on behavior, **`Product/` on `main`** wins. This README is the **map**; submodule docs and code are the **spec** for the running system.
+`CHW-Navigator-current` is the authoritative repository. `Product/` owns the
+manual-authoring application and its seven-part `clinical_logic` output;
+`compiler/` owns canonical Clinical IR and the Python production compiler.
+These contracts are not yet joined by an end-to-end adapter. The reviewed
+TypeScript workspace is a read-only differential oracle, not production code.
+When prose and executable behavior disagree, the current-tree tests and
+evidence manifest govern the technical claim; human clinical and deployment
+approval remain separate.

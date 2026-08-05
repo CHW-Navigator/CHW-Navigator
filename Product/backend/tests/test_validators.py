@@ -8,6 +8,7 @@ from backend.validators.architecture import validate_architecture
 from backend.validators.completeness import validate_completeness
 from backend.validators.clinical import validate_clinical
 from backend.validators.naming import validate_naming
+from backend.validators.test_suite import TestItem, TestSuite
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -19,6 +20,16 @@ def load_fixture(name: str) -> dict:
 
 class TestValidLogic:
     """Valid fixture should pass all validators."""
+
+    def test_fixture_activator_references_defined_modules(self):
+        logic = load_fixture("valid_logic.json")
+        module_ids = {module["module_id"] for module in logic["modules"]}
+        referenced = {rule["module_id"] for rule in logic["activator"]["rules"]}
+        assert referenced <= module_ids
+
+    def test_domain_test_models_are_not_pytest_collectors(self):
+        assert TestItem.__test__ is False
+        assert TestSuite.__test__ is False
 
     def test_all_validators_pass(self):
         logic = load_fixture("valid_logic.json")

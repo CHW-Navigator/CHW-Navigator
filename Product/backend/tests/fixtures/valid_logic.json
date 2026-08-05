@@ -31,14 +31,14 @@
     }
   ],
   "activator": {
+    "hit_policy": "COLLECT",
     "input_columns": ["q_cough", "q_diarrhea", "q_fever"],
     "rules": [
-      {"inputs": ["true", "-", "-"], "module_id": "mod_cough"},
-      {"inputs": ["-", "true", "-"], "module_id": "mod_diarrhea"},
-      {"inputs": ["-", "-", "true"], "module_id": "mod_fever"}
+      {"inputs": ["true", "-", "-"], "module_id": "mod_cough"}
     ]
   },
   "router": {
+    "hit_policy": "FIRST",
     "rules": [
       {"condition": "p_danger_sign_present == true", "next_module": "mod_emergency_referral", "priority": 0},
       {"condition": "mod_cough in required AND mod_cough not in completed", "next_module": "mod_cough", "priority": 1},
