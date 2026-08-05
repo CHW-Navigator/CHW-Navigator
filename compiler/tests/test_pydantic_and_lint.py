@@ -13,7 +13,8 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from chw_navigator.clinical_ir import ClinicalIRDocument
-from chw_navigator.cht_backend import build_cht_lowering_plan, write_cht_adapter_stub
+from chw_navigator.cht_backend import build_cht_lowering_plan, write_cht_adapter_bundle
+from chw_navigator.cht_tasks import parse_cht_task_bindings
 from chw_navigator.lint import lint_document
 from chw_navigator.validator import validate_document
 from test_support import create_test_run, reset_suite_runs
@@ -341,7 +342,28 @@ class PydanticAndLintTests(unittest.TestCase):
         self.assertEqual([], validate_document(document))
         lint_errors = [issue for issue in lint_document(document) if issue.level == "ERROR"]
         self.assertEqual([], lint_errors)
-        plan = build_cht_lowering_plan(document)
+        plan = build_cht_lowering_plan(
+            document,
+            task_bindings=parse_cht_task_bindings(
+                {
+                    "schema_version": "cht-task-bindings@1.0.0",
+                    "target_cht_version": "4.22.0",
+                    "task_types": {
+                        "followup_visit": {
+                            "source_message_key": "m_followup_3d",
+                            "title_key": "task.followup_visit.title",
+                            "followup_form": "followup_visit",
+                            "permission_key": "can_schedule_followup_visit",
+                            "icon": "icon-healthcare-followup",
+                            "start_days": 0,
+                            "end_days": 2,
+                            "source_priority": "routine",
+                            "assignee_role": "chw",
+                        }
+                    },
+                }
+            ),
+        )
         self.assertIsNotNone(plan.today_row)
         self.assertEqual("today()", plan.today_row.calculation)
         self.assertEqual(1, len(plan.read_history_requests))
@@ -484,13 +506,13 @@ class PydanticAndLintTests(unittest.TestCase):
         warnings = [issue.message for issue in lint_document(document) if issue.level == "WARNING"]
         self.assertTrue(any("no documented collection path" in message for message in warnings))
 
-    def test_cht_adapter_stub_writer_emits_expected_files(self) -> None:
+    def test_cht_adapter_bundle_writer_emits_expected_files(self) -> None:
         payload = json.loads((EXAMPLES / "pneumonia.ir.json").read_text(encoding="utf-8"))
         document = ClinicalIRDocument.from_dict(payload)
         plan = build_cht_lowering_plan(document)
         target_dir = self.test_run.outputs_dir / "cht_stub"
         target_dir.mkdir(parents=True, exist_ok=True)
-        artifacts = write_cht_adapter_stub(plan, target_dir)
+        artifacts = write_cht_adapter_bundle(plan, target_dir)
         self.assertTrue(artifacts.plan_json_path.exists())
         self.assertTrue(artifacts.history_stub_path.exists())
         self.assertTrue(artifacts.tasks_stub_path.exists())

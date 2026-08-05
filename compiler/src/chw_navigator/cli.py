@@ -10,6 +10,8 @@ from .bundles import BundleBuildError, create_bundle
 from .catalogs import CatalogLoadError, compose_document_from_catalogs
 from .change_control import ChangeReviewBuildError, create_change_review_package, load_change_memo
 from .clinical_ir import ClinicalIRDocument
+from .cht_backend import build_cht_lowering_plan, write_cht_adapter_bundle
+from .cht_tasks import CHTTaskLoweringError, load_cht_task_bindings
 from .compare import (
     ComparisonError,
     build_comparison_log,
@@ -147,6 +149,19 @@ def main(argv: list[str] | None = None) -> int:
     xlsform_parser.add_argument("ir_path")
     xlsform_parser.add_argument("output_dir")
 
+    cht_parser = subparsers.add_parser(
+        "build-cht",
+        help="build CHT XLSForm task-intent source, tasks.js, manifests, and optional reviewed special functions",
+    )
+    cht_parser.add_argument("ir_path")
+    cht_parser.add_argument("task_bindings_path")
+    cht_parser.add_argument("output_dir")
+    cht_parser.add_argument(
+        "--include-reviewed-special-functions",
+        action="store_true",
+        help="also emit reviewed special functions for the task-binding file's exact CHT version",
+    )
+
     quality_parser = subparsers.add_parser(
         "quality-check",
         help="compile XLSForm, Mermaid, and SMT artifacts from IR and write a local quality-check package",
@@ -271,6 +286,13 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_compare_smt2(Path(args.ir_path), args.smt2_path, args.patient_path)
     if args.command == "build-xlsform":
         return _handle_build_xlsform(Path(args.ir_path), args.output_dir)
+    if args.command == "build-cht":
+        return _handle_build_cht(
+            Path(args.ir_path),
+            Path(args.task_bindings_path),
+            Path(args.output_dir),
+            args.include_reviewed_special_functions,
+        )
     if args.command == "quality-check":
         return _handle_quality_check(Path(args.ir_path), Path(args.output_dir), args.patient_path)
     if args.command == "lint-xlsform":
@@ -693,6 +715,39 @@ def _handle_build_xlsform(ir_path: Path, output_dir: str) -> int:
     print(f"wrote survey sheet to {survey_path}")
     print(f"wrote choices sheet to {choices_path}")
     print(f"wrote source map to {source_map_path}")
+    return 0
+
+
+def _handle_build_cht(
+    ir_path: Path,
+    task_bindings_path: Path,
+    output_dir: Path,
+    include_reviewed_special_functions: bool,
+) -> int:
+    try:
+        document = _load_document(ir_path)
+        task_bindings = load_cht_task_bindings(task_bindings_path)
+        built = build_xlsform(document)
+        plan = build_cht_lowering_plan(
+            document,
+            built,
+            task_bindings=task_bindings,
+            special_function_target_cht_version=(
+                task_bindings.target_cht_version if include_reviewed_special_functions else None
+            ),
+        )
+        artifacts = write_cht_adapter_bundle(plan, output_dir)
+    except (CLIError, XLSFormBuildError, CHTTaskLoweringError, ValueError) as exc:
+        print(f"CHT build failed: {exc}")
+        return 1
+
+    print(f"wrote CHT bundle manifest to {artifacts.manifest_path}")
+    if artifacts.tasks_js_path is not None:
+        print(f"wrote executable CHT task rules to {artifacts.tasks_js_path}")
+    if artifacts.form_survey_path is not None:
+        print(f"wrote matching CHT XLSForm survey source to {artifacts.form_survey_path}")
+    if artifacts.special_function_paths:
+        print(f"wrote {len(artifacts.special_function_paths)} reviewed special-function files")
     return 0
 
 

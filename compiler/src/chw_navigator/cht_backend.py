@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
+import hashlib
 import json
 from pathlib import Path
 
@@ -10,8 +12,18 @@ from .cht_special_functions import (
     lower_reviewed_special_functions,
     write_cht_special_function_bundle,
 )
+from .cht_tasks import (
+    CHTTaskBindingRegistry,
+    CHTTaskIntentPlan,
+    CHTTaskLoweringError,
+    build_task_intent_plans,
+    generate_tasks_js,
+    task_intent_rows,
+    task_plan_payload,
+)
+from .diagnostics import Diagnostic, DiagnosticCode
 from .form_ir import SurveyRow
-from .xlsform_backend import BuiltXLSForm, build_xlsform
+from .xlsform_backend import BuiltXLSForm, build_xlsform, compile_xlsform_expression, write_xlsform_csvs
 
 
 @dataclass(slots=True)
@@ -58,6 +70,9 @@ class CHTLoweringPlan:
     appearance_overrides: list[CHTAppearanceOverride] = field(default_factory=list)
     read_history_requests: list[CHTReadHistoryRequest] = field(default_factory=list)
     task_specs: list[CHTTaskSpec] = field(default_factory=list)
+    task_intent_plans: tuple[CHTTaskIntentPlan, ...] = ()
+    cht_xlsform: BuiltXLSForm | None = None
+    target_cht_version: str | None = None
     special_function_bundle: CHTSpecialFunctionBundle | None = None
     notes: list[str] = field(default_factory=list)
 
@@ -67,9 +82,20 @@ class CHTAdapterArtifacts:
     output_dir: Path
     plan_json_path: Path
     history_stub_path: Path
-    tasks_stub_path: Path
+    task_plan_path: Path
     readme_path: Path
+    manifest_path: Path
+    tasks_js_path: Path | None = None
+    form_survey_path: Path | None = None
+    form_choices_path: Path | None = None
+    form_source_map_path: Path | None = None
     special_function_paths: tuple[Path, ...] = ()
+
+    @property
+    def tasks_stub_path(self) -> Path:
+        """Compatibility alias for callers written before executable task lowering."""
+
+        return self.task_plan_path
 
 
 def default_cht_profile() -> CHTProfile:
@@ -81,11 +107,12 @@ def build_cht_lowering_plan(
     built: BuiltXLSForm | None = None,
     *,
     profile: CHTProfile | None = None,
+    task_bindings: CHTTaskBindingRegistry | None = None,
     special_function_target_cht_version: str | None = None,
 ) -> CHTLoweringPlan:
     active_profile = profile or default_cht_profile()
     workbook = built or build_xlsform(document)
-    plan = CHTLoweringPlan(profile=active_profile)
+    plan = CHTLoweringPlan(profile=active_profile, cht_xlsform=copy.deepcopy(workbook))
 
     if active_profile.inject_today:
         plan.today_row = SurveyRow(
@@ -116,6 +143,7 @@ def build_cht_lowering_plan(
                 )
             )
 
+    required_calculations: dict[str, str] = {}
     for action in document.actions.values():
         if action.kind == "read_history":
             plan.read_history_requests.append(
@@ -139,6 +167,11 @@ def build_cht_lowering_plan(
                 )
             )
         if action.kind == "create_task":
+            required_calculations[action.id] = (
+                "true()"
+                if action.when is None
+                else f"if({compile_xlsform_expression(action.when, document, output_rows=workbook.output_row_names)}, true(), false())"
+            )
             plan.task_specs.append(
                 CHTTaskSpec(
                     action_id=action.id,
@@ -151,13 +184,59 @@ def build_cht_lowering_plan(
                 )
             )
 
+    if task_bindings is not None:
+        from .cht_special_functions import reviewed_cht_profile
+
+        reviewed_cht_profile(task_bindings.target_cht_version)
+        if (
+            special_function_target_cht_version is not None
+            and task_bindings.target_cht_version != special_function_target_cht_version
+        ):
+            raise CHTTaskLoweringError(
+                [
+                    Diagnostic(
+                        code=DiagnosticCode.CHT_TASK_BINDING_INVALID,
+                        severity="error",
+                        message=(
+                            "Task bindings and special functions target different CHT versions: "
+                            f"{task_bindings.target_cht_version} versus {special_function_target_cht_version}."
+                        ),
+                        path="target_cht_version",
+                    )
+                ]
+            )
+        plan.target_cht_version = task_bindings.target_cht_version
+    plan.task_intent_plans = build_task_intent_plans(
+        document,
+        source_form_code=workbook.workbook.form_id,
+        bindings=task_bindings,
+        required_calculations=required_calculations,
+    )
+    if plan.cht_xlsform is not None:
+        for task_plan in plan.task_intent_plans:
+            plan.cht_xlsform.workbook.survey.extend(task_intent_rows(task_plan))
+            plan.cht_xlsform.row_sources[task_plan.group] = [
+                item
+                for source in document.actions[task_plan.action_id].provenance
+                for item in [
+                    {
+                        "source_id": source.source_id,
+                        **({"location": source.location} if source.location is not None else {}),
+                        **({"note": source.note} if source.note is not None else {}),
+                    }
+                ]
+            ]
+
     plan.notes.append(
         "Symptom-group field-list layout is a CHT form-construction convention and is not yet derived automatically from canonical Clinical IR."
     )
-    plan.notes.append(
-        "read_history lowering is represented as a backend plan only; direct CHT code generation still needs an adapter implementation."
-    )
+    plan.notes.append("read_history remains a plan because the reviewed TypeScript implementation has no general history adapter.")
+    if plan.task_intent_plans:
+        plan.notes.append(
+            "create_task actions are lowered into stored form fields and deterministic report-based tasks.js rules compatible with the reviewed TypeScript composer."
+        )
     if special_function_target_cht_version is not None:
+        plan.target_cht_version = special_function_target_cht_version
         plan.special_function_bundle = lower_reviewed_special_functions(special_function_target_cht_version)
         plan.notes.append(
             "Reviewed technical special functions are emitted as executable CHT XForms and an extension library; they do not derive clinical policy."
@@ -165,7 +244,7 @@ def build_cht_lowering_plan(
     return plan
 
 
-def render_cht_adapter_stub(plan: CHTLoweringPlan) -> dict[str, object]:
+def render_cht_adapter_plan(plan: CHTLoweringPlan) -> dict[str, object]:
     return {
         "profile": {
             "name": plan.profile.name,
@@ -203,22 +282,16 @@ def render_cht_adapter_stub(plan: CHTLoweringPlan) -> dict[str, object]:
                 }
                 for item in plan.read_history_requests
             ],
-            "status": "stub_only",
+            "status": "stub_only" if plan.read_history_requests else "not_requested",
         },
         "task_adapter": {
-            "tasks": [
-                {
-                    "action_id": item.action_id,
-                    "task_type": item.task_type,
-                    "trigger_expr": item.trigger_expr,
-                    "due_in_days": item.due_in_days,
-                    "priority": item.priority,
-                    "assignee_role": item.assignee_role,
-                    "message_key": item.message_key,
-                }
-                for item in plan.task_specs
-            ],
-            "status": "stub_only",
+            "tasks": [task_plan_payload(item) for item in plan.task_intent_plans],
+            "status": "generated" if plan.task_intent_plans else "not_requested",
+            "target_cht_version": plan.target_cht_version,
+            "tasks_path": "tasks.js" if plan.task_intent_plans else None,
+            "source_form_code": (
+                plan.task_intent_plans[0].source_form_code if plan.task_intent_plans else None
+            ),
         },
         "special_function_adapter": (
             {
@@ -245,42 +318,122 @@ def render_cht_adapter_stub(plan: CHTLoweringPlan) -> dict[str, object]:
     }
 
 
-def write_cht_adapter_stub(plan: CHTLoweringPlan, output_dir: str | Path) -> CHTAdapterArtifacts:
+def write_cht_adapter_bundle(plan: CHTLoweringPlan, output_dir: str | Path) -> CHTAdapterArtifacts:
     target_dir = Path(output_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    payload = render_cht_adapter_stub(plan)
+    payload = render_cht_adapter_plan(plan)
     plan_json_path = target_dir / "cht_lowering_plan.json"
     history_stub_path = target_dir / "cht_read_history_stub.json"
-    tasks_stub_path = target_dir / "cht_task_stub.json"
+    task_plan_path = target_dir / "cht_task_plan.json"
     readme_path = target_dir / "README.md"
-    special_function_paths = (
+    manifest_path = target_dir / "cht-bundle-manifest.json"
+    if plan.special_function_bundle is not None:
         write_cht_special_function_bundle(plan.special_function_bundle, target_dir)
-        if plan.special_function_bundle is not None
-        else ()
-    )
+        special_function_paths = tuple(
+            [target_dir / artifact.path for artifact in plan.special_function_bundle.files]
+            + [target_dir / "special-function-manifest.json"]
+        )
+    else:
+        special_function_paths = ()
 
     plan_json_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     history_stub_path.write_text(
         json.dumps(payload["read_history_adapter"], indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    tasks_stub_path.write_text(
+    task_plan_path.write_text(
         json.dumps(payload["task_adapter"], indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    tasks_js_path: Path | None = None
+    form_survey_path: Path | None = None
+    form_choices_path: Path | None = None
+    form_source_map_path: Path | None = None
+    if plan.task_intent_plans:
+        if plan.cht_xlsform is None:
+            raise ValueError("CHT task plans require the matching CHT XLSForm source.")
+        tasks_js_path = target_dir / "tasks.js"
+        tasks_js_path.write_text(generate_tasks_js(plan.task_intent_plans), encoding="utf-8")
+        form_code = plan.task_intent_plans[0].source_form_code
+        form_source_dir = target_dir / "forms" / "app" / f"{form_code}.xlsform"
+        survey, choices, source_map = write_xlsform_csvs(plan.cht_xlsform, str(form_source_dir))
+        form_survey_path = Path(survey)
+        form_choices_path = Path(choices)
+        form_source_map_path = Path(source_map)
+
+    manifest_files = [
+        path
+        for path in (
+            plan_json_path,
+            history_stub_path,
+            task_plan_path,
+            tasks_js_path,
+            form_survey_path,
+            form_choices_path,
+            form_source_map_path,
+            *special_function_paths,
+        )
+        if path is not None
+    ]
+    manifest = {
+        "schema_version": "cht-compiler-bundle@1.0.0",
+        "target_cht_version": plan.target_cht_version,
+        "task_binding_schema_version": (
+            "cht-task-bindings@1.0.0" if plan.task_intent_plans else None
+        ),
+        "task_composer_contract": (
+            "@chw-navigator/cht-integration task-composer@1" if plan.task_intent_plans else None
+        ),
+        "deployment_requirements": {
+            "permissions": sorted({item.binding.permission_key for item in plan.task_intent_plans}),
+            "translation_keys": sorted(
+                {item.binding.title_key for item in plan.task_intent_plans}
+                | {
+                    item.binding.priority.label
+                    for item in plan.task_intent_plans
+                    if item.binding.priority is not None
+                }
+            ),
+            "icons": sorted({item.binding.icon for item in plan.task_intent_plans}),
+            "followup_forms": sorted({item.binding.followup_form for item in plan.task_intent_plans}),
+            "assignee_roles": sorted(
+                {
+                    item.binding.assignee_role
+                    for item in plan.task_intent_plans
+                    if item.binding.assignee_role is not None
+                }
+            ),
+        },
+        "files": [
+            {
+                "path": path.relative_to(target_dir).as_posix(),
+                "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+            for path in sorted(manifest_files)
+        ],
+    }
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     readme_path.write_text(
         "\n".join(
             [
-                "# CHT Adapter Stub",
+                "# CHT Compiler Bundle",
                 "",
-                "This folder contains CHT adapter artifacts derived from the lowering plan.",
+                "This folder contains CHT artifacts derived from one Clinical IR document.",
                 "",
                 "Files:",
                 "",
                 "- `cht_lowering_plan.json`: full lowering plan",
-                "- `cht_read_history_stub.json`: history-read adapter inputs",
-                "- `cht_task_stub.json`: task adapter inputs",
+                "- `cht_read_history_stub.json`: unimplemented history-read adapter inputs",
+                "- `cht_task_plan.json`: resolved task types and task-rule identities",
+                *(
+                    [
+                        "- `tasks.js`: executable report-based CHT task rules",
+                        "- `forms/app/<form>.xlsform/`: survey/choices source with the exact task-intent fields read by `tasks.js`",
+                    ]
+                    if plan.task_intent_plans
+                    else []
+                ),
                 *(
                     [
                         "- `special-function-manifest.json`: reviewed target profile, diagnostics, and hashes",
@@ -291,7 +444,7 @@ def write_cht_adapter_stub(plan: CHTLoweringPlan, output_dir: str | Path) -> CHT
                     else []
                 ),
                 "",
-                "History and task files remain planning artifacts. Special-function files, when present, are executable candidates that still require official-harness and target-runtime evidence.",
+                "Task rules are executable candidates and the accompanying XLSForm source contains their report fields. Convert and test the form in the reviewed CHT build pipeline before deployment. History remains unimplemented. Special-function files, when present, also require official-harness and target-runtime evidence.",
                 "",
             ]
         ),
@@ -301,7 +454,24 @@ def write_cht_adapter_stub(plan: CHTLoweringPlan, output_dir: str | Path) -> CHT
         output_dir=target_dir,
         plan_json_path=plan_json_path,
         history_stub_path=history_stub_path,
-        tasks_stub_path=tasks_stub_path,
+        task_plan_path=task_plan_path,
         readme_path=readme_path,
+        manifest_path=manifest_path,
+        tasks_js_path=tasks_js_path,
+        form_survey_path=form_survey_path,
+        form_choices_path=form_choices_path,
+        form_source_map_path=form_source_map_path,
         special_function_paths=special_function_paths,
     )
+
+
+def write_cht_adapter_stub(plan: CHTLoweringPlan, output_dir: str | Path) -> CHTAdapterArtifacts:
+    """Compatibility wrapper; new code should call write_cht_adapter_bundle."""
+
+    return write_cht_adapter_bundle(plan, output_dir)
+
+
+def render_cht_adapter_stub(plan: CHTLoweringPlan) -> dict[str, object]:
+    """Compatibility wrapper; new code should call render_cht_adapter_plan."""
+
+    return render_cht_adapter_plan(plan)

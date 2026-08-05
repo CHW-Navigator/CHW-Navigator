@@ -12,7 +12,7 @@ from pydantic import ValidationError as PydanticValidationError
 
 from .change_control_models import format_change_memo_error, validate_change_memo_payload
 from .clinical_ir import ClinicalIRDocument
-from .cht_backend import build_cht_lowering_plan, write_cht_adapter_stub
+from .cht_backend import build_cht_lowering_plan, write_cht_adapter_bundle
 from .compare import ComparisonCase, load_patient_cases
 from .evidence_utils import allocate_timestamped_dir, compiler_metadata, describe_file, portable_relative_path
 from .evaluator import evaluate_document
@@ -86,11 +86,11 @@ def create_change_review_package(
         updated_xlsform = build_xlsform(updated_document)
         baseline_mermaid = build_mermaid_artifact(baseline_document)
         updated_mermaid = build_mermaid_artifact(updated_document)
-        baseline_cht = write_cht_adapter_stub(
+        baseline_cht = write_cht_adapter_bundle(
             build_cht_lowering_plan(baseline_document, baseline_xlsform),
             review_dir / "outputs" / "baseline_cht",
         )
-        updated_cht = write_cht_adapter_stub(
+        updated_cht = write_cht_adapter_bundle(
             build_cht_lowering_plan(updated_document, updated_xlsform),
             review_dir / "outputs" / "updated_cht",
         )

@@ -13,6 +13,7 @@ authoring inputs:
 - `special-function-registry.json`
 - `identity-providers.json` and `identity-providers.schema.json`
 - `conflict-policies.json` and `conflict-policies.schema.json`
+- `cht-task-bindings.schema.json`
 
 Identity resolution and correction policy remain platform services outside Clinical
 IR. Their presence here does not authorize candidate lists or mutable clinical
@@ -44,6 +45,12 @@ Files:
 - `identity-providers.schema.json`
 - `conflict-policies.json`
 - `conflict-policies.schema.json`
+- `cht-task-bindings.schema.json`
+
+The CHT task-binding contract is deployment-owned. It maps a Clinical IR `task_type`
+to the exact CHT follow-up form, translation, permission, timing window, role, icon,
+and priority. CHT lowering fails closed when a `create_task` action has no matching
+binding; the compiler does not infer deployment values from clinical text.
 
 Supporting guidance:
 

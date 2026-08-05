@@ -334,3 +334,25 @@
   The reviewed TypeScript handoff remains an explicit external integration input;
   standalone clones transparently skip its real-lock assertion, while the dedicated
   source-lock and official-harness commands remain required pre-merge evidence gates.
+
+## 2026-08-04 — CHT task bridge
+
+- Root cause: the Python and TypeScript implementations used different workflow
+  models, and the earlier integration copied Prompt 12A-14 features without creating
+  the form-data/task-rule seam. Copying `tasks.js` alone would have produced rules
+  that never matched Python-generated reports.
+- Added `cht-task-bindings@1.0.0` so target-owned form, translation, permission,
+  timing, role, icon, and priority values are explicit instead of inferred.
+- Connected Clinical IR `create_task` lowering to both sides of the CHT behavior:
+  matching XLSForm task-intent fields and deterministic report-based `tasks.js`.
+- Preserved the reviewed TypeScript rule identities, canonical-intent duplicate
+  suppression, resolution window, and generated module shape. The Python output is
+  executed under Node and accepted by the reviewed TypeScript AST composer.
+- Added a permanent diagnostic guard for invalid bindings, unbound task types,
+  unsupported schedules/roles, and generated task-identity collisions. Every new
+  code is emitted and asserted by tests.
+- Generalized guardrail: a backend behavior that consumes stored fields must be
+  generated and tested with the producer of those fields; a plan-only placeholder
+  may not be described as an implemented backend action.
+- Explicit limit: `read_history` is still plan-only because there is no TypeScript
+  implementation to bridge and no target-approved CHT document/field lookup contract.

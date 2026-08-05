@@ -92,6 +92,7 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `src/chw_navigator/json_schema_export.py`: machine-checked JSON Schema export for supported JSON artifact families
 - `src/chw_navigator/person_identity.py`: four-outcome person-registration boundary and deterministic fixture provider
 - `src/chw_navigator/mutable_conflicts.py`: assertion-preserving mutable-field correction resolver
+- `src/chw_navigator/cht_tasks.py`: versioned CHT task bindings, form task-intent rows, and deterministic `tasks.js` generation
 - `tests/test_dmn_fail_loud.py`: fail-loud coverage for unsupported DMN inputs
 - `tests/test_artifact_drift.py`: mutated artifact drift detection across DMN, XLSForm, Mermaid, and IR
 - `tests/test_multi_module_router.py`: multi-table traffic-cop example with module priority and follow-on treatment/dosing tables
@@ -107,6 +108,7 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `examples/fever_basic.ir.json`: small second golden clinical example with a DMN counterpart and explicit cases
 - `examples/fever_basic.dmn`: DMN counterpart for the small fever example
 - `examples/fever_basic.cases.json`: explicit cases for the fever example
+- `examples/cht_task_demo.ir.json` and `examples/cht-task-bindings.json`: connected Clinical IR `create_task` to CHT form/task-rule example
 - `examples/catalogs/pneumonia_rr_cutoff_plus1.predicates.json`: persistent changed-source predicate example for review-package and diff testing
 - `examples/change_memos/pneumonia_rr_cutoff_plus1.memo.json`: change memo paired with the cutoff-shift review example
 - `examples/pneumonia_rr_cutoff_plus1.cases.json`: explicit changed-case suite for the cutoff-shift review example
@@ -450,7 +452,35 @@ If you are landing in this repo for the first time:
 
 - The current implementation is a stateless point-in-time engine. It does not yet model prior visits, longitudinal trends, or historical variables.
 - Scalar carry-forward state can be represented today with `st_` variables such as `st_fever_done`, but list-valued or longitudinal state is not yet first-class.
-- `FIRST` is enforced per decision, not globally. Multiple decisions may coexist, but the toolkit does not yet model a first-class action or task schedule layer for aggregated care plans.
+- `FIRST` is enforced per decision, not globally. Multiple decisions may coexist. Clinical IR has a bounded `create_task` action that the CHT backend lowers to stored task-intent report fields plus report-based `tasks.js`; this is not an aggregated care-plan model.
+
+## Build a connected CHT task bundle
+
+`build-cht` compiles a Clinical IR form and its `create_task` actions together. The
+generated XLSForm source stores `required`, `task_type`, timing, follow-up form, and
+operation-ID fields. The generated `tasks.js` reads those exact fields. This prevents
+the previous failure mode where a task rule existed separately from the form data it
+needed.
+
+```powershell
+chw-nav build-cht `
+  examples/cht_task_demo.ir.json `
+  examples/cht-task-bindings.json `
+  generated/cht-task-demo
+```
+
+The task-binding file is deployment configuration, not clinical policy. It must name
+the exact CHT version, follow-up form, translation and permission keys, timing window,
+role, icon, and priority. Missing task types, unsupported absolute due-date
+expressions, role mismatches, and generated identity collisions fail closed.
+
+The output contains executable `tasks.js`, matching XLSForm survey/choices source,
+task and history plans, hashes, and a bundle manifest. The `tasks.js` module is
+accepted by the reviewed TypeScript AST composer, which inserts or replaces its
+managed block without overwriting unrelated destination rules. XLSForm conversion,
+target-project compilation, the official CHT harness, and exact target-runtime tests
+remain deployment gates. `read_history` remains a plan because the reviewed
+TypeScript package has no general history adapter to connect.
 - Form structure is intentionally minimal today. Groups, repeats, and multivalue variables are not yet supported by the current validator/runtime path.
 - The XLSForm importer is intentionally narrow. It does not yet support general question `relevant`, general `constraint`, repeats, groups, or arbitrary legacy production forms.
 - External lookup tables and nonlinear or lookup-backed math are not supported in the current Z3 boundary. Unsupported constructs should be rejected rather than approximated.

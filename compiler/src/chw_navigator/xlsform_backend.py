@@ -168,6 +168,7 @@ def write_xlsform_csvs(built: BuiltXLSForm, output_dir: str) -> tuple[str, str, 
                     row.calculation,
                     row.required,
                     row.constraint,
+                    row.appearance,
                 ]
             )
         )
@@ -254,6 +255,17 @@ def _compile_predicate(predicate, document: ClinicalIRDocument) -> str:
     if predicate.missingness_policy is MissingnessPolicy.TREAT_MISSING_AS_FALSE:
         return f"if({expression}, true(), false())"
     return expression
+
+
+def compile_xlsform_expression(
+    expr: dict[str, object],
+    document: ClinicalIRDocument,
+    *,
+    output_rows: dict[str, str] | None = None,
+) -> str:
+    """Compile one validated Clinical IR expression for a backend-owned XLSForm row."""
+
+    return _compile_expr(expr, document, output_rows)
 
 
 def _phrase_rows(output_id: str, label: str, role: str) -> list[tuple[str, str, str]]:

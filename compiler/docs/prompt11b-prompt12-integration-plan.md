@@ -99,6 +99,19 @@ merged by treating TypeScript-package evidence as target-repository execution.
   both profiles through official `cht-conf` archive packaging and the real
   `cht:extension-lib` XPath implementation in the pinned CHT 4.11 browser harness.
 
+### Completed follow-on: Clinical IR task lowering to the reviewed CHT task contract
+
+- Added a versioned, fail-closed deployment binding for CHT task types.
+- The Python compiler now emits the form-side task-intent fields and the `tasks.js`
+  rules that read those exact fields in one bundle operation.
+- Rule names, event IDs, duplicate-intent suppression, resolution windows, and the
+  module export shape follow the reviewed TypeScript implementation.
+- A bridge regression executes the generated module and passes it through the
+  reviewed TypeScript AST composer, proving that unrelated destination task rules
+  can still be preserved.
+- `read_history` remains separate: no reviewed TypeScript implementation exists to
+  connect, and a CHT document/field lookup contract must be specified first.
+
 ### Completed slice: Prompt 13 person identity
 
 - Added the four-outcome `Create x Person` service before any future field

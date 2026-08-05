@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "chw_nav_task_intent_schedule_followup_schedule_followup",
+    "sources": [{ "source_id": "SRC" }]
+  },
+  "variables": {
+    "v_followup_needed": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "multivalue": false,
+      "source_kind": "encounter_input",
+      "provenance": [{ "source_id": "SRC" }]
+    }
+  },
+  "predicates": {},
+  "actions": {
+    "a_schedule_followup": {
+      "kind": "create_task",
+      "outputs": [],
+      "when": { "kind": "var", "id": "v_followup_needed" },
+      "task_type": "clinical_followup",
+      "due_in_days": 3,
+      "priority": "routine",
+      "assignee_role": "chw",
+      "message_key": "m_schedule_followup",
+      "provenance": [{ "source_id": "SRC", "location": "TypeScript bridge fixture" }]
+    }
+  },
+  "phrases": {
+    "m_schedule_followup": {
+      "entity_id": "a_schedule_followup",
+      "role": "message",
+      "texts": { "en": "Schedule follow-up" },
+      "provenance": [{ "source_id": "SRC" }]
+    }
+  },
+  "outputs": {},
+  "decisions": {},
+  "invariants": {},
+  "phrase_bindings": {}
+}

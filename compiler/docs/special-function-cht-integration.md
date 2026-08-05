@@ -31,7 +31,7 @@ plan = build_cht_lowering_plan(
     document,
     special_function_target_cht_version="4.22.0",
 )
-artifacts = write_cht_adapter_stub(plan, output_dir)
+artifacts = write_cht_adapter_bundle(plan, output_dir)
 ```
 
 This emits the two XForms, the dependency-free extension module, and a manifest
