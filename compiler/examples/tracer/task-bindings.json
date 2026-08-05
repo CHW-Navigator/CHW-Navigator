@@ -1,0 +1,12 @@
+{
+  "schema_version": "cht-task-bindings@1.0.0",
+  "target_cht_version": "5.2.0",
+  "task_types": {
+    "antenatal_tracer_followup": {
+      "source_message_key": "m_schedule_followup", "title_key": "task.tracer.followup.title",
+      "followup_form": "gestational_age_tracer_followup", "permission_key": "can_schedule_tracer_followup",
+      "icon": "icon-healthcare-followup", "start_days": 0, "end_days": 2,
+      "source_priority": "routine", "assignee_role": "chw", "priority": {"level": 1, "label": "task.priority.tracer"}
+    }
+  }
+}

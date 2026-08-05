@@ -121,6 +121,13 @@ class RegistrySetTests(unittest.TestCase):
         self.assertEqual("CHWN-REG-004", DiagnosticCode.REGISTRY_DIGEST_MISMATCH)
         self.assertEqual("CHWN-REG-005", DiagnosticCode.REGISTRY_CANDIDATE_UNRESOLVED)
         self.assertEqual("CHWN-REG-006", DiagnosticCode.REGISTRY_UNKNOWN_FIELD)
+        self.assertEqual("CHWN-RESOLVE-001", DiagnosticCode.CAPABILITY_REFERENCE_UNRESOLVED)
+
+    def test_unregistered_capability_has_a_resolution_diagnostic(self) -> None:
+        document = load_registry_set(FIXTURES / "valid-registry-set.json")
+        with self.assertRaises(RegistrySetError) as raised:
+            resolve_capability(document, "technical.missing")
+        self.assertEqual(DiagnosticCode.CAPABILITY_REFERENCE_UNRESOLVED, raised.exception.diagnostics[0].code)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,10 @@ SRC = COMPILER_ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from chw_navigator.special_functions import calculate_gestational_age_from_lmp
+from chw_navigator.special_functions import (
+    calculate_gestational_age_from_lmp,
+    calculate_gestational_age_naegele,
+)
 
 
 MAP_PATH = COMPILER_ROOT / "integration" / "oracle-overlap-map.json"
@@ -27,6 +30,19 @@ def _source_root() -> Path:
 
 
 def _normalize_python(case: dict) -> dict:
+    if case["python_entrypoint"].endswith("calculate_gestational_age_naegele"):
+        result = calculate_gestational_age_naegele(**case["input"]).to_dict()
+        normalized = {"status": result["status"]}
+        if "technical" in result:
+            technical = result["technical"]
+            normalized["technical"] = {
+                "gestational_age_weeks": round(
+                    technical["ga_weeks"] + technical["ga_days_remainder"] / 7,
+                    1,
+                ),
+                "estimated_delivery_date": technical["edd"],
+            }
+        return normalized
     result = calculate_gestational_age_from_lmp(**case["input"]).to_dict()
     normalized = {"status": result["status"]}
     if "technical" in result:
@@ -49,9 +65,9 @@ const input = JSON.parse(raw);
 const module = await import(pathToFileURL(process.argv[1]).href);
 const result = module.calculateGestationalAgeFromLmp({
   lmpDate: input.lmp_date,
-  asOfDate: input.as_of_date,
-  functionVersion: input.function_version,
-  referenceDataVersion: input.reference_data_version
+  asOfDate: input.as_of_date ?? input.reference_date,
+  functionVersion: input.function_version ?? '1.0.0',
+  referenceDataVersion: input.reference_data_version ?? 'calendar-280-day-v1'
 });
 console.log(JSON.stringify(result));
 """

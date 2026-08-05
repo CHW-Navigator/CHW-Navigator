@@ -11,6 +11,8 @@ from .special_functions import (
     GESTATIONAL_AGE_FUNCTION_VERSION,
     GESTATIONAL_AGE_REFERENCE_VERSION,
     SPECIAL_FUNCTION_STATUSES,
+    NAEGELE_FUNCTION_VERSION,
+    NAEGELE_REFERENCE_VERSION,
     sha256_text,
     validate_status_coverage,
 )
@@ -127,6 +129,51 @@ module.exports = function(operationEnvelope, lmpEnvelope, asOfEnvelope) {{
     const edd = new Date(lmp + ESTIMATED_PREGNANCY_DAYS * DAY_MS).toISOString().slice(0, 10);
     if (!Number.isFinite(weeks) || !edd) return response('numeric_failure');
     return response('ok', `${{weeks}},${{edd}}`);
+  }} catch (_error) {{
+    return response('execution_failure');
+  }}
+}};
+'''
+
+
+def naegele_extension_source() -> str:
+    return f'''\
+'use strict';
+
+const FUNCTION_VERSION = "{NAEGELE_FUNCTION_VERSION}";
+const REFERENCE_VERSION = "{NAEGELE_REFERENCE_VERSION}";
+const DAY_MS = 86400000;
+const response = (status, value = '') => ({{ t: 'str', v: `${{status}}|${{value}}` }});
+const readValue = value => {{
+  if (!value || typeof value !== 'object') return undefined;
+  const raw = value.t === 'arr' ? value.v && value.v[0] : value.v;
+  return raw && typeof raw === 'object' && 'textContent' in raw ? raw.textContent : raw;
+}};
+const parseDate = value => {{
+  if (typeof value !== 'string' || !/^\\d{{4}}-\\d{{2}}-\\d{{2}}$/.test(value)) return undefined;
+  const timestamp = Date.parse(`${{value}}T00:00:00.000Z`);
+  return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value ? timestamp : undefined;
+}};
+
+module.exports = function(operationEnvelope, lmpEnvelope, referenceEnvelope) {{
+  try {{
+    const operation = readValue(operationEnvelope);
+    if (operation === 'versions') return {{ t: 'str', v: `${{FUNCTION_VERSION}}|${{REFERENCE_VERSION}}` }};
+    if (operation !== 'compute') return response('input_invalid');
+    const lmpValue = readValue(lmpEnvelope);
+    const referenceValue = readValue(referenceEnvelope);
+    if (!lmpValue || !referenceValue) return response('input_missing');
+    const lmp = parseDate(lmpValue);
+    const reference = parseDate(referenceValue);
+    if (lmp === undefined || reference === undefined) return response('input_invalid');
+    const elapsedDays = (reference - lmp) / DAY_MS;
+    if (elapsedDays < 0) return response('input_invalid');
+    if (elapsedDays > 314) return response('outside_supported_domain');
+    const weeks = Math.floor(elapsedDays / 7);
+    const remainder = elapsedDays % 7;
+    const edd = new Date(lmp + 280 * DAY_MS).toISOString().slice(0, 10);
+    if (!Number.isInteger(weeks) || !Number.isInteger(remainder) || !edd) return response('numeric_failure');
+    return response('ok', `${{weeks}},${{remainder}},${{edd}}`);
   }} catch (_error) {{
     return response('execution_failure');
   }}

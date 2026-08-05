@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "gestational_age_tracer",
+    "sources": [{"source_id": "TRACER_POLICY"}, {"source_id": "LOCAL_DATA_CODEBOOK"}]
+  },
+  "variables": {
+    "st_lmp_date_h": {
+      "type": "string", "allowed_missingness": true, "multivalue": false, "source_kind": "history",
+      "history_binding": {"record_key": "local.person.lmp_date@1.0.0", "freshness_max_age_days": 300},
+      "provenance": [{"source_id": "LOCAL_DATA_CODEBOOK"}]
+    },
+    "st_lmp_recorded_at_h": {
+      "type": "string", "allowed_missingness": true, "multivalue": false, "source_kind": "history",
+      "history_binding": {"record_key": "local.person.lmp_date@1.0.0"},
+      "provenance": [{"source_id": "LOCAL_DATA_CODEBOOK"}]
+    },
+    "st_lmp_availability": {
+      "type": "enum", "domain": {"values": ["available", "missing", "invalid", "stale"]},
+      "allowed_missingness": false, "multivalue": false, "source_kind": "derived",
+      "provenance": [{"source_id": "TRACER_POLICY"}]
+    },
+    "st_reference_date": {
+      "type": "string", "allowed_missingness": false, "multivalue": false, "source_kind": "derived",
+      "provenance": [{"source_id": "TRACER_POLICY"}]
+    },
+    "st_ga_status": {
+      "type": "enum",
+      "domain": {"values": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"]},
+      "allowed_missingness": false, "multivalue": false, "source_kind": "derived",
+      "provenance": [{"source_id": "TRACER_POLICY"}]
+    },
+    "st_ga_weeks": {"type": "int", "unit": "completed_weeks", "allowed_missingness": true, "multivalue": false, "source_kind": "derived", "provenance": [{"source_id": "TRACER_POLICY"}]},
+    "st_ga_days_remainder": {"type": "int", "unit": "days", "allowed_missingness": true, "multivalue": false, "source_kind": "derived", "provenance": [{"source_id": "TRACER_POLICY"}]},
+    "st_edd": {"type": "string", "allowed_missingness": true, "multivalue": false, "source_kind": "derived", "provenance": [{"source_id": "TRACER_POLICY"}]}
+  },
+  "constants": {},
+  "predicates": {},
+  "actions": {
+    "a_read_lmp": {
+      "kind": "read_local_data", "source": "local.person.lmp_date@1.0.0",
+      "outputs": ["st_lmp_date_h", "st_lmp_recorded_at_h"],
+      "mappings": [{"record_key": "value", "target_var": "st_lmp_date_h", "recorded_at_target_var": "st_lmp_recorded_at_h"}],
+      "fail_mode": "soft_missing", "provenance": [{"source_id": "LOCAL_DATA_CODEBOOK"}]
+    },
+    "a_invoke_naegele": {
+      "kind": "invoke_capability", "capability_id": "technical.gestational-age.naegele",
+      "arguments": {"lmp_date": "st_lmp_date_h", "reference_date": "st_reference_date"},
+      "status_target_var": "st_ga_status",
+      "outputs": ["st_ga_weeks", "st_ga_days_remainder", "st_edd"],
+      "mappings": [
+        {"record_key": "ga_weeks", "target_var": "st_ga_weeks"},
+        {"record_key": "ga_days_remainder", "target_var": "st_ga_days_remainder"},
+        {"record_key": "edd", "target_var": "st_edd"}
+      ],
+      "provenance": [{"source_id": "TRACER_POLICY"}]
+    },
+    "a_schedule_followup": {
+      "kind": "create_task", "outputs": [], "when": {"kind": "output", "id": "o_followup_needed"},
+      "task_type": "antenatal_tracer_followup", "due_in_days_output": "o_followup_due_days", "priority": "routine", "assignee_role": "chw",
+      "message_key": "m_schedule_followup", "provenance": [{"source_id": "TRACER_POLICY"}]
+    }
+  },
+  "phrases": {
+    "m_schedule_followup": {"entity_id": "a_schedule_followup", "role": "message", "texts": {"en": "Schedule tracer follow-up"}, "provenance": [{"source_id": "TRACER_POLICY"}]}
+  },
+  "decisions": {
+    "d_followup_endpoint": {
+      "hit_policy": "FIRST", "inputs_used": ["st_lmp_availability", "st_ga_status"], "depends_on": [],
+      "rules": [
+        {"id": "r_stale", "when": {"kind": "=", "left": {"kind": "var", "id": "st_lmp_availability"}, "right": {"kind": "literal", "type": "enum", "value": "stale"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_missing", "when": {"kind": "=", "left": {"kind": "var", "id": "st_lmp_availability"}, "right": {"kind": "literal", "type": "enum", "value": "missing"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_ok", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "ok"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": true}, "o_followup_due_days": {"kind": "literal", "type": "int", "value": 7}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_input_missing", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "input_missing"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_input_invalid", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "input_invalid"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_outside", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "outside_supported_domain"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_reference", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "reference_data_unavailable"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_numeric", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "numeric_failure"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_version", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "version_mismatch"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_execution", "when": {"kind": "=", "left": {"kind": "var", "id": "st_ga_status"}, "right": {"kind": "literal", "type": "enum", "value": "execution_failure"}}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]},
+        {"id": "r_else", "when": {"kind": "else"}, "then": {"o_followup_needed": {"kind": "literal", "type": "bool", "value": false}}, "provenance": [{"source_id": "TRACER_POLICY"}]}
+      ],
+      "provenance": [{"source_id": "TRACER_POLICY"}]
+    }
+  },
+  "outputs": {
+    "o_followup_needed": {"type": "bool", "description": "Synthetic tracer endpoint; not approved clinical policy.", "provenance": [{"source_id": "TRACER_POLICY"}]},
+    "o_followup_due_days": {"type": "int", "description": "Synthetic tracer interval from the decision table; not approved clinical policy.", "provenance": [{"source_id": "TRACER_POLICY"}]}
+  },
+  "invariants": {},
+  "phrase_bindings": {}
+}

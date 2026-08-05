@@ -341,7 +341,13 @@ def resolve_capability(
     )
     if capability is None:
         raise RegistrySetError(
-            [_diagnostic(DiagnosticCode.REGISTRY_SCHEMA_INVALID, f"Capability '{capability_id}' is not registered.")]
+            [
+                _diagnostic(
+                    DiagnosticCode.CAPABILITY_REFERENCE_UNRESOLVED,
+                    f"Capability '{capability_id}' is not registered.",
+                    "$.capability_registry.capabilities",
+                )
+            ]
         )
     diagnostics: list[Diagnostic] = []
     if capability.evidence_status == "candidate":

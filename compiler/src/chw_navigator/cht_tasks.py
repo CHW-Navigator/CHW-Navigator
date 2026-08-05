@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 from typing import Any
 
-from .clinical_ir import ClinicalIRDocument
+from .clinical_ir import ActionDef, ClinicalIRDocument
 from .clinical_vocabulary import reject_clinical_derivation
 from .diagnostics import Diagnostic, DiagnosticCode
 from .form_ir import SurveyRow
@@ -271,6 +271,41 @@ def task_rule_name(source_form_code: str, step: str) -> str:
     return f"chw-nav-{source_form_code.replace('_', '-')}-{step.replace('_', '-')}"
 
 
+def resolve_static_due_in_days(document: ClinicalIRDocument, action: ActionDef) -> int | None:
+    """Resolve a task interval only when the decision table makes it compile-time constant."""
+
+    if action.due_in_days is not None:
+        return action.due_in_days
+    output_id = action.due_in_days_output
+    if output_id is None:
+        return None
+
+    trigger_output = None
+    if action.when is not None and action.when.get("kind") == "output":
+        trigger_output = action.when.get("id")
+
+    values: list[int] = []
+    for decision in document.decisions.values():
+        for rule in decision.rules:
+            if trigger_output is not None:
+                trigger = rule.then.get(str(trigger_output))
+                if not (
+                    isinstance(trigger, dict)
+                    and trigger.get("kind") == "literal"
+                    and trigger.get("value") is True
+                ):
+                    continue
+            expression = rule.then.get(output_id)
+            if not isinstance(expression, dict) or expression.get("kind") != "literal":
+                return None
+            value = expression.get("value")
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                return None
+            values.append(value)
+
+    return values[0] if values and len(set(values)) == 1 else None
+
+
 def build_task_intent_plans(
     document: ClinicalIRDocument,
     *,
@@ -305,6 +340,7 @@ def build_task_intent_plans(
     diagnostics: list[Diagnostic] = []
     plans: list[CHTTaskIntentPlan] = []
     for action in actions:
+        due_days = resolve_static_due_in_days(document, action)
         binding = bindings.task_types.get(action.task_type or "")
         if binding is None:
             diagnostics.append(
@@ -315,11 +351,13 @@ def build_task_intent_plans(
                 )
             )
             continue
-        if action.due_in_days is None or action.due_at_expr is not None:
+        if due_days is None or action.due_at_expr is not None:
             diagnostics.append(
                 _diagnostic(
                     DiagnosticCode.CHT_TASK_SCHEDULE_UNSUPPORTED,
-                    "CHT task lowering currently requires due_in_days and does not lower due_at_expr.",
+                    "CHT task lowering requires a non-negative static due_in_days or a "
+                    "due_in_days_output that resolves to one value on every triggering rule; "
+                    "due_at_expr is not lowered.",
                     f"actions.{action.id}",
                 )
             )
@@ -371,7 +409,7 @@ def build_task_intent_plans(
                 name=name,
                 event_id=f"{name}-event",
                 source_form_code=source_form_code,
-                due_days=action.due_in_days,
+                due_days=due_days,
                 required_calculation=required_calculations[action.id],
                 operation_id_calculation=f"concat(/data/meta/instanceID, '::{step}')",
                 binding=binding,

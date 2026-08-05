@@ -1,0 +1,13 @@
+{
+  "schema_version": "tracer-vectors@1.0.0",
+  "derivation": "Hand-derived Gregorian calendar arithmetic: elapsed days divmod 7; EDD is LMP plus 280 days.",
+  "vectors": [
+    {"name": "day-zero", "input": {"lmp_date": "2026-01-01", "reference_date": "2026-01-01"}, "status": "ok", "technical": {"ga_weeks": 0, "ga_days_remainder": 0, "edd": "2026-10-08"}},
+    {"name": "month-boundary", "input": {"lmp_date": "2026-01-31", "reference_date": "2026-02-08"}, "status": "ok", "technical": {"ga_weeks": 1, "ga_days_remainder": 1, "edd": "2026-11-07"}},
+    {"name": "leap-year", "input": {"lmp_date": "2024-02-29", "reference_date": "2024-03-08"}, "status": "ok", "technical": {"ga_weeks": 1, "ga_days_remainder": 1, "edd": "2024-12-05"}},
+    {"name": "exact-280-day", "input": {"lmp_date": "2026-01-01", "reference_date": "2026-10-08"}, "status": "ok", "technical": {"ga_weeks": 40, "ga_days_remainder": 0, "edd": "2026-10-08"}},
+    {"name": "domain-edge", "input": {"lmp_date": "2026-01-01", "reference_date": "2026-11-11"}, "status": "ok", "technical": {"ga_weeks": 44, "ga_days_remainder": 6, "edd": "2026-10-08"}},
+    {"name": "past-domain", "input": {"lmp_date": "2026-01-01", "reference_date": "2026-11-12"}, "status": "outside_supported_domain"},
+    {"name": "reference-before-lmp", "input": {"lmp_date": "2026-01-02", "reference_date": "2026-01-01"}, "status": "input_invalid"}
+  ]
+}

@@ -112,6 +112,7 @@ from .staged_lint import (
 from .special_functions import (
     SPECIAL_FUNCTION_STATUSES,
     SpecialFunctionResult,
+    calculate_gestational_age_naegele,
     calculate_gestational_age_from_lmp,
 )
 from .validator import ValidationError, validate_document
@@ -214,6 +215,7 @@ __all__ = [
     "build_case_suite_equivalence_report",
     "build_z3_checks_log",
     "calculate_gestational_age_from_lmp",
+    "calculate_gestational_age_naegele",
     "clinical_object_findings",
     "compare_backends",
     "compare_document_pair",

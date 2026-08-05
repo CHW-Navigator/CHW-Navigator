@@ -77,7 +77,7 @@ def generate_cht_xform(built: BuiltXLSForm) -> str:
             continue
         attributes = {"nodeset": path}
         if row.type not in {"begin group", "begin_group"}:
-            attributes["type"] = _xform_type(row.type)
+            attributes["type"] = row.bind_type or _xform_type(row.type)
         if row.calculation:
             attributes["calculate"] = _absolute_refs(row.calculation, name_paths)
         if row.relevant:
