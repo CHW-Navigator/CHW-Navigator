@@ -26,6 +26,28 @@ approved entry agrees on family, operation, resource, input and output types,
 and backend. Missing, ambiguous, inactive, incompatible, or unreviewed needs
 block compilation.
 
+Prompt B now has a separate strict candidate-needs contract and an explicit,
+injected model-adapter entry point in `backend.operational.capability_scan`.
+Its request contains only the untrusted manual, a source digest, instructions,
+and the output schema. It cannot receive a registry or implementation binding.
+The parser requires local `need_*` IDs, exact source substrings at the declared
+location, ordered typed/unit-bearing parameters, closed statuses and subject
+scope, uncertainty, and matching provenance. Unknown fields fail closed, so
+approval, activation, and resolved capability IDs cannot enter this artifact.
+
+Ten recorded mini-manual cases exercise no-need, date arithmetic, local reads,
+decision-policy boundaries, ambiguity, unit mismatch, unsupported group scope,
+prompt injection, insufficient grounding, and separation of similar needs.
+Run `backend/scripts/run_prompt_b_evaluation.py` without an adapter to record
+live evidence as `not_run`; supply an explicit `module:function` model adapter
+to opt in. Expected annotations are used only after inference for scoring and
+are never included in the request. Recorded cases are E2 evidence; they do not
+establish live-model quality, approval, resolution, or deployment readiness.
+
+Human-review evidence for the older operational candidate contract is also a
+separate resolver argument. A candidate carrying `review_approval` is rejected
+rather than being allowed to approve itself.
+
 Pass a reviewed sidecar to `backend.gen8.pipeline.run` as
 `operational_requirements` together with an exact `registry_snapshot`. The
 pipeline then emits checksummed `operational_requirements.json`,

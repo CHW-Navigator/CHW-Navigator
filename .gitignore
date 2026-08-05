@@ -77,6 +77,9 @@ compiler/generated/tracer/
 Product/backend/tests/e2e_fixtures/runs/
 Product/.e2e-venv/
 
+# Prompt B live-model evidence (environment-specific; recorded cases stay tracked)
+Product/backend/reports/prompt-b-live-evaluation.json
+
 # Environment-specific WS evidence manifests (schemas/summaries remain tracked)
 compiler/reports/baseline-manifest.json
 compiler/reports/tracer-evidence-manifest.json

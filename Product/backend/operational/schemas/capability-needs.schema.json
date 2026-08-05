@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/prompt-b/capability-needs/1.0.0",
+  "title": "Prompt B candidate capability needs",
+  "type": "object",
+  "required": ["schema_version", "candidates"],
+  "properties": {
+    "schema_version": {"const": "capability-needs@1.0.0"},
+    "candidates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/candidate"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "parameter": {
+      "type": "object",
+      "required": ["name", "data_type", "unit"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "data_type": {
+          "enum": ["boolean", "code", "date", "datetime", "decimal", "integer", "reference", "string"]
+        },
+        "unit": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[A-Za-z0-9%._/-]+$", "minLength": 1, "maxLength": 40}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["document_id", "page", "section", "quote"],
+      "properties": {
+        "document_id": {"type": "string", "minLength": 1},
+        "page": {"type": "string", "minLength": 1},
+        "section": {"type": "string", "minLength": 1},
+        "quote": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "uncertainty": {
+      "type": "object",
+      "required": ["status", "details"],
+      "properties": {
+        "status": {
+          "enum": ["none", "ambiguous", "insufficient_grounding", "unit_mismatch", "unsupported_scope"]
+        },
+        "details": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["origin", "source_digest"],
+      "properties": {
+        "origin": {"const": "manual"},
+        "source_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "local_id", "need_kind", "problem", "inputs", "outputs",
+        "required_statuses", "failure_behavior", "subject_scope",
+        "uncertainty", "source", "provenance"
+      ],
+      "properties": {
+        "local_id": {"type": "string", "pattern": "^need_[a-z0-9_]+$"},
+        "need_kind": {"enum": ["technical_calculation", "local_data_read"]},
+        "problem": {"type": "string", "minLength": 1},
+        "inputs": {"type": "array", "items": {"$ref": "#/$defs/parameter"}},
+        "outputs": {"type": "array", "items": {"$ref": "#/$defs/parameter"}, "minItems": 1},
+        "required_statuses": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "success", "missing_input", "invalid_input", "out_of_range",
+              "missing_reference_data", "ambiguous_input", "unsupported_scope", "error"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "failure_behavior": {"enum": ["return_status", "block", "flag_for_review"]},
+        "subject_scope": {"enum": ["current_contact", "individual", "household", "group", "facility", "unknown"]},
+        "uncertainty": {"$ref": "#/$defs/uncertainty"},
+        "source": {"$ref": "#/$defs/source"},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "uncertainty": {"properties": {"status": {"const": "none"}}}
+            }
+          },
+          "then": {
+            "properties": {
+              "required_statuses": {"contains": {"const": "success"}},
+              "uncertainty": {"properties": {"details": {"type": "null"}}}
+            }
+          },
+          "else": {
+            "properties": {
+              "required_statuses": {"not": {"contains": {"const": "success"}}},
+              "failure_behavior": {"enum": ["block", "flag_for_review"]},
+              "uncertainty": {"properties": {"details": {"type": "string", "minLength": 1}}}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -139,7 +139,10 @@ def _candidate_signature(candidate: dict[str, Any]) -> tuple[Any, ...]:
 
 
 def resolve_capability(
-    candidate: dict[str, Any], registry_entries: Iterable[dict[str, Any]]
+    candidate: dict[str, Any],
+    registry_entries: Iterable[dict[str, Any]],
+    *,
+    reviewed_candidate_ids: Iterable[str] = (),
 ) -> dict[str, Any]:
     """Resolve one capability only when there is one exact, approved match.
 
@@ -148,11 +151,34 @@ def resolve_capability(
     are intentionally absent from the matching rule.
     """
     candidate = _require_mapping(candidate, "candidate")
+    candidate_fields = {
+        "id", "family", "operation", "resource", "input_types",
+        "output_types", "backend", "requires_human_review", "source",
+    }
+    missing_fields = candidate_fields - candidate.keys()
+    extra_fields = candidate.keys() - candidate_fields
+    if missing_fields:
+        raise OperationalValidationError(
+            f"candidate missing fields: {', '.join(sorted(missing_fields))}"
+        )
+    if extra_fields:
+        raise OperationalValidationError(
+            f"candidate has unknown fields: {', '.join(sorted(extra_fields))}"
+        )
     candidate_id = _require_string(candidate.get("id"), "candidate.id")
     _require_source(candidate, "candidate")
+    source_fields = {"document_id", "page", "section", "quote"}
+    extra_source_fields = candidate["source"].keys() - source_fields
+    if extra_source_fields:
+        raise OperationalValidationError(
+            f"candidate.source has unknown fields: {', '.join(sorted(extra_source_fields))}"
+        )
+    if not isinstance(candidate["requires_human_review"], bool):
+        raise OperationalValidationError("candidate.requires_human_review must be a boolean")
     family, operation, resource, backend, inputs, outputs = _candidate_signature(candidate)
 
-    if candidate.get("requires_human_review") and not candidate.get("review_approval"):
+    reviewed_ids = set(reviewed_candidate_ids)
+    if candidate.get("requires_human_review") and candidate_id not in reviewed_ids:
         return {
             "candidate_id": candidate_id,
             "status": "blocked",
@@ -503,6 +529,7 @@ def build_operational_package(
     registry_snapshot: dict[str, Any],
     *,
     clinical_logic_content_sha256: str,
+    reviewed_candidate_ids: Iterable[str] = (),
 ) -> dict[str, Any]:
     """Validate and compile an operational companion package.
 
@@ -527,7 +554,14 @@ def build_operational_package(
         requirements.get("external_effect_requests", []), "external_effect_requests"
     )
 
-    resolutions = [resolve_capability(candidate, entries) for candidate in candidates]
+    resolutions = [
+        resolve_capability(
+            candidate,
+            entries,
+            reviewed_candidate_ids=reviewed_candidate_ids,
+        )
+        for candidate in candidates
+    ]
     candidate_ids = [resolution["candidate_id"] for resolution in resolutions]
     if len(candidate_ids) != len(set(candidate_ids)):
         raise OperationalValidationError("capability candidate IDs must be unique")

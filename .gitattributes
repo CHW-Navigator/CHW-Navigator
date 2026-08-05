@@ -3,3 +3,6 @@
 # forms for manuals and other PDFs stored below the repository root.
 *.pdf binary
 **/*.pdf binary
+
+# Golden-vector digests are byte-exact; prevent Windows checkout conversion.
+compiler/examples/special_functions/gestational-age-vectors.json text eol=lf
