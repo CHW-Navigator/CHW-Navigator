@@ -1,0 +1,8 @@
+{
+  "id": "synthetic-operational-registry",
+  "version": "1.0.0",
+  "entries": [
+    {"id": "topology.resolve-relation", "version": "1.0.0", "family": "topology", "operation": "resolve", "resource": "relation", "input_types": ["topology_relation_request"], "output_types": ["topology_resolution"], "backends": ["cht", "fhir-r4"], "status": "active", "approved": true},
+    {"id": "external-effect.send-approved-message", "version": "1.0.0", "family": "external-effect", "operation": "plan", "resource": "message", "input_types": ["external_effect_request"], "output_types": ["external_effect_plan"], "backends": ["planning-only"], "status": "active", "approved": true}
+  ]
+}

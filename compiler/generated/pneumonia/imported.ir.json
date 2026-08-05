@@ -1,0 +1,411 @@
+{
+  "constants": {},
+  "decisions": {
+    "d_triage": {
+      "hit_policy": "FIRST",
+      "id": "d_triage",
+      "provenance": [
+        {
+          "column": null,
+          "kind": "dmn_decision",
+          "location": "decision:d_triage",
+          "note": null,
+          "page": null,
+          "row": null,
+          "section": null,
+          "source_id": "examples\\pneumonia.dmn",
+          "table": null
+        }
+      ],
+      "rules": [
+        {
+          "description": null,
+          "id": "r1",
+          "provenance": [
+            {
+              "column": null,
+              "kind": "dmn_rule",
+              "location": "decision:d_triage/rule:r1",
+              "note": null,
+              "page": null,
+              "row": 1,
+              "section": null,
+              "source_id": "examples\\pneumonia.dmn",
+              "table": null
+            }
+          ],
+          "then": {
+            "o_home_treatment": false,
+            "o_no_action": false,
+            "o_referral": true
+          },
+          "when": {
+            "id": "p_danger_sign",
+            "kind": "pred"
+          }
+        },
+        {
+          "description": null,
+          "id": "r2",
+          "provenance": [
+            {
+              "column": null,
+              "kind": "dmn_rule",
+              "location": "decision:d_triage/rule:r2",
+              "note": null,
+              "page": null,
+              "row": 2,
+              "section": null,
+              "source_id": "examples\\pneumonia.dmn",
+              "table": null
+            }
+          ],
+          "then": {
+            "o_home_treatment": true,
+            "o_no_action": false,
+            "o_referral": false
+          },
+          "when": {
+            "args": [
+              {
+                "arg": {
+                  "id": "p_danger_sign",
+                  "kind": "pred"
+                },
+                "kind": "not"
+              },
+              {
+                "id": "p_fast_breathing",
+                "kind": "pred"
+              }
+            ],
+            "kind": "and"
+          }
+        },
+        {
+          "description": null,
+          "id": "r3",
+          "provenance": [
+            {
+              "column": null,
+              "kind": "dmn_rule",
+              "location": "decision:d_triage/rule:r3",
+              "note": null,
+              "page": null,
+              "row": 3,
+              "section": null,
+              "source_id": "examples\\pneumonia.dmn",
+              "table": null
+            }
+          ],
+          "then": {
+            "o_home_treatment": false,
+            "o_no_action": true,
+            "o_referral": false
+          },
+          "when": {
+            "kind": "else"
+          }
+        }
+      ]
+    }
+  },
+  "invariants": {
+    "i_single_endpoint": {
+      "expression": {
+        "args": [
+          {
+            "id": "o_referral",
+            "kind": "output"
+          },
+          {
+            "id": "o_home_treatment",
+            "kind": "output"
+          },
+          {
+            "id": "o_no_action",
+            "kind": "output"
+          }
+        ],
+        "kind": "exactly_one"
+      },
+      "id": "i_single_endpoint",
+      "provenance": [
+        {
+          "column": null,
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": 1,
+          "section": null,
+          "source_id": "qa_policy",
+          "table": null
+        }
+      ],
+      "severity": "error"
+    }
+  },
+  "metadata": {
+    "compiler_version": "0.1.0",
+    "generated_at": "2026-04-30T12:00:00Z",
+    "guideline_id": "pneumonia",
+    "ir_version": 1,
+    "sources": [
+      {
+        "id": "chw_manual_v1",
+        "kind": "manual",
+        "ref": "Pneumonia chapter"
+      }
+    ]
+  },
+  "outputs": {
+    "o_home_treatment": {
+      "description": null,
+      "domain": null,
+      "id": "o_home_treatment",
+      "provenance": [
+        {
+          "column": "o_home_treatment",
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": null,
+          "section": null,
+          "source_id": "dmn_triage",
+          "table": null
+        }
+      ],
+      "type": "bool"
+    },
+    "o_no_action": {
+      "description": null,
+      "domain": null,
+      "id": "o_no_action",
+      "provenance": [
+        {
+          "column": "o_no_action",
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": null,
+          "section": null,
+          "source_id": "dmn_triage",
+          "table": null
+        }
+      ],
+      "type": "bool"
+    },
+    "o_referral": {
+      "description": null,
+      "domain": null,
+      "id": "o_referral",
+      "provenance": [
+        {
+          "column": "o_referral",
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": null,
+          "section": null,
+          "source_id": "dmn_triage",
+          "table": null
+        }
+      ],
+      "type": "bool"
+    }
+  },
+  "phrase_bindings": {
+    "o_referral": {
+      "message_key": "m_referral"
+    }
+  },
+  "predicates": {
+    "p_danger_sign": {
+      "description": null,
+      "expression": {
+        "id": "v_danger_sign",
+        "kind": "var"
+      },
+      "id": "p_danger_sign",
+      "inputs_used": [
+        "v_danger_sign"
+      ],
+      "missingness_policy": "require_inputs",
+      "provenance": [
+        {
+          "column": null,
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": 1,
+          "section": null,
+          "source_id": "predicate_table",
+          "table": null
+        }
+      ]
+    },
+    "p_fast_breathing": {
+      "description": null,
+      "expression": {
+        "args": [
+          {
+            "args": [
+              {
+                "kind": "<",
+                "left": {
+                  "id": "v_age_months",
+                  "kind": "var"
+                },
+                "right": {
+                  "kind": "literal",
+                  "type": "int",
+                  "value": 12
+                }
+              },
+              {
+                "kind": ">=",
+                "left": {
+                  "id": "v_resp_rate",
+                  "kind": "var"
+                },
+                "right": {
+                  "kind": "literal",
+                  "type": "int",
+                  "value": 50
+                }
+              }
+            ],
+            "kind": "and"
+          },
+          {
+            "args": [
+              {
+                "kind": ">=",
+                "left": {
+                  "id": "v_age_months",
+                  "kind": "var"
+                },
+                "right": {
+                  "kind": "literal",
+                  "type": "int",
+                  "value": 12
+                }
+              },
+              {
+                "kind": ">=",
+                "left": {
+                  "id": "v_resp_rate",
+                  "kind": "var"
+                },
+                "right": {
+                  "kind": "literal",
+                  "type": "int",
+                  "value": 40
+                }
+              }
+            ],
+            "kind": "and"
+          }
+        ],
+        "kind": "or"
+      },
+      "id": "p_fast_breathing",
+      "inputs_used": [
+        "v_age_months",
+        "v_resp_rate"
+      ],
+      "missingness_policy": "require_inputs",
+      "provenance": [
+        {
+          "column": null,
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": 2,
+          "section": null,
+          "source_id": "predicate_table",
+          "table": null
+        }
+      ]
+    }
+  },
+  "variables": {
+    "v_age_months": {
+      "allowed_missingness": false,
+      "domain": {
+        "max": 120,
+        "min": 0,
+        "values": null
+      },
+      "id": "v_age_months",
+      "multivalue": false,
+      "provenance": [
+        {
+          "column": null,
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": 1,
+          "section": null,
+          "source_id": "variable_catalog",
+          "table": null
+        }
+      ],
+      "type": "int",
+      "unit": null
+    },
+    "v_danger_sign": {
+      "allowed_missingness": false,
+      "domain": null,
+      "id": "v_danger_sign",
+      "multivalue": false,
+      "provenance": [
+        {
+          "column": null,
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": 3,
+          "section": null,
+          "source_id": "variable_catalog",
+          "table": null
+        }
+      ],
+      "type": "bool",
+      "unit": null
+    },
+    "v_resp_rate": {
+      "allowed_missingness": false,
+      "domain": {
+        "max": 120,
+        "min": 0,
+        "values": null
+      },
+      "id": "v_resp_rate",
+      "multivalue": false,
+      "provenance": [
+        {
+          "column": null,
+          "kind": null,
+          "location": null,
+          "note": null,
+          "page": null,
+          "row": 2,
+          "section": null,
+          "source_id": "variable_catalog",
+          "table": null
+        }
+      ],
+      "type": "int",
+      "unit": "breaths_per_min"
+    }
+  }
+}

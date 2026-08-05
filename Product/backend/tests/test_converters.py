@@ -1,5 +1,7 @@
 """Tests for converters."""
 
+import csv
+import io
 import json
 import tempfile
 from pathlib import Path
@@ -40,10 +42,19 @@ class TestDMNConverter:
         xml = convert_to_dmn(logic)
         assert "p.38" in xml or "p.22" in xml
 
-    def test_contains_activator(self):
+    def test_legacy_activator_uses_collect(self):
         logic = load_fixture("valid_logic.json")
+        # The converter accepts either the current router or the legacy
+        # activator. Exercise the activator contract without allowing the
+        # current router to take precedence.
+        logic.pop("router")
         xml = convert_to_dmn(logic)
         assert "COLLECT" in xml
+
+    def test_current_router_uses_explicit_first_policy(self):
+        logic = load_fixture("valid_logic.json")
+        xml = convert_to_dmn(logic)
+        assert 'hitPolicy="FIRST"' in xml
 
 
 class TestMermaidConverter:
@@ -79,8 +90,18 @@ class TestCSVConverter:
     def test_phrases_csv_has_headers(self):
         logic = load_fixture("valid_logic.json")
         csv_str = convert_phrases_to_csv(logic)
-        assert "message_id" in csv_str
-        assert "english_text" in csv_str
+        rows = list(csv.DictReader(io.StringIO(csv_str)))
+        assert rows
+        assert list(rows[0]) == [
+            "message_id",
+            "category",
+            "text",
+            "module_context",
+            "source_section_id",
+        ]
+        # Legacy english_text remains an accepted input, but the canonical
+        # export header is text.
+        assert rows[0]["text"] == logic["phrase_bank"][0]["english_text"]
 
     def test_phrases_csv_has_data(self):
         logic = load_fixture("valid_logic.json")

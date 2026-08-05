@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "fever_basic",
+    "compiler_version": "0.1.0",
+    "generated_at": "2026-05-06T14:55:00Z",
+    "sources": [
+      {
+        "id": "chw_manual_fever_v1",
+        "kind": "manual",
+        "ref": "Fever module"
+      }
+    ]
+  },
+  "variables": {
+    "v_temp_c_x10": {
+      "type": "int",
+      "domain": { "min": 250, "max": 450 },
+      "unit": "c_x10",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 1 }]
+    },
+    "v_danger_sign": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 2 }]
+    }
+  },
+  "predicates": {
+    "p_danger_sign": {
+      "inputs_used": ["v_danger_sign"],
+      "expression": { "kind": "var", "id": "v_danger_sign" },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 1 }]
+    },
+    "p_fever": {
+      "inputs_used": ["v_temp_c_x10"],
+      "expression": {
+        "kind": ">=",
+        "left": { "kind": "var", "id": "v_temp_c_x10" },
+        "right": { "kind": "literal", "type": "int", "value": 375 }
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 2 }]
+    }
+  },
+  "outputs": {
+    "o_referral": {
+      "type": "bool",
+      "provenance": [{ "source_id": "dmn_triage", "column": "o_referral" }]
+    },
+    "o_home_care": {
+      "type": "bool",
+      "provenance": [{ "source_id": "dmn_triage", "column": "o_home_care" }]
+    },
+    "o_no_fever": {
+      "type": "bool",
+      "provenance": [{ "source_id": "dmn_triage", "column": "o_no_fever" }]
+    }
+  },
+  "decisions": {
+    "d_fever_triage": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "dmn_triage", "table": "fever_triage" }],
+      "rules": [
+        {
+          "id": "r1",
+          "when": { "kind": "pred", "id": "p_danger_sign" },
+          "then": { "o_referral": true },
+          "provenance": [{ "source_id": "dmn_triage", "row": 1 }]
+        },
+        {
+          "id": "r2",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "pred", "id": "p_fever" },
+              { "kind": "not", "arg": { "kind": "pred", "id": "p_danger_sign" } }
+            ]
+          },
+          "then": { "o_home_care": true },
+          "provenance": [{ "source_id": "dmn_triage", "row": 2 }]
+        },
+        {
+          "id": "r3",
+          "when": { "kind": "else" },
+          "then": { "o_no_fever": true },
+          "provenance": [{ "source_id": "dmn_triage", "row": 3 }]
+        }
+      ]
+    }
+  },
+  "invariants": {
+    "i_single_endpoint": {
+      "severity": "error",
+      "expression": {
+        "kind": "exactly_one",
+        "args": [
+          { "kind": "output", "id": "o_referral" },
+          { "kind": "output", "id": "o_home_care" },
+          { "kind": "output", "id": "o_no_fever" }
+        ]
+      },
+      "provenance": [{ "source_id": "qa_policy", "row": 1 }]
+    }
+  },
+  "phrases": {
+    "m_referral": {
+      "entity_id": "o_referral",
+      "role": "message",
+      "texts": { "en": "Refer urgently to facility." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 1 }]
+    },
+    "m_home_care": {
+      "entity_id": "o_home_care",
+      "role": "message",
+      "texts": { "en": "Provide home fever care." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 2 }]
+    },
+    "m_no_fever": {
+      "entity_id": "o_no_fever",
+      "role": "message",
+      "texts": { "en": "No fever action needed." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 3 }]
+    }
+  },
+  "phrase_bindings": {}
+}

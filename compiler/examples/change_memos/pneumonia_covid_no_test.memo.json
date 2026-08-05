@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "memo_version": 1,
+    "change_id": "pneumonia-covid-no-test-v1",
+    "title": "Add isolation counseling for cough during COVID circulation without rapid testing",
+    "change_type": "modify_module",
+    "effective_date": "2026-05-02",
+    "applies_to": [
+      "cough_module",
+      "children_under_5",
+      "high-transmission settings"
+    ],
+    "source_provenance": [
+      "MOH memo 2026-05-01",
+      "WHO respiratory triage guidance"
+    ]
+  },
+  "clinical_intent": "When COVID is circulating and rapid tests are unavailable, children with cough but without danger signs should receive isolation and household protection advice without delaying standard pneumonia assessment and treatment.",
+  "new_or_changed_inputs": [
+    "Record whether the child currently has cough.",
+    "Use the local deployment context indicating that COVID is circulating."
+  ],
+  "new_predicates_needed": [
+    "Child has cough.",
+    "COVID-circulation context is active for this deployment."
+  ],
+  "changed_classifications": [
+    "Add a non-urgent isolation counseling output for cough during COVID circulation."
+  ],
+  "changed_actions": [
+    "Give household protection and isolation counseling when cough is present without danger signs and without fast-breathing pneumonia."
+  ],
+  "priority_rules": [
+    "Danger-sign referral remains highest priority.",
+    "Fast-breathing pneumonia treatment remains higher priority than isolation counseling."
+  ],
+  "missingness_rules": [
+    "If cough status is missing, ask the cough question before classification.",
+    "If the COVID-circulation context is unavailable, use the program default constant."
+  ],
+  "stockout_device_rules": [
+    "No COVID rapid test branch is introduced in this change; standard clinical logic remains in use."
+  ],
+  "safety_invariants": [
+    "Isolation counseling must never delay urgent referral.",
+    "Isolation counseling must not replace fast-breathing pneumonia treatment."
+  ],
+  "counseling_messages": [
+    "Explain home isolation, masking where feasible, hand hygiene, and return precautions."
+  ],
+  "follow_up": [
+    "Return promptly if danger signs develop or breathing worsens."
+  ],
+  "data_capture_reporting": [
+    "Record that isolation counseling was given."
+  ],
+  "sunset_review_condition": "Review when rapid testing becomes available or the COVID-circulation advisory is retired.",
+  "unresolved_questions": []
+}

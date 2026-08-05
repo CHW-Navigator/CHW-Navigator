@@ -1,0 +1,15 @@
+{
+  "expected_candidates": {
+    "dmn": "mutations/dmn/candidate.dmn",
+    "ir": "mutations/ir/candidate.ir.json",
+    "mermaid": "mutations/mermaid/candidate.mmd",
+    "smt2": "mutations/smt2/candidate.smt2",
+    "xlsform_choices": "mutations/xlsform/choices.csv",
+    "xlsform_survey": "mutations/xlsform/survey.csv"
+  },
+  "label": "multi-module-router",
+  "notes": [
+    "Copy one generated artifact into the matching mutation folder before editing it.",
+    "Mutation tests should demonstrate that semantic drift is detected rather than silently accepted."
+  ]
+}

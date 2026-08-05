@@ -1,0 +1,88 @@
+{
+  "node_sources": {
+    "d_triage": [
+      {
+        "source_id": "dmn_triage",
+        "table": "triage"
+      }
+    ],
+    "d_triage__r1": [
+      {
+        "source_id": "dmn_triage",
+        "table": "triage"
+      },
+      {
+        "row": 1,
+        "source_id": "dmn_triage"
+      }
+    ],
+    "d_triage__r2": [
+      {
+        "source_id": "dmn_triage",
+        "table": "triage"
+      },
+      {
+        "row": 2,
+        "source_id": "dmn_triage"
+      }
+    ],
+    "d_triage__r3": [
+      {
+        "source_id": "dmn_triage",
+        "table": "triage"
+      },
+      {
+        "row": 3,
+        "source_id": "dmn_triage"
+      }
+    ],
+    "o_home_treatment": [
+      {
+        "column": "o_home_treatment",
+        "source_id": "dmn_triage"
+      }
+    ],
+    "o_no_action": [
+      {
+        "column": "o_no_action",
+        "source_id": "dmn_triage"
+      }
+    ],
+    "o_referral": [
+      {
+        "column": "o_referral",
+        "source_id": "dmn_triage"
+      }
+    ],
+    "p_danger_sign": [
+      {
+        "row": 1,
+        "source_id": "predicate_table"
+      }
+    ],
+    "p_fast_breathing": [
+      {
+        "row": 2,
+        "source_id": "predicate_table"
+      }
+    ],
+    "v_age_months": [
+      {
+        "row": 1,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_danger_sign": [
+      {
+        "row": 3,
+        "source_id": "variable_catalog"
+      }
+    ],
+    "v_resp_rate": [
+      {
+        "row": 2,
+        "source_id": "variable_catalog"
+      }
+    ]
+  }
+}

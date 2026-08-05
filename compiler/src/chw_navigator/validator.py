@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .clinical_ir import ClinicalIRDocument, DecisionDef, Domain, HitPolicy, ScalarType
+from .clinical_ir import ClinicalIRDocument, DecisionDef, HitPolicy, ScalarType
+from .expr_tools import collect_refs, is_else_expr
 
 
 @dataclass(slots=True)
@@ -13,17 +14,21 @@ class ValidationError:
 
 
 def validate_document(document: ClinicalIRDocument) -> list[ValidationError]:
+    """Run semantic and runtime-subset validation on a Clinical IR document.
+
+    Schema/local contract checks now happen earlier in Pydantic. This validator
+    stays focused on the checks that still need the full dataclass document:
+    expression typing, decision semantics, phrase bindings, and dependency logic.
+    """
+
     errors: list[ValidationError] = []
 
-    _validate_metadata(document, errors)
-    _validate_identity_consistency(document, errors)
-    _validate_identifier_prefixes(document, errors)
-    _validate_provenance(document, errors)
     _validate_current_subset(document, errors)
-    _validate_domains(document, errors)
+    _validate_variables(document, errors)
     _validate_predicates(document, errors)
-    _validate_phrases(document, errors)
+    _validate_actions(document, errors)
     _validate_decisions(document, errors)
+    _validate_decision_dependencies(document, errors)
     _validate_invariants(document, errors)
     _validate_phrase_bindings(document, errors)
     _validate_predicate_dependencies(document, errors)
@@ -32,6 +37,8 @@ def validate_document(document: ClinicalIRDocument) -> list[ValidationError]:
 
 
 def _validate_current_subset(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check limitations of the current evaluator/XLSForm/Z3 subset."""
+
     for variable in document.variables.values():
         if variable.multivalue:
             errors.append(
@@ -42,138 +49,25 @@ def _validate_current_subset(document: ClinicalIRDocument, errors: list[Validati
             )
 
 
-def _validate_metadata(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
-    if not document.metadata.sources:
-        errors.append(ValidationError("metadata.sources", "metadata must include at least one source record"))
+def _validate_variables(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check history-binding references and basic variable-level coherence."""
 
-
-def _validate_identity_consistency(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
-    _check_named_section("variables", document.variables, errors)
-    _check_named_section("constants", document.constants, errors)
-    _check_named_section("predicates", document.predicates, errors)
-    _check_named_section("phrases", document.phrases, errors)
-    _check_named_section("decisions", document.decisions, errors)
-    _check_named_section("outputs", document.outputs, errors)
-    _check_named_section("invariants", document.invariants, errors)
-
-    for decision_id, decision in document.decisions.items():
-        seen_rule_ids: set[str] = set()
-        for index, rule in enumerate(decision.rules):
-            if not rule.id:
-                errors.append(ValidationError(f"decisions.{decision_id}.rules[{index}].id", "rule id cannot be empty"))
-            elif rule.id in seen_rule_ids:
-                errors.append(ValidationError(f"decisions.{decision_id}.rules[{index}].id", f"duplicate rule id '{rule.id}'"))
-            seen_rule_ids.add(rule.id)
-
-
-def _validate_identifier_prefixes(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
-    _check_prefixes("variables", document.variables, {"v_", "st_"}, errors)
-    _check_prefixes("constants", document.constants, {"c_"}, errors)
-    _check_prefixes("predicates", document.predicates, {"p_"}, errors)
-    _check_prefixes("phrases", document.phrases, {"m_"}, errors)
-    _check_prefixes("decisions", document.decisions, {"d_"}, errors)
-    _check_prefixes("outputs", document.outputs, {"o_"}, errors)
-    _check_prefixes("invariants", document.invariants, {"i_"}, errors)
-
-    for decision_id, decision in document.decisions.items():
-        for index, rule in enumerate(decision.rules):
-            if not rule.id.startswith("r"):
-                errors.append(
-                    ValidationError(
-                        f"decisions.{decision_id}.rules[{index}].id",
-                        "rule ids must start with 'r'",
-                    )
-                )
-
-
-def _check_prefixes(
-    section_name: str,
-    items: dict[str, Any],
-    prefixes: set[str],
-    errors: list[ValidationError],
-) -> None:
-    allowed = "/".join(sorted(prefixes))
-    label = {
-        "variables": "variable",
-        "constants": "constant",
-        "predicates": "predicate",
-        "decisions": "decision",
-        "outputs": "output",
-        "invariants": "invariant",
-    }.get(section_name, section_name)
-    for key in items:
-        if not any(key.startswith(prefix) for prefix in prefixes):
-            errors.append(
-                ValidationError(
-                    f"{section_name}.{key}.id",
-                    f"{label} ids must use one of the following prefixes: {allowed}",
-                )
-            )
-
-
-def _check_named_section(section_name: str, items: dict[str, Any], errors: list[ValidationError]) -> None:
-    for key, item in items.items():
-        if getattr(item, "id", key) != key:
-            errors.append(
-                ValidationError(
-                    f"{section_name}.{key}.id",
-                    f"section key '{key}' must match embedded id '{getattr(item, 'id', None)}'",
-                )
-            )
-
-
-def _validate_provenance(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
-    for section_name, items in (
-        ("variables", document.variables),
-        ("constants", document.constants),
-        ("predicates", document.predicates),
-        ("phrases", document.phrases),
-        ("decisions", document.decisions),
-        ("outputs", document.outputs),
-        ("invariants", document.invariants),
-    ):
-        for key, item in items.items():
-            if not getattr(item, "provenance", []):
-                errors.append(ValidationError(f"{section_name}.{key}.provenance", "provenance is required"))
-
-    for decision_id, decision in document.decisions.items():
-        for index, rule in enumerate(decision.rules):
-            if not rule.provenance:
-                errors.append(
-                    ValidationError(
-                        f"decisions.{decision_id}.rules[{index}].provenance",
-                        "provenance is required",
-                    )
-                )
-
-
-def _validate_domains(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
     for variable in document.variables.values():
-        _validate_domain(f"variables.{variable.id}.domain", variable.type, variable.domain, errors)
-
-    for output_def in document.outputs.values():
-        _validate_domain(f"outputs.{output_def.id}.domain", output_def.type, output_def.domain, errors)
-
-
-def _validate_domain(
-    path: str,
-    scalar_type: ScalarType,
-    domain: Domain | None,
-    errors: list[ValidationError],
-) -> None:
-    if domain is None:
-        if scalar_type is ScalarType.ENUM:
-            errors.append(ValidationError(path, "enum types must define domain values"))
-        return
-    if domain.min is not None and domain.max is not None and domain.min > domain.max:
-        errors.append(ValidationError(path, "domain min cannot be greater than max"))
-    if domain.values is not None and not domain.values:
-        errors.append(ValidationError(path, "domain values cannot be empty"))
-    if scalar_type is ScalarType.ENUM and not domain.values:
-        errors.append(ValidationError(path, "enum types must define non-empty domain values"))
+        binding = variable.history_binding
+        if binding is None:
+            continue
+        if binding.recorded_at_var is not None and binding.recorded_at_var not in document.variables:
+            errors.append(
+                ValidationError(
+                    f"variables.{variable.id}.history_binding.recorded_at_var",
+                    f"unknown variable reference '{binding.recorded_at_var}'",
+                )
+            )
 
 
 def _validate_predicates(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check predicate input references and expression typing."""
+
     for predicate in document.predicates.values():
         for identifier in predicate.inputs_used:
             if identifier not in document.variables:
@@ -198,46 +92,117 @@ def _validate_predicates(document: ClinicalIRDocument, errors: list[ValidationEr
         )
 
 
-def _validate_phrases(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
-    for phrase in document.phrases.values():
-        if not phrase.texts:
-            errors.append(
-                ValidationError(
-                    f"phrases.{phrase.key}.texts",
-                    "phrase must define at least one language text",
-                )
-            )
-        for language, text in phrase.texts.items():
-            if not language.strip():
+def _validate_actions(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check action references without yet executing action semantics."""
+
+    for action in document.actions.values():
+        for output_name in action.outputs:
+            if output_name not in document.variables and output_name not in document.outputs:
                 errors.append(
                     ValidationError(
-                        f"phrases.{phrase.key}.texts",
-                        "phrase language keys cannot be empty",
+                        f"actions.{action.id}.outputs",
+                        f"unknown output target '{output_name}'",
                     )
                 )
-            if not text.strip():
-                errors.append(
-                    ValidationError(
-                        f"phrases.{phrase.key}.texts.{language}",
-                        "phrase text cannot be empty",
+
+        if action.when is not None:
+            _infer_expr_type(action.when, document, f"actions.{action.id}.when", errors)
+
+        if action.kind in {"read_history", "read_local_data"}:
+            for output_name in action.outputs:
+                if output_name in document.variables and not _is_history_id(output_name):
+                    errors.append(
+                        ValidationError(
+                            f"actions.{action.id}.outputs",
+                            "local-data read outputs must target legacy h_ ids or variables with the _h suffix",
+                        )
                     )
-                )
-        if phrase.entity_id.startswith("o_"):
-            continue
-        if phrase.entity_id not in document.variables and phrase.entity_id not in document.predicates:
-            errors.append(
-                ValidationError(
-                    f"phrases.{phrase.key}.entity_id",
-                    f"phrase references unknown entity '{phrase.entity_id}'",
-                )
-            )
+            for index, mapping in enumerate(action.mappings):
+                if mapping.target_var not in document.variables:
+                    errors.append(
+                        ValidationError(
+                            f"actions.{action.id}.mappings[{index}].target_var",
+                            f"unknown variable reference '{mapping.target_var}'",
+                        )
+                    )
+                if (
+                    mapping.recorded_at_target_var is not None
+                    and mapping.recorded_at_target_var not in document.variables
+                ):
+                    errors.append(
+                        ValidationError(
+                            f"actions.{action.id}.mappings[{index}].recorded_at_target_var",
+                            f"unknown variable reference '{mapping.recorded_at_target_var}'",
+                        )
+                    )
+
+        if action.kind == "compute" and action.expression is not None:
+            _infer_expr_type(action.expression, document, f"actions.{action.id}.expression", errors)
 
 
 def _validate_decisions(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check rule structure, output assignments, and ELSE semantics."""
+
     seen_rule_ids: set[str] = set()
 
     for decision in document.decisions.values():
         _validate_decision(decision, document, seen_rule_ids, errors)
+
+
+def _validate_decision_dependencies(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check staged decision references point backward and resolve cleanly."""
+
+    output_producers: dict[str, str] = {}
+    for decision in document.decisions.values():
+        for rule in decision.rules:
+            for output_id in rule.then:
+                output_producers.setdefault(output_id, decision.id)
+
+    for decision in document.decisions.values():
+        for dependency in decision.depends_on:
+            if dependency not in document.decisions:
+                errors.append(
+                    ValidationError(
+                        f"decisions.{decision.id}.depends_on",
+                        f"unknown decision reference '{dependency}'",
+                    )
+                )
+                continue
+            prior = document.decisions[dependency]
+            if decision.stage is not None and prior.stage is not None and prior.stage >= decision.stage:
+                errors.append(
+                    ValidationError(
+                        f"decisions.{decision.id}.depends_on",
+                        f"decision '{dependency}' must have a lower stage than '{decision.id}'",
+                    )
+                )
+
+        for item in decision.inputs_used:
+            if item.startswith("o_"):
+                producer = output_producers.get(item)
+                if producer is None:
+                    errors.append(
+                        ValidationError(
+                            f"decisions.{decision.id}.inputs_used",
+                            f"output input '{item}' is not produced by any decision rule",
+                        )
+                    )
+                    continue
+                if producer == decision.id:
+                    errors.append(
+                        ValidationError(
+                            f"decisions.{decision.id}.inputs_used",
+                            f"decision must not depend on its own output '{item}'",
+                        )
+                    )
+                prior = document.decisions.get(producer)
+                if decision.stage is not None and prior is not None and prior.stage is not None and prior.stage >= decision.stage:
+                    errors.append(
+                        ValidationError(
+                            f"decisions.{decision.id}.inputs_used",
+                            f"output input '{item}' must come from a lower-stage decision",
+                        )
+                    )
 
 
 def _validate_decision(
@@ -263,7 +228,7 @@ def _validate_decision(
             errors.append(ValidationError(f"decisions.{decision.id}.rules[{index}].id", f"duplicate rule id '{rule.id}'"))
         seen_rule_ids.add(rule.id)
 
-        if _is_else(rule.when):
+        if is_else_expr(rule.when):
             else_count += 1
             if index != len(decision.rules) - 1:
                 errors.append(
@@ -323,6 +288,8 @@ def _validate_decision(
 
 
 def _validate_invariants(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check invariant expressions type-check to booleans."""
+
     for invariant in document.invariants.values():
         expr_type = _infer_expr_type(
             invariant.expression,
@@ -340,27 +307,15 @@ def _validate_invariants(document: ClinicalIRDocument, errors: list[ValidationEr
 
 
 def _validate_phrase_bindings(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
-    for output_name, binding in document.phrase_bindings.items():
-        if output_name not in document.outputs:
-            errors.append(
-                ValidationError(
-                    f"phrase_bindings.{output_name}",
-                    f"phrase binding references unknown output '{output_name}'",
-                )
-            )
-        elif not any(binding.get(key) for key in ("message_key", "guidance_key")):
-            errors.append(
-                ValidationError(
-                    f"phrase_bindings.{output_name}",
-                    "phrase binding must include a non-empty message_key or guidance_key",
-                )
-            )
+    """Phrase-binding schema and local contract checks now happen in Pydantic."""
 
 
 def _validate_predicate_dependencies(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:
+    """Check predicate dependency graph is acyclic."""
+
     graph: dict[str, set[str]] = {}
     for predicate in document.predicates.values():
-        graph[predicate.id] = _collect_refs(predicate.expression, {"pred"})
+        graph[predicate.id] = collect_refs(predicate.expression, {"pred"})
 
     temp_mark: set[str] = set()
     perm_mark: set[str] = set()
@@ -438,6 +393,48 @@ def _infer_expr_type(
             errors.append(ValidationError(path, f"unknown output reference '{identifier}'"))
             return None
         return document.outputs[identifier].type
+    if kind == "call":
+        fn = expr.get("fn")
+        args = expr.get("args")
+        if not isinstance(fn, str) or not fn:
+            errors.append(ValidationError(path, "call expressions require fn"))
+            return None
+        if not isinstance(args, list):
+            errors.append(ValidationError(path, "call expressions require args"))
+            return None
+        for index, arg in enumerate(args):
+            if isinstance(arg, dict):
+                _infer_expr_type(arg, document, f"{path}.args[{index}]", errors)
+            else:
+                errors.append(ValidationError(f"{path}.args[{index}]", "call arguments must be expressions"))
+        if fn == "is_missing":
+            if len(args) != 1:
+                errors.append(ValidationError(path, "is_missing expects exactly one argument"))
+            return ScalarType.BOOL
+        if fn == "floor":
+            if len(args) != 1:
+                errors.append(ValidationError(path, "floor expects exactly one argument"))
+                return None
+            arg_type = _infer_expr_type(args[0], document, f"{path}.args[0]", errors)
+            if arg_type is not None and not _is_numeric(arg_type):
+                errors.append(ValidationError(f"{path}.args[0]", "floor requires a numeric argument"))
+            return ScalarType.INT
+        if fn in {"date_diff_days", "age_months_from_date"}:
+            if len(args) != 2:
+                errors.append(ValidationError(path, f"{fn} expects exactly two arguments"))
+                return None
+            for index, arg in enumerate(args):
+                arg_type = _infer_expr_type(arg, document, f"{path}.args[{index}]", errors)
+                if arg_type is not None and not _is_numeric(arg_type):
+                    errors.append(
+                        ValidationError(
+                            f"{path}.args[{index}]",
+                            f"{fn} requires numeric day-serial arguments",
+                        )
+                    )
+            return ScalarType.INT
+        errors.append(ValidationError(path, f"unsupported helper function '{fn}'"))
+        return None
 
     if kind in {"and", "or", "exactly_one"}:
         args = expr.get("args")
@@ -604,43 +601,6 @@ def _is_numeric(scalar_type: ScalarType) -> bool:
     return scalar_type in {ScalarType.INT, ScalarType.DECIMAL}
 
 
-def _collect_refs(expr: dict[str, Any], kinds: set[str]) -> set[str]:
-    kind = expr.get("kind")
-    if kind in kinds and "id" in expr:
-        return {str(expr["id"])}
-    if kind in {"literal", "else"}:
-        return set()
-    if kind in {"var", "const", "pred", "output"}:
-        return set()
-    if kind in {"and", "or", "exactly_one"}:
-        refs: set[str] = set()
-        for arg in expr.get("args", []):
-            refs |= _collect_refs(arg, kinds)
-        return refs
-    if kind == "not":
-        arg = expr.get("arg", {})
-        return _collect_refs(arg, kinds) if isinstance(arg, dict) else set()
-    if kind == "if":
-        refs: set[str] = set()
-        for key in ("cond", "then", "else"):
-            value = expr.get(key, {})
-            if isinstance(value, dict):
-                refs |= _collect_refs(value, kinds)
-        return refs
-    if kind in {"=", "!=", "<", "<=", ">", ">=", "+", "-", "*", "/"}:
-        refs: set[str] = set()
-        left = expr.get("left", {})
-        right = expr.get("right", {})
-        if isinstance(left, dict):
-            refs |= _collect_refs(left, kinds)
-        if isinstance(right, dict):
-            refs |= _collect_refs(right, kinds)
-        return refs
-    if kind == "selected":
-        target = expr.get("target", {})
-        return _collect_refs(target, kinds) if isinstance(target, dict) else set()
-    return set()
 
-
-def _is_else(expr: dict[str, Any]) -> bool:
-    return expr.get("kind") == "else"
+def _is_history_id(identifier: str) -> bool:
+    return identifier.startswith("h_") or identifier.endswith("_h")

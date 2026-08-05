@@ -66,3 +66,16 @@ ml_assessment.log
 matrix_medical.egg-info/
 **/comparison.png
 **/tuned_decoder_test*
+
+# Compiler local test run scratch outputs
+compiler/generated/t/
+compiler/generated/test_runs/
+compiler/generated/cht-task-bridge-harness/
+
+# Synthetic end-to-end fixture run evidence (regenerated locally)
+Product/backend/tests/e2e_fixtures/runs/
+Product/.e2e-venv/
+
+# Environment-specific WS evidence manifests (schemas/summaries remain tracked)
+compiler/reports/baseline-manifest.json
+compiler/reports/tracer-evidence-manifest.json

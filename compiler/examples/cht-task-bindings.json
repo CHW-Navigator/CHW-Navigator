@@ -1,0 +1,21 @@
+{
+  "schema_version": "cht-task-bindings@1.0.0",
+  "target_cht_version": "4.22.0",
+  "task_types": {
+    "followup_visit": {
+      "source_message_key": "m_schedule_followup",
+      "title_key": "task.followup_visit.title",
+      "followup_form": "registered_encounter_followup",
+      "permission_key": "can_schedule_followup_visit",
+      "icon": "icon-healthcare-followup",
+      "start_days": 0,
+      "end_days": 2,
+      "source_priority": "routine",
+      "assignee_role": "chw",
+      "priority": {
+        "level": 1,
+        "label": "task.priority.followup_visit"
+      }
+    }
+  }
+}

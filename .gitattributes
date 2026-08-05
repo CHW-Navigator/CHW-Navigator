@@ -1,0 +1,5 @@
+# PDFs are binary fixtures and must never receive line-ending normalization.
+# Attribute patterns are directory-local, so retain both root and recursive
+# forms for manuals and other PDFs stored below the repository root.
+*.pdf binary
+**/*.pdf binary

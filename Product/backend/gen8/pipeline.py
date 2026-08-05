@@ -458,8 +458,23 @@ async def run(
     labeler: str = "opus",
     run_verifier: bool = True,
     source_guide_meta: dict | None = None,
+    operational_requirements: dict | None = None,
+    registry_snapshot: dict | None = None,
+    topology_package: dict | None = None,
+    external_effect_catalog: dict | None = None,
 ) -> dict[str, Any]:
-    """Run gen8 (labeler=opus) or gen8.5 (labeler=sonnet7way) end-to-end."""
+    """Run gen8 (labeler=opus) or gen8.5 (labeler=sonnet7way) end-to-end.
+
+    ``operational_requirements`` is an optional, separately reviewed sidecar.
+    It is intentionally not inferred from clinical output: a source-grounded
+    capability scan must supply it, and its registry snapshot must be pinned.
+    ``topology_package`` is separately versioned deployment configuration; it
+    is validated and locked only when typed topology requirements are present.
+    ``external_effect_catalog`` is an approved, versioned planning catalog;
+    it can only produce send-free Prompt 10 request sidecars.
+    Omitting all companion arguments preserves the existing clinical-only
+    pipeline.
+    """
     if output_dir is None:
         raise ValueError("output_dir is required")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -728,6 +743,232 @@ async def run(
     # Now persist the four reconcile reports with the post-reconcile SHA.
     _write_reconcile_reports(reports, output_dir, base_prov, clinical_logic_sha)
 
+    # ---------- Prompts 8--10 operational companion package ----------
+    # This happens after the clinical artifact has been finalized and never
+    # mutates it.  It deliberately produces a plan, not a task, topology
+    # assignment, message, or deployment write.
+    operational_package: dict | None = None
+    external_effect_package: dict | None = None
+    if operational_requirements is not None:
+        if registry_snapshot is None:
+            raise ValueError(
+                "operational_requirements require an exact registry_snapshot; "
+                "the pipeline will not guess capability bindings"
+            )
+        from backend.operational import build_operational_package
+
+        operational_package = build_operational_package(
+            operational_requirements,
+            registry_snapshot,
+            clinical_logic_content_sha256=clinical_logic_sha,
+        )
+        requirements_sha = write_with_provenance(
+            output_dir / "operational_requirements.json",
+            operational_requirements,
+            artifact_kind="operational_requirements",
+            parents=[ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha)],
+            **base_prov,
+        )
+        registry_snapshot_sha = write_with_provenance(
+            output_dir / "registry_snapshot.json",
+            registry_snapshot,
+            artifact_kind="registry_snapshot",
+            **base_prov,
+        )
+        write_with_provenance(
+            output_dir / "capability_candidates.json",
+            operational_requirements.get("capability_candidates", []),
+            artifact_kind="capability_candidates",
+            parents=[ParentRef(kind="operational_requirements", content_sha256=requirements_sha)],
+            **base_prov,
+        )
+        resolutions_sha = write_with_provenance(
+            output_dir / "registry_resolution.json",
+            operational_package["capability_resolutions"],
+            artifact_kind="registry_resolution",
+            parents=[
+                ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+                ParentRef(kind="registry_snapshot", content_sha256=registry_snapshot_sha),
+            ],
+            **base_prov,
+        )
+        lifecycle_definitions_sha = write_with_provenance(
+            output_dir / "lifecycle_definitions.json",
+            operational_package["lifecycle_definitions"],
+            artifact_kind="lifecycle_definitions",
+            parents=[
+                ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+            ],
+            **base_prov,
+        )
+        version_lock_sha = write_with_provenance(
+            output_dir / "operational_version_lock.json",
+            operational_package["version_lock"],
+            artifact_kind="operational_version_lock",
+            parents=[
+                ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                ParentRef(kind="registry_snapshot", content_sha256=registry_snapshot_sha),
+                ParentRef(kind="registry_resolution", content_sha256=resolutions_sha),
+                ParentRef(kind="lifecycle_definitions", content_sha256=lifecycle_definitions_sha),
+            ],
+            **base_prov,
+        )
+        operational_package_sha = write_with_provenance(
+            output_dir / "operational_package.json",
+            operational_package,
+            artifact_kind="operational_package",
+            parents=[
+                ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+                ParentRef(kind="registry_snapshot", content_sha256=registry_snapshot_sha),
+                ParentRef(kind="operational_version_lock", content_sha256=version_lock_sha),
+            ],
+            **base_prov,
+        )
+        topology_requirements = operational_package["topology_requirements"]
+        external_effect_requests = operational_package["external_effect_requests"]
+        topology_lock: dict | None = None
+        topology_lock_sha: str | None = None
+        if topology_requirements or external_effect_requests:
+            if topology_package is None:
+                raise ValueError(
+                    "topology or external-effect requirements require an exact topology_package; "
+                    "the pipeline will not resolve deployment relationships by guesswork"
+                )
+            from backend.operational import (
+                assert_topology_valid,
+                build_topology_lock,
+                validate_topology_requirements_against_package,
+            )
+
+            topology_diagnostics = assert_topology_valid(topology_package, deployment=True)
+            topology_requirements_sha: str | None = None
+            if topology_requirements:
+                validate_topology_requirements_against_package(topology_requirements, topology_package)
+                topology_requirements_sha = write_with_provenance(
+                    output_dir / "topology_requirements.json",
+                    topology_requirements,
+                    artifact_kind="topology_requirements",
+                    parents=[
+                        ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                        ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+                        ParentRef(kind="registry_resolution", content_sha256=resolutions_sha),
+                    ],
+                    **base_prov,
+                )
+            topology_package_sha = write_with_provenance(
+                output_dir / "topology_package.json",
+                topology_package,
+                artifact_kind="topology_package",
+                parents=[
+                    ParentRef(
+                        kind="topology_requirements" if topology_requirements_sha else "operational_package",
+                        content_sha256=topology_requirements_sha or operational_package_sha,
+                    )
+                ],
+                **base_prov,
+            )
+            write_with_provenance(
+                output_dir / "topology_validation.json",
+                {"diagnostics": topology_diagnostics},
+                artifact_kind="topology_validation",
+                parents=[ParentRef(kind="topology_package", content_sha256=topology_package_sha)],
+                **base_prov,
+            )
+            topology_lock = build_topology_lock(topology_package)
+            topology_lock_sha = write_with_provenance(
+                output_dir / "topology_lock.json",
+                topology_lock,
+                artifact_kind="topology_lock",
+                parents=[
+                    ParentRef(kind="topology_package", content_sha256=topology_package_sha),
+                    ParentRef(
+                        kind="topology_requirements" if topology_requirements_sha else "operational_package",
+                        content_sha256=topology_requirements_sha or operational_package_sha,
+                    ),
+                ],
+                **base_prov,
+            )
+        elif topology_package is not None:
+            raise ValueError(
+                "topology_package requires typed topology or external-effect requirements; "
+                "deployment configuration cannot be attached without an approved clinical relation need"
+            )
+        if external_effect_requests:
+            if external_effect_catalog is None:
+                raise ValueError(
+                    "external effect requests require an exact external_effect_catalog; "
+                    "the pipeline will not guess templates, policies, or adapters"
+                )
+            if topology_lock is None or topology_lock_sha is None:
+                raise ValueError("external effect requests require a validated topology lock")
+            from backend.operational import build_external_effect_package
+
+            resolved_capabilities = {
+                f"{item['entry_id']}@{item['entry_version']}"
+                for item in operational_package["capability_resolutions"]
+            }
+            external_effect_package = build_external_effect_package(
+                external_effect_requests,
+                external_effect_catalog,
+                resolved_capabilities=resolved_capabilities,
+                topology_lock=topology_lock,
+                clinical_logic_content_sha256=clinical_logic_sha,
+            )
+            external_requests_sha = write_with_provenance(
+                output_dir / "external_effect_requests.json",
+                external_effect_requests,
+                artifact_kind="external_effect_requests",
+                parents=[
+                    ParentRef(kind="clinical_logic", content_sha256=clinical_logic_sha),
+                    ParentRef(kind="operational_requirements", content_sha256=requirements_sha),
+                    ParentRef(kind="topology_lock", content_sha256=topology_lock_sha),
+                ],
+                **base_prov,
+            )
+            external_catalog_sha = write_with_provenance(
+                output_dir / "external_effect_catalog.json",
+                external_effect_catalog,
+                artifact_kind="external_effect_catalog",
+                **base_prov,
+            )
+            external_lock_sha = write_with_provenance(
+                output_dir / "external_effect_version_lock.json",
+                external_effect_package["version_lock"],
+                artifact_kind="external_effect_version_lock",
+                parents=[
+                    ParentRef(kind="external_effect_requests", content_sha256=external_requests_sha),
+                    ParentRef(kind="external_effect_catalog", content_sha256=external_catalog_sha),
+                    ParentRef(kind="topology_lock", content_sha256=topology_lock_sha),
+                ],
+                **base_prov,
+            )
+            write_with_provenance(
+                output_dir / "external_effect_package.json",
+                external_effect_package,
+                artifact_kind="external_effect_package",
+                parents=[
+                    ParentRef(kind="external_effect_requests", content_sha256=external_requests_sha),
+                    ParentRef(kind="external_effect_catalog", content_sha256=external_catalog_sha),
+                    ParentRef(kind="external_effect_version_lock", content_sha256=external_lock_sha),
+                ],
+                **base_prov,
+            )
+        elif external_effect_catalog is not None:
+            raise ValueError(
+                "external_effect_catalog requires typed external_effect_requests; "
+                "a catalog alone cannot create an external effect"
+            )
+    elif topology_package is not None:
+        raise ValueError(
+            "topology_package requires operational_requirements and an exact registry_snapshot"
+        )
+    elif external_effect_catalog is not None:
+        raise ValueError(
+            "external_effect_catalog requires operational_requirements and an exact registry_snapshot"
+        )
+
     # ---------- Converters ----------
     try:
         from backend.converters import convert_to_dmn, convert_to_csv
@@ -927,6 +1168,8 @@ async def run(
         "container_sha": container_sha,
         "verification_summary": verification_summary,
         "reports": reports,
+        "operational_package": operational_package,
+        "external_effect_package": external_effect_package,
     }
 
 

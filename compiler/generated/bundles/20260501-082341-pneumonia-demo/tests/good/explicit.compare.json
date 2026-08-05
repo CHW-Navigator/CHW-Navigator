@@ -1,0 +1,203 @@
+[
+  {
+    "dmn_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": false,
+      "o_referral": true
+    },
+    "dmn_predicates": {
+      "p_danger_sign": true,
+      "p_fast_breathing": false
+    },
+    "dmn_rule_hits": {
+      "r1": true,
+      "r2": false,
+      "r3": false
+    },
+    "inputs": {
+      "v_age_months": 0,
+      "v_danger_sign": true,
+      "v_resp_rate": 0
+    },
+    "interpreter_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": false,
+      "o_referral": true
+    },
+    "interpreter_predicates": {
+      "p_danger_sign": true,
+      "p_fast_breathing": false
+    },
+    "interpreter_rule_hits": {
+      "r1": true,
+      "r2": false,
+      "r3": false
+    },
+    "mismatches": [],
+    "missing": [],
+    "name": "referral_case",
+    "ok": true,
+    "xlsform_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": false,
+      "o_referral": true
+    },
+    "xlsform_predicates": {
+      "p_danger_sign": true,
+      "p_fast_breathing": false
+    },
+    "xlsform_rule_hits": {
+      "r1": true,
+      "r2": false,
+      "r3": false
+    },
+    "z3_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": false,
+      "o_referral": true
+    },
+    "z3_predicates": {
+      "p_danger_sign": true,
+      "p_fast_breathing": false
+    },
+    "z3_rule_hits": {
+      "r1": true,
+      "r2": false,
+      "r3": false
+    }
+  },
+  {
+    "dmn_outputs": {
+      "o_home_treatment": true,
+      "o_no_action": false,
+      "o_referral": false
+    },
+    "dmn_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": true
+    },
+    "dmn_rule_hits": {
+      "r1": false,
+      "r2": true,
+      "r3": false
+    },
+    "inputs": {
+      "v_age_months": 12,
+      "v_danger_sign": false,
+      "v_resp_rate": 40
+    },
+    "interpreter_outputs": {
+      "o_home_treatment": true,
+      "o_no_action": false,
+      "o_referral": false
+    },
+    "interpreter_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": true
+    },
+    "interpreter_rule_hits": {
+      "r1": false,
+      "r2": true,
+      "r3": false
+    },
+    "mismatches": [],
+    "missing": [],
+    "name": "home_treatment_case",
+    "ok": true,
+    "xlsform_outputs": {
+      "o_home_treatment": true,
+      "o_no_action": false,
+      "o_referral": false
+    },
+    "xlsform_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": true
+    },
+    "xlsform_rule_hits": {
+      "r1": false,
+      "r2": true,
+      "r3": false
+    },
+    "z3_outputs": {
+      "o_home_treatment": true,
+      "o_no_action": false,
+      "o_referral": false
+    },
+    "z3_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": true
+    },
+    "z3_rule_hits": {
+      "r1": false,
+      "r2": true,
+      "r3": false
+    }
+  },
+  {
+    "dmn_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": true,
+      "o_referral": false
+    },
+    "dmn_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": false
+    },
+    "dmn_rule_hits": {
+      "r1": false,
+      "r2": false,
+      "r3": true
+    },
+    "inputs": {
+      "v_age_months": 0,
+      "v_danger_sign": false,
+      "v_resp_rate": 0
+    },
+    "interpreter_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": true,
+      "o_referral": false
+    },
+    "interpreter_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": false
+    },
+    "interpreter_rule_hits": {
+      "r1": false,
+      "r2": false,
+      "r3": true
+    },
+    "mismatches": [],
+    "missing": [],
+    "name": "no_action_case",
+    "ok": true,
+    "xlsform_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": true,
+      "o_referral": false
+    },
+    "xlsform_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": false
+    },
+    "xlsform_rule_hits": {
+      "r1": false,
+      "r2": false,
+      "r3": true
+    },
+    "z3_outputs": {
+      "o_home_treatment": false,
+      "o_no_action": true,
+      "o_referral": false
+    },
+    "z3_predicates": {
+      "p_danger_sign": false,
+      "p_fast_breathing": false
+    },
+    "z3_rule_hits": {
+      "r1": false,
+      "r2": false,
+      "r3": true
+    }
+  }
+]

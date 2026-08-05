@@ -20,6 +20,8 @@ Authoring model:
 - Clinical IR is the canonical compiled representation generated from those sources
 - every authoring contract should use structured provenance objects, not free-text provenance blobs
 - EHR/history-fed fields should stay in the normal identifier families and may use an `_h` suffix such as `v_weight_kg_h` or `st_prev_referral_h`
+- measured numeric variables should usually encode the stored unit in the identifier, such as `v_weight_g`, `v_temp_c_x10`, or `v_height_mm`
+- DOB/visit dates used in compiled logic should currently be represented as integer day serials, for example `v_birth_day` and `v_visit_day`
 
 ## What The Compiler Consumes Today
 
@@ -82,6 +84,12 @@ Recommended upstream JSON or CSV:
       "type": "int",
       "domain": { "min": 0, "max": 120 },
       "unit": null,
+      "measurement_limits": {
+        "remeasure_min": 0,
+        "remeasure_max": 120,
+        "dont_allow_min": 0,
+        "dont_allow_max": 3650
+      },
       "allowed_missingness": false,
       "multivalue": false,
       "provenance": [
@@ -107,9 +115,67 @@ Expected fields:
 - `type`: required
 - `domain`: optional except recommended for numeric and enum variables
 - `unit`: optional
+- `storage_unit`: optional, for teams that want a machine-readable field in addition to unit-bearing ids like `v_temp_c_x10`
+- `input_decimals`: optional, to document permitted UI input precision
+- `display_decimals`: optional, to document safe summary/display precision
+- `measurement_limits`: optional
 - `allowed_missingness`: required
 - `multivalue`: required, but currently must be `false`
 - `provenance`: required
+
+Recommended optional `measurement_limits` fields for continuous variables:
+
+- `remeasure_min`
+- `remeasure_max`
+- `dont_allow_min`
+- `dont_allow_max`
+
+Use these when MOH provides:
+
+- a narrower "re-measure" band
+- a wider "don't allow" hard-stop band
+
+These are authoring/validation thresholds and should stay distinct from the compiler's formal proof domain.
+
+Recommended storage rule for continuous variables:
+
+- prefer scaled integers over floating point for values that drive logic or formal verification
+- include the stored unit in the variable name when practical
+- keep the declared `domain` broad enough for Z3 proof, not just for normal values
+
+Examples:
+
+- `v_weight_g`
+- `v_weight_kg_x100`
+- `v_temp_c_x10`
+- `v_waz_x10`
+
+Recommended broad proof domains:
+
+- `v_temp_c_x10`: `250..450`
+- respiratory rate variables: `0..250`
+- age/day-serial durations: `0..3650`
+- MUAC in mm: `50..300`
+- SpO₂ percent: `0..100`
+- z-scores stored as `x10`: `-100..100`
+- `v_temp_c_x10`
+- `v_waz_x10`
+- `v_birth_day`
+- `v_visit_day`
+
+Weight recommendation:
+
+- store internally as grams or `kg x 100`
+- allow user entry to two decimal places when needed for infants
+- round only for display, not for the stored computational value
+
+DOB recommendation:
+
+- if DOB is available and should drive clinical logic, store DOB and visit/as-of date as integer day serial variables
+- derive age using helper expressions such as:
+  - `date_diff_days(v_visit_day, v_birth_day)`
+  - `age_months_from_date(v_visit_day, v_birth_day)`
+- current supported semantics are numeric day-serial based, not free-form calendar-date strings
 
 Allowed `type` values today:
 
@@ -228,6 +294,13 @@ Recommended expression grammar for any staging string form:
   - `selected(x, 'choice')`
 
 If you use string expressions upstream, they should be parsed into the AST before compile time.
+
+Current helper calls supported in the IR subset:
+
+- `is_missing(x)`
+- `date_diff_days(a, b)`
+- `age_months_from_date(a, b)`
+- `floor(x)`
 
 ## Phrase Bank Contract
 

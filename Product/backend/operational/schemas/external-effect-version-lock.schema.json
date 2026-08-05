@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/external-effect-version-lock/1.0.0",
+  "title": "Exact external-effect planning lock",
+  "type": "object",
+  "required": ["schema_version", "clinical_logic_content_sha256", "catalog", "topology_package", "resolved_capabilities", "requests_digest", "runtime_status"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "clinical_logic_content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "catalog": {"type": "object"},
+    "topology_package": {"type": "object"},
+    "resolved_capabilities": {"type": "array", "items": {"type": "string"}},
+    "requests_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "runtime_status": {"const": "planning_only"}
+  },
+  "additionalProperties": false
+}

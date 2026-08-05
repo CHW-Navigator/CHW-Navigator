@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "priority-and-missingness",
+  "title": "Synthetic Training Manual: Priority Before Routine",
+  "fixture_status": "complete",
+  "function_profile": {
+    "kind": "native_expression",
+    "library": "navigator-core@1.0",
+    "functions": ["boolean_or", "rule_priority", "required_input_guard"]
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Purpose and inputs", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "Record whether either synthetic danger indicator A or B is present and whether a routine condition is present.", "The two danger indicators are required before any routine result may be recorded."]},
+    {"page": 2, "title": "Priority rule", "sections": ["If either synthetic danger indicator is present, record SYNTHETIC_PRIORITY_EXIT.", "SYNTHETIC_PRIORITY_EXIT takes precedence over every routine condition.", "Only when both danger indicators are recorded absent may the CHW evaluate the routine condition."]},
+    {"page": 3, "title": "Missingness rule", "sections": ["If either required danger indicator is missing, record incomplete assessment and do not take the routine branch.", "A missing indicator is unknown, not false.", "Record which required input is missing for review."]}
+  ],
+  "source_oracle": {
+    "must_include": ["takes precedence", "missing indicator is unknown", "do not take the routine branch"],
+    "must_not_invent": ["default false", "home treatment", "automatic completion"],
+    "expected_integration_status": "eligible_for_artifact_and_behavior_test"
+  },
+  "setup": {"topology": "../common/topology-package.json", "required_context": ["patient.danger_a", "patient.danger_b", "patient.routine_condition"]},
+  "patient_cases": [
+    {"id": "priority-overlap", "inputs": {"patient_id": "patient-edge", "danger_a": true, "danger_b": false, "routine_condition": true}, "expected": {"status": "classified", "classification": "SYNTHETIC_PRIORITY_EXIT"}},
+    {"id": "routine-only", "inputs": {"patient_id": "patient-edge", "danger_a": false, "danger_b": false, "routine_condition": true}, "expected": {"status": "classified", "classification": "SYNTHETIC_ROUTINE"}},
+    {"id": "missing-danger", "inputs": {"patient_id": "patient-edge", "danger_a": false, "routine_condition": true}, "expected": {"status": "blocked", "reason": "missing_required_data"}},
+    {"id": "no-condition", "inputs": {"patient_id": "patient-edge", "danger_a": false, "danger_b": false, "routine_condition": false}, "expected": {"status": "classified", "classification": "SYNTHETIC_NO_ACTION"}}
+  ]
+}

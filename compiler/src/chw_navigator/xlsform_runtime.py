@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any
 
 from .form_ir import XLSFormWorkbook
@@ -138,6 +139,8 @@ class _Parser:
             return self._parse_if()
         if self.text.startswith("selected(", self.pos):
             return self._parse_selected()
+        if self.text.startswith("floor(", self.pos):
+            return self._parse_floor()
         if self.text.startswith("true()", self.pos):
             self.pos += len("true()")
             return True
@@ -184,6 +187,16 @@ class _Parser:
         if isinstance(target, (list, tuple, set)):
             return choice in target
         return False
+
+    def _parse_floor(self) -> Any:
+        self._expect("floor(")
+        value = self._parse_or()
+        self._expect(")")
+        if value is None:
+            return None
+        if not isinstance(value, (int, float)):
+            raise XLSFormRuntimeError(f"floor() requires a numeric argument, got {value!r}")
+        return math.floor(value)
 
     def _parse_string(self) -> str:
         self._expect("'")
@@ -300,6 +313,10 @@ def _coerce_bool(value: Any) -> bool | None:
 
 
 def _compare_values(left: Any, right: Any, operator: str) -> bool | None:
+    if left is None and right == "":
+        return operator == "="
+    if right is None and left == "":
+        return operator == "="
     if left is None or right is None:
         return None
     try:

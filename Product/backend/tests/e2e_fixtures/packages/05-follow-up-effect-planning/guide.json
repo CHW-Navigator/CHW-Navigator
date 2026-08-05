@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Caregiver Follow-Up Plan",
+    "fixture_id": "follow-up-effect-planning",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose and trigger",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose and trigger\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nAfter a SYNTHETIC_YELLOW result, create a follow-up plan for the current patient's primary caregiver.\n\nThe plan must retain the source quotation, trigger identifier, and requested time.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose and trigger"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "After a SYNTHETIC_YELLOW result, create a follow-up plan for the current patient's primary caregiver."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The plan must retain the source quotation, trigger identifier, and requested time."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Recipient and content",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Recipient and content\n\nResolve the recipient only through the patient.primary-caregiver topology relation.\n\nUse the approved synthetic follow-up template, policy, and adapter versions.\n\nDo not put a phone number, email address, provider endpoint, secret, or raw destination in the clinical or planning request.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Recipient and content"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Resolve the recipient only through the patient.primary-caregiver topology relation."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Use the approved synthetic follow-up template, policy, and adapter versions."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Do not put a phone number, email address, provider endpoint, secret, or raw destination in the clinical or planning request."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Planning boundary",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Planning boundary\n\nThe expected result is a version-locked request in requested state and planning_only runtime status.\n\nThe plan does not authorize, queue, send, accept a provider result, or claim delivery.\n\nIf no unique caregiver relation is available, record unassigned and do not create an effect request.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Planning boundary"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "The expected result is a version-locked request in requested state and planning_only runtime status."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "The plan does not authorize, queue, send, accept a provider result, or claim delivery."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "If no unique caregiver relation is available, record unassigned and do not create an effect request."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose and trigger\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nAfter a SYNTHETIC_YELLOW result, create a follow-up plan for the current patient's primary caregiver.\n\nThe plan must retain the source quotation, trigger identifier, and requested time."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Recipient and content\n\nResolve the recipient only through the patient.primary-caregiver topology relation.\n\nUse the approved synthetic follow-up template, policy, and adapter versions.\n\nDo not put a phone number, email address, provider endpoint, secret, or raw destination in the clinical or planning request."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Planning boundary\n\nThe expected result is a version-locked request in requested state and planning_only runtime status.\n\nThe plan does not authorize, queue, send, accept a provider result, or claim delivery.\n\nIf no unique caregiver relation is available, record unassigned and do not create an effect request."
+    }
+  }
+}

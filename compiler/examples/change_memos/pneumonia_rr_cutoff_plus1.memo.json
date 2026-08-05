@@ -1,0 +1,55 @@
+{
+  "changed_actions": [
+    "Home-treatment recommendation should no longer fire for an old child with respiratory rate exactly 40 unless another rule path applies."
+  ],
+  "changed_classifications": [
+    "Children 12 months and older now require respiratory rate >= 41 instead of >= 40 to enter the fast-breathing branch."
+  ],
+  "clinical_intent": "Demonstrate that a one-unit change in the old-child fast-breathing threshold is visible throughout the authored-source, compiled, review, and QA artifacts.",
+  "counseling_messages": [
+    "No counseling text changes are introduced."
+  ],
+  "data_capture_reporting": [
+    "No new reporting fields are introduced."
+  ],
+  "follow_up": [
+    "Continue standard follow-up for fast-breathing pneumonia when the updated threshold is met."
+  ],
+  "metadata": {
+    "applies_to": [
+      "pneumonia_module",
+      "children_12_months_and_older"
+    ],
+    "change_id": "pneumonia-rr-cutoff-plus-1-v1",
+    "change_type": "modify_module",
+    "effective_date": "2026-05-06",
+    "memo_version": 1,
+    "source_provenance": [
+      "Persistent example memo for compiler change-review validation",
+      "Predicate table cutoff adjustment exercise"
+    ],
+    "title": "Raise the old-child fast-breathing cutoff by one breath per minute"
+  },
+  "missingness_rules": [
+    "Respiratory rate remains required for fast-breathing determination."
+  ],
+  "new_or_changed_inputs": [
+    "No new inputs are introduced."
+  ],
+  "new_predicates_needed": [
+    "No new predicates are introduced; the existing p_fast_breathing predicate changes threshold for children 12 months and older."
+  ],
+  "priority_rules": [
+    "Danger-sign referral remains highest priority.",
+    "The cutpoint change affects only the fast-breathing threshold for older children."
+  ],
+  "safety_invariants": [
+    "Danger-sign referral must remain unchanged.",
+    "Infant fast-breathing threshold must remain unchanged."
+  ],
+  "stockout_device_rules": [
+    "No stockout or device rule changes are introduced."
+  ],
+  "sunset_review_condition": "Retire this proof artifact after the change-review workflow is accepted by the team.",
+  "unresolved_questions": []
+}

@@ -1,8 +1,11 @@
 # CHW Navigator — status board
 
-This file is the umbrella repo's quick status view. For deep implementation details, `Product/` docs are the source of truth.
+This file is the umbrella repo's quick status view. `Product/` is the authoring
+application source of truth; `compiler/` is the canonical Clinical IR and
+Python production-compiler source of truth. They are not yet connected by a
+deterministic adapter.
 
-**Last updated:** 2026-04-24
+**Last updated:** 2026-08-05
 
 ---
 
@@ -16,7 +19,7 @@ When this file and `Product/` disagree, trust `Product/`.
 
 ---
 
-## Shipped (current)
+## Implemented locally (not deployment approval)
 
 | Capability | Status | Owner path | Evidence |
 |---|---|---|---|
@@ -24,8 +27,9 @@ When this file and `Product/` disagree, trust `Product/`.
 | Gen7 extraction (`guide_json` -> `clinical_logic.json`) | Current | `Product/backend/gen7/`, `Product/backend/rlm_runner.py` | Reference runs in `Product/backend/output/` |
 | Deterministic converters (DMN/XLSForm/Mermaid/CSV) | Current | `Product/backend/converters/` | Generated artifacts in output folders |
 | Backend+frontend runtime app | Current | `Product/backend/`, `Product/frontend/` | `Product/ARCHITECTURE.md` |
-| Core automated tests | Current | `Product/backend/tests/` | `pytest` suite |
+| Core automated tests | Current | `Product/backend/tests/`, `compiler/tests/` | WS0 baseline verifier and manifest |
 | Cross-check harnesses | Current | `Testing/` | Gigi/Angelina/Aaron toolchains |
+| Canonical Clinical IR compiler and bounded CHT lowering | Current | `compiler/` | `compiler/tests/`; exact target-runtime evidence remains external |
 
 ---
 

@@ -1,0 +1,26 @@
+{
+  "id": "synthetic-effect-catalog",
+  "version": "1.0.0",
+  "templates": [
+    {
+      "id": "synthetic-follow-up", "version": "1.0.0", "status": "active", "approved": true,
+      "approved_by": "fixture-review", "approved_at": "2026-08-03T00:00:00Z",
+      "purpose": "synthetic_follow_up", "channels": ["sms"],
+      "variables": [{"name": "child_label", "type": "string", "sensitivity": "personal", "required": true}],
+      "translations": {"en": "Synthetic follow-up reminder for {{child_label}}."}
+    }
+  ],
+  "policies": [
+    {
+      "id": "synthetic-caregiver-policy", "version": "1.0.0", "status": "active", "approved": true,
+      "allowed_purposes": ["synthetic_follow_up"],
+      "allowed_channels_by_purpose": {"synthetic_follow_up": ["sms"]},
+      "channel_sensitivity_ceiling": {"sms": "personal"},
+      "consent_required_purposes": ["synthetic_follow_up"],
+      "emergency_consent_override_purposes": [], "max_attempts": 1
+    }
+  ],
+  "adapters": [
+    {"id": "synthetic-sms", "version": "1.0.0", "status": "active", "approved": true, "channels": ["sms"], "secret_references": ["secret://fixtures/synthetic-sms"]}
+  ]
+}

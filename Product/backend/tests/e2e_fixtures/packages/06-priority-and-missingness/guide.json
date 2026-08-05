@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Priority Before Routine",
+    "fixture_id": "priority-and-missingness",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose and inputs",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nRecord whether either synthetic danger indicator A or B is present and whether a routine condition is present.\n\nThe two danger indicators are required before any routine result may be recorded.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose and inputs"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "Record whether either synthetic danger indicator A or B is present and whether a routine condition is present."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The two danger indicators are required before any routine result may be recorded."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Priority rule",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Priority rule\n\nIf either synthetic danger indicator is present, record SYNTHETIC_PRIORITY_EXIT.\n\nSYNTHETIC_PRIORITY_EXIT takes precedence over every routine condition.\n\nOnly when both danger indicators are recorded absent may the CHW evaluate the routine condition.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Priority rule"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "If either synthetic danger indicator is present, record SYNTHETIC_PRIORITY_EXIT."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "SYNTHETIC_PRIORITY_EXIT takes precedence over every routine condition."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Only when both danger indicators are recorded absent may the CHW evaluate the routine condition."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Missingness rule",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Missingness rule\n\nIf either required danger indicator is missing, record incomplete assessment and do not take the routine branch.\n\nA missing indicator is unknown, not false.\n\nRecord which required input is missing for review.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Missingness rule"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "If either required danger indicator is missing, record incomplete assessment and do not take the routine branch."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "A missing indicator is unknown, not false."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Record which required input is missing for review."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nRecord whether either synthetic danger indicator A or B is present and whether a routine condition is present.\n\nThe two danger indicators are required before any routine result may be recorded."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Priority rule\n\nIf either synthetic danger indicator is present, record SYNTHETIC_PRIORITY_EXIT.\n\nSYNTHETIC_PRIORITY_EXIT takes precedence over every routine condition.\n\nOnly when both danger indicators are recorded absent may the CHW evaluate the routine condition."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Missingness rule\n\nIf either required danger indicator is missing, record incomplete assessment and do not take the routine branch.\n\nA missing indicator is unknown, not false.\n\nRecord which required input is missing for review."
+    }
+  }
+}

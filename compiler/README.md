@@ -16,6 +16,17 @@ The authored clinical source of truth is:
 
 Clinical IR is the canonical compiled representation used for execution, QA, and backend generation. Everything else in the toolchain compiles through that shared semantic layer after ingest from those authored sources.
 
+Temporary compatibility adapters for one-off external artifact shapes should stay outside the core compiler contracts. As of 2026-05-05, the `gen7` mini-compiler bridge is intentionally kept separate from the main compiler branch and should not be treated as a long-term supported authoring path.
+
+Supporting process docs:
+
+- `docs/authoring-guide.md`
+- `docs/user-types-manual.md`
+- `docs/dmn-intake-runbook.md`
+- `docs/release-workflow.md`
+- `docs/llm-authoring-guidance.md`
+- `docs/source-of-truth-editing-policy.md`
+
 ## Current scope
 
 - typed Clinical IR data model
@@ -27,10 +38,37 @@ Clinical IR is the canonical compiled representation used for execution, QA, and
 - Z3 QA checks with witness patients
 - minimal Form IR and XLSForm CSV backend
 - generated XLSForm runtime for comparison
+- independent headless XLSForm runner for parity checks
 - Mermaid audit graph generation
+- staged linting for source inputs, compiled IR, and generated backends
 - provenance validation and backend source maps
+- evidence bundles that now carry lint reports and artifact hashes
+- change-review package generation for baseline-vs-updated clinical deltas
 - example IR document
 - hardened DMN XML parsing via `defusedxml`
+- reviewed CHT 4.22/5.2 special-function lowering with an isolated official harness
+- platform-owned person registration and mutable administrative-conflict contracts
+
+## Validation layers
+
+The compiler now uses a clearer validation split:
+
+- Pydantic/schema validation:
+  - structural contract checks
+  - identifier-family checks
+  - local cross-field checks that do not require execution semantics
+- `validate_document(...)` semantic validation:
+  - expression typing
+  - decision semantics
+  - dependency ordering
+  - runtime-subset compatibility
+- `lint_document(...)` quality lint:
+  - coverage gaps
+  - dead or suspicious authored elements
+  - workflow-policy guidance
+  - non-blocking review findings
+
+In short: invalid payload shape should fail in Pydantic first, semantic impossibility should fail in `validate_document`, and review-quality concerns should show up in lint.
 
 ## Project layout
 
@@ -45,10 +83,16 @@ Clinical IR is the canonical compiled representation used for execution, QA, and
 - `src/chw_navigator/xlsform_expr.py`: parser for the supported XLSForm expression subset
 - `src/chw_navigator/xlsform_import.py`: supported XLSForm survey/choices import back into Clinical IR
 - `src/chw_navigator/xlsform_runtime.py`: evaluator for the generated XLSForm subset
+- `src/chw_navigator/headless_runner.py`: independent headless XLSForm evaluator used for cross-engine parity
 - `src/chw_navigator/compare.py`: cross-engine comparison harness
 - `src/chw_navigator/mermaid_backend.py`: Mermaid flowchart generation from canonical logic
 - `src/chw_navigator/bundles.py`: immutable intake bundle creation for inputs, outputs, and test evidence
+- `src/chw_navigator/change_control.py`: change-review package generation for clinician-facing delta review
 - `src/chw_navigator/cli.py`: command-line entry points
+- `src/chw_navigator/json_schema_export.py`: machine-checked JSON Schema export for supported JSON artifact families
+- `src/chw_navigator/person_identity.py`: four-outcome person-registration boundary and deterministic fixture provider
+- `src/chw_navigator/mutable_conflicts.py`: assertion-preserving mutable-field correction resolver
+- `src/chw_navigator/cht_tasks.py`: versioned CHT task bindings, form task-intent rows, and deterministic `tasks.js` generation
 - `tests/test_dmn_fail_loud.py`: fail-loud coverage for unsupported DMN inputs
 - `tests/test_artifact_drift.py`: mutated artifact drift detection across DMN, XLSForm, Mermaid, and IR
 - `tests/test_multi_module_router.py`: multi-table traffic-cop example with module priority and follow-on treatment/dosing tables
@@ -61,6 +105,14 @@ Clinical IR is the canonical compiled representation used for execution, QA, and
 - `examples/multi_module_router.dmn`: DMN counterpart for the multi-table module-routing example
 - `examples/multi_module_router.cases.json`: explicit comparison cases for the multi-table module-routing example
 - `examples/state_prefix.ir.json`: minimal example showing supported `st_` state-variable prefix usage
+- `examples/fever_basic.ir.json`: small second golden clinical example with a DMN counterpart and explicit cases
+- `examples/fever_basic.dmn`: DMN counterpart for the small fever example
+- `examples/fever_basic.cases.json`: explicit cases for the fever example
+- `examples/cht_task_demo.ir.json` and `examples/cht-task-bindings.json`: connected Clinical IR `create_task` to CHT form/task-rule example
+- `examples/catalogs/pneumonia_rr_cutoff_plus1.predicates.json`: persistent changed-source predicate example for review-package and diff testing
+- `examples/change_memos/pneumonia_rr_cutoff_plus1.memo.json`: change memo paired with the cutoff-shift review example
+- `examples/pneumonia_rr_cutoff_plus1.cases.json`: explicit changed-case suite for the cutoff-shift review example
+- `examples/external_suites/pneumonia_external_review_cases.json`: external-style patient suite that is compared across DMN, IR, XLSForm, headless, and Z3
 
 ## Run the validator
 
@@ -74,6 +126,24 @@ Or install the package in editable mode and use the console script:
 pip install -e .
 chw-nav validate examples/pneumonia.ir.json
 ```
+
+## Write machine-checked JSON Schemas
+
+```bash
+$env:PYTHONPATH='src'; python -m chw_navigator.cli write-json-schemas generated\schemas
+```
+
+This currently writes JSON Schemas for:
+
+- `clinical_ir`
+- `metadata`
+- `variable_catalog_json`
+- `predicate_catalog_json`
+- `phrase_bank_json`
+- `patient_case`
+- `patient_case_suite`
+
+These cover the JSON-shaped artifact families that already have Pydantic-backed validation.
 
 ## Compose a base IR from standalone catalogs
 
@@ -161,6 +231,43 @@ and then the imported IR can go directly into:
 - `build-xlsform`
 - `compare`
 
+The regression suite now treats imported XLSForms as proof targets, not just parser targets:
+
+- generated `survey.csv` + `choices.csv` are imported back into IR
+- the imported IR is validated
+- the imported IR is compared across interpreter, generated XLSForm runtime, headless runner, and Z3 on explicit patient cases
+
+## Build an XLSForm round-trip proof package
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli prove-xlsform generated\pneumonia\survey.csv generated\pneumonia\choices.csv generated\xlsform_proof --reference-ir examples\pneumonia.ir.json --patients examples\pneumonia.cases.json
+```
+
+This command is the stronger quality-proof path for the supported XLSForm subset:
+
+- it imports the XLSForm back into Clinical IR
+- it writes the imported IR and import report
+- it compares the imported IR against the original workbook on a patient suite
+- it optionally compares the imported IR against a supplied reference IR
+- it runs backend comparison and Z3 checks on the imported IR
+- it writes a short proof summary plus machine-readable evidence files
+
+## Run post-compile quality checks
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli quality-check examples\pneumonia.ir.json generated\quality_check --patients examples\pneumonia.cases.json
+```
+
+This command writes a local quality package for a compiled IR:
+
+- it compiles XLSForm, Mermaid, and SMT-LIB artifacts
+- it runs IR lint plus backend-specific lint
+- it runs the XLSForm round-trip proof against the generated workbook
+- it runs backend comparison and Z3 checks
+- it marks release blockers such as decision-relevant variables with no documented collection path
+
+If you also want an external upload-based confirmation, the quality package points to [XLSForm Online](https://getodk.org/xlsform/), which ODK documents as a temporary preview path for XLSForms.
+
 ## Check Z3 lowering
 
 ```bash
@@ -213,6 +320,20 @@ $env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-mermaid
 
 This also writes a companion Mermaid source map at `pneumonia.mmd.source-map.json`.
 
+The Mermaid backend now defaults to a more clinician-friendly style:
+
+- left-to-right layout
+- larger labels
+- color-coded variables, predicates, decisions, outputs, and rules
+- humanized labels instead of raw `v_` / `p_` / `o_` identifiers where possible
+- automatic line breaks for longer rule labels
+
+You can override the main layout knobs from the CLI:
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-mermaid examples/pneumonia.ir.json --output generated\pneumonia\pneumonia.mmd --direction TD --font-size 30
+```
+
 ## Create an immutable intake bundle
 
 ```bash
@@ -226,6 +347,45 @@ Each bundle gets a fresh timestamped folder and is never overwritten. The bundle
 - baseline comparison reports under `tests/good/`
 - a mutation workspace plus manifest under `mutations/`
 - `metadata.json` and `README.md` with compiler version, source paths, and provenance
+
+## Build the persistent cutoff-shift review example
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compose-ir examples/catalogs/pneumonia.metadata.json examples/catalogs/pneumonia.variables.csv examples/catalogs/pneumonia_rr_cutoff_plus1.predicates.json examples/catalogs/pneumonia.phrases.csv --output generated\catalog_demo\pneumonia_rr_cutoff_plus1.base.ir.json
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli import-dmn generated\catalog_demo\pneumonia_rr_cutoff_plus1.base.ir.json examples/pneumonia.dmn --output generated\catalog_demo\pneumonia_rr_cutoff_plus1.ir.json
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-change-review examples/change_memos/pneumonia_rr_cutoff_plus1.memo.json examples/pneumonia.ir.json generated\catalog_demo\pneumonia_rr_cutoff_plus1.ir.json generated\reviews --patients examples/pneumonia_rr_cutoff_plus1.cases.json --baseline-dmn examples/pneumonia.dmn --updated-dmn examples/pneumonia.dmn
+```
+
+This example is intentionally small:
+
+- only one authored predicate threshold changes
+- the review package shows which patient case changes
+- the generated diff is meant to be understandable to clinicians and technical reviewers
+
+## Build a bounded clinical-equivalence report
+
+```bash
+$env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli build-equivalence-report examples/fever_basic.ir.json examples/fever_basic.ir.json examples/fever_basic.cases.json generated\equivalence
+```
+
+This report is intentionally scoped:
+
+- it compares two IR documents on an explicit supplied patient suite
+- it reports both any-semantic mismatch counts and output-changing case counts
+- it does not claim whole-proof-space equivalence
+- it is useful for reviewer-facing “same behavior on these cases?” checks while fuller proof-space equivalence remains future work
+
+## Team Docs
+
+- [Start here](./docs/start-here.md)
+- [Authoring guide](./docs/authoring-guide.md)
+- [Contribute DMN for testing](./docs/contribute-dmn.md)
+- [User types manual](./docs/user-types-manual.md)
+- [DMN intake runbook](./docs/dmn-intake-runbook.md)
+- [Source-of-truth editing policy](./docs/source-of-truth-editing-policy.md)
+- [Release workflow](./docs/release-workflow.md)
+- [LLM authoring guidance](./docs/llm-authoring-guidance.md)
+- [Use cases](./docs/use-cases.md)
 
 ## Compare engines on explicit cases
 
@@ -261,6 +421,15 @@ $env:PYTHONPATH='src'; .\.venv\Scripts\python -m chw_navigator.cli compare examp
 
 The validator and canonical IR are the semantic core of the project. DMN ingest, XLSForm generation, Mermaid output, and Z3 lowering will all be safer and simpler if they target the same explicit typed representation from the beginning.
 
+## New contributors
+
+If you are landing in this repo for the first time:
+
+1. start with [Start here](./docs/start-here.md)
+2. if you want to submit or revise a table, read [Contribute DMN for testing](./docs/contribute-dmn.md)
+3. if you need the exact file contracts, use `contracts/`
+4. if you want working examples, use `examples/`
+
 ## Supported subset today
 
 - Clinical IR expressions in the documented core subset
@@ -281,9 +450,72 @@ The validator and canonical IR are the semantic core of the project. DMN ingest,
 
 ## Current limitations
 
-- The current implementation is a stateless point-in-time engine. It does not yet model prior visits, longitudinal trends, or historical variables.
+- The decision engine remains point-in-time. Registered scalar values already present in supported CHT form contexts can be loaded into history variables, but report searches, longitudinal trends, and aggregated histories are not yet supported.
 - Scalar carry-forward state can be represented today with `st_` variables such as `st_fever_done`, but list-valued or longitudinal state is not yet first-class.
-- `FIRST` is enforced per decision, not globally. Multiple decisions may coexist, but the toolkit does not yet model a first-class action or task schedule layer for aggregated care plans.
+- `FIRST` is enforced per decision, not globally. Multiple decisions may coexist. Clinical IR has a bounded `create_task` action that the CHT backend lowers to stored task-intent report fields plus report-based `tasks.js`; this is not an aggregated care-plan model.
+
+## Build a connected CHT task bundle
+
+`build-cht` compiles a Clinical IR form and its `create_task` actions together. The
+generated XLSForm source stores `required`, `task_type`, timing, follow-up form, and
+operation-ID fields. The generated `tasks.js` reads those exact fields. This prevents
+the previous failure mode where a task rule existed separately from the form data it
+needed.
+
+```powershell
+chw-nav build-cht `
+  examples/cht_task_demo.ir.json `
+  examples/cht-task-bindings.json `
+  generated/cht-task-demo
+```
+
+The task-binding file is deployment configuration, not clinical policy. It must name
+the exact CHT version, follow-up form, translation and permission keys, timing window,
+role, icon, and priority. Missing task types, unsupported absolute due-date
+expressions, role mismatches, and generated identity collisions fail closed.
+
+The output contains executable `tasks.js`, matching XLSForm survey/choices source,
+task and local-data plans, hashes, and a bundle manifest. The `tasks.js` module is
+accepted by the reviewed TypeScript AST composer, which inserts or replaces its
+managed block without overwriting unrelated destination rules. XLSForm conversion,
+target-project compilation, the official CHT harness, and exact target-runtime tests
+remain deployment gates.
+
+## Read registered on-device CHT data
+
+The optional `cht-local-data-bindings@1.0.0` registry turns an IR
+`read_local_data` action (or its legacy `read_history` spelling) into an exact CHT
+form read. The IR names a versioned binding; it never contains an arbitrary CouchDB
+query or deployment XPath.
+
+```powershell
+chw-nav build-cht `
+  examples/cht_local_data_demo.ir.json `
+  examples/cht-task-bindings.json `
+  generated/cht-local-data-demo `
+  --local-data-bindings examples/cht-local-data-bindings.json `
+  --form-context contact
+```
+
+Registry version 1 supports three reviewed adapters:
+
+- `cht_contact_field`: a declared field under `inputs/contact`, available from a contact or task launch;
+- `cht_contact_summary`: a declared `instance('contact-summary')/context/...` value, available from a contact profile;
+- `cht_task_input`: a declared field under `inputs`, available from a task launch.
+
+Every binding declares its value type, meaning, subject, supported launch contexts,
+and either `immutable` freshness or an observation-date path plus `max_age_days`.
+The compiler rejects unknown binding IDs, XPath-like injected paths, context
+mismatches, type/unit mismatches, and conflicting freshness declarations. Runtime
+failure is explicit: `soft_missing`, `ask_if_missing`, or `hard_error`.
+
+The bundle contains CSV XLSForm source and a directly executable CHT XForm for
+registered reads. The official harness regression covers contact injection and the
+missing-value fallback when its browser and `xsltproc` prerequisites are present.
+Arbitrary local report/PouchDB search remains deliberately unsupported. See
+[`docs/local-data-authoring-handoff.md`](docs/local-data-authoring-handoff.md) for
+the exact upstream LLM handoff and the Product-to-Clinical-IR boundary that remains.
+
 - Form structure is intentionally minimal today. Groups, repeats, and multivalue variables are not yet supported by the current validator/runtime path.
 - The XLSForm importer is intentionally narrow. It does not yet support general question `relevant`, general `constraint`, repeats, groups, or arbitrary legacy production forms.
 - External lookup tables and nonlinear or lookup-backed math are not supported in the current Z3 boundary. Unsupported constructs should be rejected rather than approximated.

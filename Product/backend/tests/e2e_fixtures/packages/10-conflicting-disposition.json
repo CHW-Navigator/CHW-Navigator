@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "conflicting-disposition",
+  "title": "Synthetic Training Manual: Conflicting Action Rule",
+  "fixture_status": "source_blocked",
+  "function_profile": {
+    "kind": "native_expression",
+    "library": "navigator-core@1.0",
+    "functions": ["boolean_compare", "rule_priority"],
+    "missing_definition": "conflict_resolution_priority"
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Purpose", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "A CHW records whether synthetic marker X is present.", "The marker is the only clinical input in this manual."]},
+    {"page": 2, "title": "Conflicting instructions", "sections": ["If synthetic marker X is present, record SYNTHETIC_HOME and finish the visit.", "If synthetic marker X is present, record SYNTHETIC_IMMEDIATE_REFERRAL and finish the visit.", "The manual gives no priority, exception, or tie-breaking instruction."]},
+    {"page": 3, "title": "Review expectation", "sections": ["This contradictory source is a negative fixture.", "Do not choose one action by array order or by external knowledge.", "Record manual_review_required with conflict_resolution_priority missing."]}
+  ],
+  "source_oracle": {
+    "must_include": ["SYNTHETIC_HOME", "SYNTHETIC_IMMEDIATE_REFERRAL", "no priority"],
+    "must_not_invent": ["first rule wins", "priority exit", "default disposition"],
+    "expected_integration_status": "manual_review_required",
+    "required_finding": "conflicting_dispositions"
+  },
+  "setup": {"topology": "../common/topology-package.json", "required_context": ["patient.synthetic_marker_x"]},
+  "patient_cases": [
+    {"id": "conflicting-true", "inputs": {"patient_id": "patient-edge", "synthetic_marker_x": true}, "expected": {"status": "blocked", "reason": "conflicting_dispositions", "forbidden_outputs": ["SYNTHETIC_HOME", "SYNTHETIC_IMMEDIATE_REFERRAL"]}},
+    {"id": "false-no-conflict", "inputs": {"patient_id": "patient-edge", "synthetic_marker_x": false}, "expected": {"status": "not_requested"}}
+  ]
+}

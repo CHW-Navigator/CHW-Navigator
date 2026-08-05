@@ -158,7 +158,7 @@ def import_xlsform_workbook(
             if not row.calculation:
                 raise XLSFormImportError(f"calculate row '{row.name}' is missing a calculation")
             try:
-                calc_asts[row.name] = parse_xlsform_expression(row.calculation)
+                calc_asts[row.name] = _recover_compiled_helper_calls(parse_xlsform_expression(row.calculation))
             except XLSFormExpressionError as exc:
                 raise XLSFormImportError(f"calculate row '{row.name}' has unsupported expression: {exc}") from exc
             calc_rows[row.name] = row
@@ -794,6 +794,111 @@ def _infer_output_type_from_output_row(
     return inferred or known_outputs.get(str(expr.get("id", "")), ScalarType.BOOL)
 
 
+def _recover_compiled_helper_calls(expr: dict[str, Any]) -> dict[str, Any]:
+    kind = expr.get("kind")
+    if kind in {"literal", "ref", "else"}:
+        return expr
+    if kind in {"and", "or"}:
+        normalized = {"kind": kind, "args": [_recover_compiled_helper_calls(item) for item in expr["args"]]}
+        return normalized
+    if kind == "not":
+        arg = _recover_compiled_helper_calls(expr["arg"])
+        missing_target = _missing_target_from_compare(arg)
+        if missing_target is not None:
+            return {"kind": "not", "arg": {"kind": "call", "fn": "is_missing", "args": [missing_target]}}
+        return {"kind": "not", "arg": arg}
+    if kind == "if":
+        cond = _recover_compiled_helper_calls(expr["cond"])
+        then_expr = _recover_compiled_helper_calls(expr["then"])
+        else_expr = _recover_compiled_helper_calls(expr["else"])
+        recovered = _recover_date_helper_call(cond, then_expr, else_expr)
+        if recovered is not None:
+            return recovered
+        return {"kind": "if", "cond": cond, "then": then_expr, "else": else_expr}
+    if kind == "call":
+        return {
+            "kind": "call",
+            "fn": expr["fn"],
+            "args": [_recover_compiled_helper_calls(item) for item in expr["args"]],
+        }
+    if kind == "selected":
+        return {
+            "kind": "selected",
+            "target": _recover_compiled_helper_calls(expr["target"]),
+            "choice": expr["choice"],
+        }
+    if kind in {"=", "!=", "<", "<=", ">", ">=", "+", "-", "*", "/"}:
+        left = _recover_compiled_helper_calls(expr["left"])
+        right = _recover_compiled_helper_calls(expr["right"])
+        if kind == "=":
+            missing_target = _missing_target_from_compare({"kind": kind, "left": left, "right": right})
+            if missing_target is not None:
+                return {"kind": "call", "fn": "is_missing", "args": [missing_target]}
+        return {"kind": kind, "left": left, "right": right}
+    return expr
+
+
+def _recover_date_helper_call(
+    cond: dict[str, Any],
+    then_expr: dict[str, Any],
+    else_expr: dict[str, Any],
+) -> dict[str, Any] | None:
+    if not _is_empty_string_literal(then_expr):
+        return None
+    missing_pair = _missing_guard_pair(cond)
+    if missing_pair is None:
+        return None
+    left_target, right_target = missing_pair
+    if else_expr.get("kind") == "-" and else_expr.get("left") == left_target and else_expr.get("right") == right_target:
+        return {"kind": "call", "fn": "date_diff_days", "args": [left_target, right_target]}
+    if else_expr.get("kind") == "call" and else_expr.get("fn") == "floor" and len(else_expr.get("args", [])) == 1:
+        floor_arg = else_expr["args"][0]
+        if (
+            floor_arg.get("kind") == "/"
+            and floor_arg.get("left", {}).get("kind") == "-"
+            and floor_arg["left"].get("left") == left_target
+            and floor_arg["left"].get("right") == right_target
+            and floor_arg.get("right", {}).get("kind") == "literal"
+            and floor_arg["right"].get("value") == 30
+        ):
+            return {"kind": "call", "fn": "age_months_from_date", "args": [left_target, right_target]}
+    return None
+
+
+def _missing_guard_pair(expr: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    if expr.get("kind") != "or":
+        return None
+    args = expr.get("args", [])
+    if len(args) != 2:
+        return None
+    left_target = _missing_target_from_compare(args[0])
+    right_target = _missing_target_from_compare(args[1])
+    if left_target is None or right_target is None:
+        return None
+    return left_target, right_target
+
+
+def _missing_target_from_compare(expr: dict[str, Any]) -> dict[str, Any] | None:
+    if expr.get("kind") == "call" and expr.get("fn") == "is_missing" and len(expr.get("args", [])) == 1:
+        arg = expr["args"][0]
+        if isinstance(arg, dict):
+            return arg
+        return None
+    if expr.get("kind") != "=":
+        return None
+    left = expr.get("left")
+    right = expr.get("right")
+    if _is_empty_string_literal(left) and isinstance(right, dict):
+        return right
+    if _is_empty_string_literal(right) and isinstance(left, dict):
+        return left
+    return None
+
+
+def _is_empty_string_literal(expr: dict[str, Any]) -> bool:
+    return expr.get("kind") == "literal" and expr.get("value") == ""
+
+
 def _infer_value_type(expr: dict[str, Any], calc_asts: dict[str, dict[str, Any]]) -> ScalarType | None:
     kind = expr.get("kind")
     if kind == "literal":
@@ -816,6 +921,12 @@ def _infer_value_type(expr: dict[str, Any], calc_asts: dict[str, dict[str, Any]]
         return ScalarType.DECIMAL
     if kind == "if":
         return _infer_value_type(expr["then"], calc_asts) or _infer_value_type(expr["else"], calc_asts)
+    if kind == "call":
+        fn = expr.get("fn")
+        if fn in {"date_diff_days", "age_months_from_date", "floor"}:
+            return ScalarType.INT
+        if fn == "is_missing":
+            return ScalarType.BOOL
     return None
 
 
@@ -903,6 +1014,23 @@ def _resolve_refs(
             "then": _resolve_refs(expr["then"], variable_ids, predicate_ids, output_ids, symbol_types=symbol_types, state_alias_map=state_alias_map, allow_temporaries=allow_temporaries),
             "else": _resolve_refs(expr["else"], variable_ids, predicate_ids, output_ids, symbol_types=symbol_types, state_alias_map=state_alias_map, allow_temporaries=allow_temporaries),
         }
+    if kind == "call":
+        return {
+            "kind": "call",
+            "fn": expr["fn"],
+            "args": [
+                _resolve_refs(
+                    item,
+                    variable_ids,
+                    predicate_ids,
+                    output_ids,
+                    symbol_types=symbol_types,
+                    state_alias_map=state_alias_map,
+                    allow_temporaries=allow_temporaries,
+                )
+                for item in expr["args"]
+            ],
+        }
     if kind in {"=", "!=", "<", "<=", ">", ">=", "+", "-", "*", "/"}:
         left = _resolve_refs(expr["left"], variable_ids, predicate_ids, output_ids, symbol_types=symbol_types, state_alias_map=state_alias_map, allow_temporaries=allow_temporaries)
         right = _resolve_refs(expr["right"], variable_ids, predicate_ids, output_ids, symbol_types=symbol_types, state_alias_map=state_alias_map, allow_temporaries=allow_temporaries)
@@ -928,6 +1056,11 @@ def _collect_var_refs(expr: dict[str, Any]) -> set[str]:
     kind = expr.get("kind")
     if kind == "ref" and str(expr.get("id", "")).startswith(("v_", "st_")):
         refs.add(str(expr["id"]))
+    if kind == "call":
+        for child in expr.get("args", []):
+            if isinstance(child, dict):
+                refs |= _collect_var_refs(child)
+        return refs
     for key in ("arg", "left", "right", "cond", "then", "else", "target"):
         child = expr.get(key)
         if isinstance(child, dict):

@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "follow-up-effect-planning",
+  "title": "Synthetic Training Manual: Caregiver Follow-Up Plan",
+  "fixture_status": "complete",
+  "function_profile": {
+    "kind": "prompt10_planning",
+    "library": "gen8.operational.external-effects@1.0",
+    "functions": ["patient.primary-caregiver", "external_effect_request", "version_lock"]
+  },
+  "clarifying_memos": ["NOG-OPS-002-local-effect-boundary"],
+  "manual_pages": [
+    {"page": 1, "title": "Purpose and trigger", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "After a SYNTHETIC_YELLOW result, create a follow-up plan for the current patient's primary caregiver.", "The plan must retain the source quotation, trigger identifier, and requested time."]},
+    {"page": 2, "title": "Recipient and content", "sections": ["Resolve the recipient only through the patient.primary-caregiver topology relation.", "Use the approved synthetic follow-up template, policy, and adapter versions.", "Do not put a phone number, email address, provider endpoint, secret, or raw destination in the clinical or planning request."]},
+    {"page": 3, "title": "Planning boundary", "sections": ["The expected result is a version-locked request in requested state and planning_only runtime status.", "The plan does not authorize, queue, send, accept a provider result, or claim delivery.", "If no unique caregiver relation is available, record unassigned and do not create an effect request."]}
+  ],
+  "source_oracle": {
+    "must_include": ["patient.primary-caregiver", "approved synthetic follow-up template", "planning_only", "do not create an effect request"],
+    "must_not_invent": ["phone number", "sent", "delivered", "provider receipt"],
+    "expected_integration_status": "eligible_for_artifact_and_behavior_test"
+  },
+  "setup": {"topology": "../common/topology-package.json", "registry": "../common/registry-snapshot.json", "external_effect_catalog": "../common/external-effect-catalog.json", "required_context": ["patient_id", "classification", "requested_at"]},
+  "patient_cases": [
+    {"id": "yellow-creates-plan", "inputs": {"patient_id": "patient-edge", "classification": "SYNTHETIC_YELLOW", "requested_at": "2026-08-03T09:00:00Z"}, "expected": {"status": "planned", "recipient_relation": "patient.primary-caregiver", "request_state": "requested", "runtime_status": "planning_only"}},
+    {"id": "green-no-plan", "inputs": {"patient_id": "patient-edge", "classification": "SYNTHETIC_GREEN", "requested_at": "2026-08-03T09:00:00Z"}, "expected": {"status": "not_requested"}},
+    {"id": "missing-trigger-time", "inputs": {"patient_id": "patient-edge", "classification": "SYNTHETIC_YELLOW"}, "expected": {"status": "blocked", "reason": "missing_required_data"}}
+  ]
+}

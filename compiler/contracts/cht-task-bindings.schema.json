@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.example/contracts/cht-task-bindings.schema.json",
+  "title": "CHW Navigator CHT task bindings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "target_cht_version", "task_types"],
+  "properties": {
+    "schema_version": { "const": "cht-task-bindings@1.0.0" },
+    "target_cht_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "task_types": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]{0,127}$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_message_key", "title_key", "followup_form", "permission_key", "icon", "start_days", "end_days"],
+        "properties": {
+          "source_message_key": { "type": "string", "pattern": "^m_[a-z0-9][a-z0-9_]{0,125}$" },
+          "title_key": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$" },
+          "followup_form": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,127}$" },
+          "permission_key": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,127}$" },
+          "icon": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$" },
+          "start_days": { "type": "integer", "minimum": 0 },
+          "end_days": { "type": "integer", "minimum": 0 },
+          "source_priority": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$" },
+          "assignee_role": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$" },
+          "priority": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["level", "label"],
+            "properties": {
+              "level": { "type": "integer", "minimum": 1 },
+              "label": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

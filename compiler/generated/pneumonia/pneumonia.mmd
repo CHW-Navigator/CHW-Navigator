@@ -1,0 +1,25 @@
+flowchart TD
+  v_age_months["v_age_months"]
+  v_resp_rate["v_resp_rate"]
+  v_danger_sign["v_danger_sign"]
+  p_danger_sign{"p_danger_sign"}
+  p_fast_breathing{"p_fast_breathing"}
+  d_triage{{"d_triage"}}
+  o_referral["o_referral"]
+  o_home_treatment["o_home_treatment"]
+  o_no_action["o_no_action"]
+  v_danger_sign --> p_danger_sign
+  v_age_months --> p_fast_breathing
+  v_resp_rate --> p_fast_breathing
+  d_triage__r1["r1: p_danger_sign"]
+  d_triage -->|priority 1| d_triage__r1
+  p_danger_sign -.-> d_triage__r1
+  d_triage__r1 -->|o_referral=true| o_referral
+  d_triage__r2["r2: p_fast_breathing and not(p_danger_sign)"]
+  d_triage__r1 -->|else next| d_triage__r2
+  p_danger_sign -.-> d_triage__r2
+  p_fast_breathing -.-> d_triage__r2
+  d_triage__r2 -->|o_home_treatment=true| o_home_treatment
+  d_triage__r3["r3: else"]
+  d_triage__r2 -->|else next| d_triage__r3
+  d_triage__r3 -->|o_no_action=true| o_no_action

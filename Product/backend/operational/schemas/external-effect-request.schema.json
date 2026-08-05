@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/external-effect-request/1.0.0",
+  "title": "Planning-only controlled external-effect request",
+  "type": "object",
+  "required": ["schema_version", "source", "capability", "subject", "recipient_relation", "purpose", "channel", "urgency", "template", "adapter", "requested_at", "policy", "topology_snapshot_id"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "id": {"type": "string", "pattern": "^effect-[a-f0-9]{32}$"},
+    "state": {"const": "requested"},
+    "source": {"type": "object"},
+    "capability": {"type": "string", "minLength": 1},
+    "subject": {"type": "string", "minLength": 1},
+    "recipient_relation": {"enum": ["patient.primary-caregiver", "patient.assigned-chw", "patient.supervising-entity", "referral.eligible-facilities"]},
+    "purpose": {"type": "string", "minLength": 1},
+    "channel": {"enum": ["sms", "whatsapp", "email", "push", "voice", "rapidpro-flow", "internal"]},
+    "urgency": {"enum": ["routine", "urgent", "emergency"]},
+    "template": {"type": "object"},
+    "adapter": {"type": "object"},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "not_before": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "policy": {"type": "object"},
+    "topology_snapshot_id": {"type": "string", "minLength": 1},
+    "acknowledgment": {"type": "object"}
+  },
+  "additionalProperties": false
+}

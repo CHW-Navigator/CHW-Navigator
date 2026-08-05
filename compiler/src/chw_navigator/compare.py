@@ -10,6 +10,7 @@ from .clinical_ir import ClinicalIRDocument, ScalarType
 from .dmn import import_dmn_decisions
 from .evaluator import evaluate_document
 from .form_ir import XLSFormWorkbook
+from .headless_runner import evaluate_workbook_headless
 from .mermaid_backend import build_mermaid_artifact
 from .xlsform_backend import build_xlsform
 from .xlsform_runtime import evaluate_workbook
@@ -66,6 +67,9 @@ class CaseResult:
     xlsform_predicates: dict[str, Any] = field(default_factory=dict)
     xlsform_outputs: dict[str, Any] = field(default_factory=dict)
     xlsform_rule_hits: dict[str, Any] = field(default_factory=dict)
+    headless_predicates: dict[str, Any] = field(default_factory=dict)
+    headless_outputs: dict[str, Any] = field(default_factory=dict)
+    headless_rule_hits: dict[str, Any] = field(default_factory=dict)
     z3_predicates: dict[str, Any] | None = None
     z3_outputs: dict[str, Any] | None = None
     z3_rule_hits: dict[str, Any] | None = None
@@ -98,7 +102,7 @@ def compare_backends(
     built = build_xlsform(document)
     mermaid = build_mermaid_artifact(document)
     dmn_document = import_dmn_decisions(document, dmn_path) if dmn_path else None
-    cases = patient_cases or _derive_comparison_cases(document)
+    cases = patient_cases or derive_comparison_cases(document)
 
     if not cases:
         raise ComparisonError("no comparison cases are available")
@@ -111,6 +115,10 @@ def compare_backends(
         dmn_eval = evaluate_document(dmn_document, case.values, case.missing) if dmn_document else None
         z3_eval = evaluate_patient(document, case.values, case.missing)
         xlsform_eval = evaluate_workbook(
+            built.workbook,
+            _coerce_patient_values(document, case.values, case.missing),
+        )
+        headless_eval = evaluate_workbook_headless(
             built.workbook,
             _coerce_patient_values(document, case.values, case.missing),
         )
@@ -129,6 +137,18 @@ def compare_backends(
             rule_id: xlsform_eval.values.get(row_name)
             for rule_id, row_name in built.rule_row_names.items()
         }
+        headless_predicates = {
+            predicate_id: headless_eval.values.get(predicate_id)
+            for predicate_id in document.predicates
+        }
+        headless_outputs = {
+            output_id: headless_eval.values.get(output_id)
+            for output_id in document.outputs
+        }
+        headless_rule_hits = {
+            rule_id: headless_eval.values.get(row_name)
+            for rule_id, row_name in built.rule_row_names.items()
+        }
         mermaid_trace_nodes, mermaid_missing_nodes = _mermaid_trace(interpreter_rule_hits, interpreter.outputs, document, mermaid)
         mismatch_entries: list[MismatchEntry] = []
 
@@ -140,6 +160,9 @@ def compare_backends(
         mismatch_entries.extend(_compare_dicts("predicate", "interpreter", "xlsform", interpreter.predicates, xlsform_predicates))
         mismatch_entries.extend(_compare_dicts("output", "interpreter", "xlsform", interpreter.outputs, xlsform_outputs))
         mismatch_entries.extend(_compare_dicts("rule_hit", "interpreter", "xlsform", interpreter_rule_hits, xlsform_rule_hits))
+        mismatch_entries.extend(_compare_dicts("predicate", "interpreter", "headless", interpreter.predicates, headless_predicates))
+        mismatch_entries.extend(_compare_dicts("output", "interpreter", "headless", interpreter.outputs, headless_outputs))
+        mismatch_entries.extend(_compare_dicts("rule_hit", "interpreter", "headless", interpreter_rule_hits, headless_rule_hits))
         mismatch_entries.extend(_compare_dicts("predicate", "interpreter", "z3", interpreter.predicates, z3_eval.predicates))
         mismatch_entries.extend(_compare_dicts("output", "interpreter", "z3", interpreter.outputs, z3_eval.outputs))
         mismatch_entries.extend(_compare_dicts("rule_hit", "interpreter", "z3", interpreter_rule_hits, z3_eval.rule_hits))
@@ -176,6 +199,9 @@ def compare_backends(
                 xlsform_predicates=xlsform_predicates,
                 xlsform_outputs=xlsform_outputs,
                 xlsform_rule_hits=xlsform_rule_hits,
+                headless_predicates=headless_predicates,
+                headless_outputs=headless_outputs,
+                headless_rule_hits=headless_rule_hits,
                 z3_predicates=z3_eval.predicates,
                 z3_outputs=z3_eval.outputs,
                 z3_rule_hits=z3_eval.rule_hits,
@@ -332,7 +358,7 @@ def compare_workbook_pair(
     return results
 
 
-def _derive_comparison_cases(document: ClinicalIRDocument) -> list[ComparisonCase]:
+def derive_comparison_cases(document: ClinicalIRDocument) -> list[ComparisonCase]:
     generated_cases = generate_test_patients(document)
     return [_comparison_case_from_generated(item) for item in generated_cases]
 
@@ -527,6 +553,7 @@ def _render_mismatch_message(entry: MismatchEntry) -> str:
     engine_label = {
         "dmn": "DMN",
         "xlsform": "XLSForm",
+        "headless": "Headless",
         "z3": "Z3",
         "mermaid": "Mermaid",
     }.get(entry.actual_engine, entry.actual_engine)
@@ -553,6 +580,9 @@ def _render_case_result(result: CaseResult) -> dict[str, Any]:
         "xlsform_predicates": result.xlsform_predicates,
         "xlsform_outputs": result.xlsform_outputs,
         "xlsform_rule_hits": result.xlsform_rule_hits,
+        "headless_predicates": result.headless_predicates,
+        "headless_outputs": result.headless_outputs,
+        "headless_rule_hits": result.headless_rule_hits,
         "z3_predicates": result.z3_predicates,
         "z3_outputs": result.z3_outputs,
         "z3_rule_hits": result.z3_rule_hits,

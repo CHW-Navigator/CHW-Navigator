@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "missing-chw-identity",
+  "title": "Synthetic Training Manual: Assigned CHW Record",
+  "fixture_status": "setup_blocked",
+  "function_profile": {
+    "kind": "topology_lookup",
+    "library": "gen8.operational.topology@1.0",
+    "functions": ["patient.assigned-chw"]
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Purpose", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "The assigned CHW opens the synthetic assessment and records their display name and patient relation.", "The CHW identity comes from the active deployment topology."]},
+    {"page": 2, "title": "Local setup", "sections": ["A CHW node must have a non-empty display name, active placement, and active service-area assignment.", "The clinical manual does not supply a missing CHW identity.", "Do not replace a missing CHW name with a patient name, facility name, or default text."]},
+    {"page": 3, "title": "Block condition", "sections": ["If the assigned CHW identity is incomplete, stop before the patient workflow begins.", "Record setup_validation_blocked with the topology validation finding.", "No clinical result, task, referral, or effect request may be created from this setup."]}
+  ],
+  "source_oracle": {
+    "must_include": ["non-empty display name", "does not supply a missing CHW identity", "stop before the patient workflow"],
+    "must_not_invent": ["default CHW", "patient name", "send message"],
+    "expected_integration_status": "setup_validation_blocked"
+  },
+  "setup": {"topology": "../common/topology-package.json", "topology_patch": [{"op": "remove_node_field", "external_id": "chw-alpha", "field": "name"}], "required_roles": ["chw"], "required_context": ["patient_id"]},
+  "patient_cases": [
+    {"id": "missing-chw-name", "inputs": {"patient_id": "patient-edge"}, "expected": {"status": "blocked", "reason": "setup_validation_error", "before": "clinical_execution"}},
+    {"id": "no-effect-after-setup-block", "inputs": {"patient_id": "patient-edge", "classification": "SYNTHETIC_YELLOW"}, "expected": {"status": "blocked", "reason": "setup_validation_error", "forbidden_outputs": ["task", "referral", "external_effect_request"]}}
+  ]
+}

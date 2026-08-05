@@ -13,17 +13,26 @@ if str(SRC) not in sys.path:
 
 from chw_navigator.clinical_ir import ClinicalIRDocument
 from chw_navigator.dmn import DMNImportError, import_dmn_decisions
+from test_support import create_test_run, reset_suite_runs
 
 
 EXAMPLES = ROOT / "examples"
-TEST_ROOT = ROOT / "generated" / "test_artifacts"
-TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 class DmnFailLoudTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        reset_suite_runs("dmn_fail_loud")
+
     def setUp(self) -> None:
         self.base_document = _load_document(EXAMPLES / "pneumonia.ir.json")
         self.good_dmn = (EXAMPLES / "pneumonia.dmn").read_text(encoding="utf-8")
+        self.test_run = create_test_run(
+            suite_name="dmn_fail_loud",
+            test_name=self.id().split(".")[-1],
+            purpose="Negative DMN importer tests that verify unsupported or unsafe DMN inputs fail loudly.",
+            input_paths=(EXAMPLES / "pneumonia.ir.json", EXAMPLES / "pneumonia.dmn", EXAMPLES / "state_prefix.ir.json"),
+        )
 
     def test_rejects_missing_decision_table(self) -> None:
         self._assert_import_fails(
@@ -155,7 +164,7 @@ class DmnFailLoudTests(unittest.TestCase):
   </decision>
 </definitions>
 """
-        path = TEST_ROOT / "state_input_ok.dmn"
+        path = self.test_run.outputs_dir / "state_input_ok.dmn"
         path.write_text(dmn_text, encoding="utf-8")
 
         imported = import_dmn_decisions(stateful_document, str(path))
@@ -163,7 +172,7 @@ class DmnFailLoudTests(unittest.TestCase):
         self.assertEqual("r_seen_yes", imported.decisions["d_state_router"].rules[0].id)
 
     def _assert_import_fails(self, dmn_text: str, expected_message: str) -> None:
-        path = TEST_ROOT / "bad_input.dmn"
+        path = self.test_run.outputs_dir / "bad_input.dmn"
         path.write_text(dmn_text, encoding="utf-8")
         with self.assertRaises(DMNImportError) as ctx:
             import_dmn_decisions(self.base_document, str(path))

@@ -12,18 +12,36 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from chw_navigator.clinical_ir import ClinicalIRDocument
-from chw_navigator.compare import compare_document_pair, load_patient_cases
+from chw_navigator.compare import compare_backends, compare_document_pair, load_patient_cases
 from chw_navigator.validator import validate_document
 from chw_navigator.xlsform_import import XLSFormImportError, import_xlsform_files, import_xlsform_files_detailed
+from test_support import create_test_run, reset_suite_runs
 
 
 EXAMPLES = ROOT / "examples"
 GENERATED = ROOT / "generated"
-TEST_ROOT = GENERATED / "test_artifacts" / "xlsform_import"
-TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 class XLSFormImportTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        reset_suite_runs("xlsform_import")
+
+    def setUp(self) -> None:
+        self.test_run = create_test_run(
+            suite_name="xlsform_import",
+            test_name=self.id().split(".")[-1],
+            purpose="XLSForm importer tests for generated workbooks and normalized wild workbook inputs.",
+            input_paths=(
+                GENERATED / "pneumonia" / "survey.csv",
+                GENERATED / "pneumonia" / "choices.csv",
+                GENERATED / "multi_module_router" / "survey.csv",
+                GENERATED / "multi_module_router" / "choices.csv",
+                EXAMPLES / "web_xlsform" / "tip_survey.csv",
+                EXAMPLES / "web_xlsform" / "tip_choices.csv",
+            ),
+        )
+
     def test_imports_generated_pneumonia_workbook(self) -> None:
         imported = import_xlsform_files(
             str(GENERATED / "pneumonia" / "survey.csv"),
@@ -37,6 +55,10 @@ class XLSFormImportTests(unittest.TestCase):
         results = compare_document_pair(expected, imported, cases, label="imported xlsform")
         self.assertTrue(results)
         self.assertTrue(all(result.ok for result in results))
+
+        backend_results = compare_backends(imported, patient_cases=cases)
+        self.assertTrue(backend_results)
+        self.assertTrue(all(result.ok for result in backend_results))
 
     def test_imports_generated_multi_module_workbook(self) -> None:
         imported = import_xlsform_files(
@@ -52,6 +74,10 @@ class XLSFormImportTests(unittest.TestCase):
         self.assertTrue(results)
         self.assertTrue(all(result.ok for result in results))
 
+        backend_results = compare_backends(imported, patient_cases=cases)
+        self.assertTrue(backend_results)
+        self.assertTrue(all(result.ok for result in backend_results))
+
     def test_imports_web_tip_example_with_standalone_output_calculation(self) -> None:
         imported = import_xlsform_files(
             str(EXAMPLES / "web_xlsform" / "tip_survey.csv"),
@@ -61,10 +87,14 @@ class XLSFormImportTests(unittest.TestCase):
         self.assertEqual([], validate_document(imported))
         self.assertIn("o_tip", imported.outputs)
         self.assertIn("d_imported_calculations", imported.decisions)
+        cases = load_patient_cases(str(EXAMPLES / "web_xlsform" / "tip_cases.json"))
+        backend_results = compare_backends(imported, patient_cases=cases)
+        self.assertTrue(backend_results)
+        self.assertTrue(all(result.ok for result in backend_results))
 
     def test_normalizes_wild_xlsform_names_and_reports_findings(self) -> None:
-        survey = TEST_ROOT / "wild_tip_survey.csv"
-        choices = TEST_ROOT / "wild_tip_choices.csv"
+        survey = self.test_run.inputs_dir / "wild_tip_survey.csv"
+        choices = self.test_run.inputs_dir / "wild_tip_choices.csv"
         survey.write_text(
             "\n".join(
                 [
@@ -109,8 +139,8 @@ class XLSFormImportTests(unittest.TestCase):
         self.assertTrue(all(result.ok for result in results))
 
     def test_rejects_name_collisions_after_normalization(self) -> None:
-        survey = TEST_ROOT / "colliding_survey.csv"
-        choices = TEST_ROOT / "colliding_choices.csv"
+        survey = self.test_run.inputs_dir / "colliding_survey.csv"
+        choices = self.test_run.inputs_dir / "colliding_choices.csv"
         survey.write_text(
             "\n".join(
                 [
@@ -128,8 +158,8 @@ class XLSFormImportTests(unittest.TestCase):
             import_xlsform_files_detailed(str(survey), str(choices), guideline_id="colliding")
 
     def test_rejects_question_relevant_logic_for_now(self) -> None:
-        survey = TEST_ROOT / "bad_survey.csv"
-        choices = TEST_ROOT / "bad_choices.csv"
+        survey = self.test_run.inputs_dir / "bad_survey.csv"
+        choices = self.test_run.inputs_dir / "bad_choices.csv"
         survey.write_text(
             "\n".join(
                 [

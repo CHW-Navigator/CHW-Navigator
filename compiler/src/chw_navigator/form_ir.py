@@ -21,6 +21,7 @@ class SurveyRow:
     calculation: str = ""
     required: str = ""
     constraint: str = ""
+    appearance: str = ""
     role: str = ""
 
 
@@ -32,7 +33,7 @@ class XLSFormWorkbook:
     choices: list[ChoiceRow] = field(default_factory=list)
 
     def survey_headers(self) -> list[str]:
-        return ["type", "name", "label", "relevant", "calculation", "required", "constraint"]
+        return ["type", "name", "label", "relevant", "calculation", "required", "constraint", "appearance"]
 
     def choice_headers(self) -> list[str]:
         return ["list_name", "name", "label"]
@@ -44,7 +45,8 @@ def load_xlsform_workbook(survey_path: str, choices_path: str) -> XLSFormWorkboo
 
     with Path(survey_path).open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
-        _require_headers(reader.fieldnames or [], XLSFormWorkbook("", "").survey_headers(), survey_path)
+        # `appearance` is optional on older generated workbooks and defaults to blank.
+        _require_headers(reader.fieldnames or [], XLSFormWorkbook("", "").survey_headers()[:-1], survey_path)
         for row in reader:
             survey_rows.append(
                 SurveyRow(
@@ -55,6 +57,7 @@ def load_xlsform_workbook(survey_path: str, choices_path: str) -> XLSFormWorkboo
                     calculation=row.get("calculation", ""),
                     required=row.get("required", ""),
                     constraint=row.get("constraint", ""),
+                    appearance=row.get("appearance", ""),
                 )
             )
 

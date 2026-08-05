@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "functions": {
+    "special.technical.gestational-age-and-edd-from-lmp": {
+      "function_version": "1.0.0",
+      "reference_data_version": "calendar-280-day-v1",
+      "implementation_digest": "sha256:744047c9a5b5b2e700a593618645c0951158022ff324f1a9e647edf7fcb4affc",
+      "golden_vector_digest": "sha256:8c6160638e8442c998ea0ef2a27553859d7452dd1b386fec11aef55d39471140",
+      "statuses": [
+        "ok",
+        "input_missing",
+        "input_invalid",
+        "outside_supported_domain",
+        "reference_data_unavailable",
+        "numeric_failure",
+        "version_mismatch",
+        "execution_failure"
+      ],
+      "technical_only": true,
+      "deterministic": true,
+      "side_effects": [],
+      "cht_lowering": {
+        "strategy": "extension-lib",
+        "module_file": "gestational-age-from-lmp.js",
+        "argument_order": ["lmp_date", "as_of_date"],
+        "supported_cht_versions": ["4.22.0", "5.2.0"]
+      }
+    },
+    "special.who.weight-for-age-z-score-monthly": {
+      "function_version": "1.0.0",
+      "reference_data_version": "2006-monthly-lms-v1",
+      "statuses": [
+        "ok",
+        "input_missing",
+        "input_invalid",
+        "outside_supported_domain",
+        "reference_data_unavailable",
+        "numeric_failure",
+        "version_mismatch",
+        "execution_failure"
+      ],
+      "technical_only": true,
+      "deterministic": true,
+      "side_effects": [],
+      "cht_lowering": {
+        "strategy": "native",
+        "xpath_function": "z-score",
+        "chart_name": "weight-for-age",
+        "supported_cht_versions": ["4.22.0", "5.2.0"],
+        "reference_data_verification": "external_required"
+      }
+    }
+  }
+}

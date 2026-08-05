@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/capability-candidate/1.0.0",
+  "title": "Gen 8 capability candidate",
+  "type": "object",
+  "required": ["id", "family", "operation", "resource", "input_types", "output_types", "backend", "requires_human_review", "source"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "family": {"type": "string", "minLength": 1},
+    "operation": {"type": "string", "minLength": 1},
+    "resource": {"type": "string", "minLength": 1},
+    "input_types": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "output_types": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "backend": {"type": "string", "minLength": 1},
+    "requires_human_review": {"type": "boolean"},
+    "review_approval": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object",
+      "required": ["document_id", "page", "section", "quote"],
+      "properties": {
+        "document_id": {"type": "string", "minLength": 1},
+        "page": {"type": "string", "minLength": 1},
+        "section": {"type": "string", "minLength": 1},
+        "quote": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

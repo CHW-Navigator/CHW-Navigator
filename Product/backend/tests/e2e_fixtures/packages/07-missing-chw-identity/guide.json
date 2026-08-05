@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Assigned CHW Record",
+    "fixture_id": "missing-chw-identity",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nThe assigned CHW opens the synthetic assessment and records their display name and patient relation.\n\nThe CHW identity comes from the active deployment topology.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The assigned CHW opens the synthetic assessment and records their display name and patient relation."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "The CHW identity comes from the active deployment topology."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Local setup",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Local setup\n\nA CHW node must have a non-empty display name, active placement, and active service-area assignment.\n\nThe clinical manual does not supply a missing CHW identity.\n\nDo not replace a missing CHW name with a patient name, facility name, or default text.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Local setup"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "A CHW node must have a non-empty display name, active placement, and active service-area assignment."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "The clinical manual does not supply a missing CHW identity."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Do not replace a missing CHW name with a patient name, facility name, or default text."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Block condition",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Block condition\n\nIf the assigned CHW identity is incomplete, stop before the patient workflow begins.\n\nRecord setup_validation_blocked with the topology validation finding.\n\nNo clinical result, task, referral, or effect request may be created from this setup.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Block condition"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "If the assigned CHW identity is incomplete, stop before the patient workflow begins."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Record setup_validation_blocked with the topology validation finding."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "No clinical result, task, referral, or effect request may be created from this setup."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nThe assigned CHW opens the synthetic assessment and records their display name and patient relation.\n\nThe CHW identity comes from the active deployment topology."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Local setup\n\nA CHW node must have a non-empty display name, active placement, and active service-area assignment.\n\nThe clinical manual does not supply a missing CHW identity.\n\nDo not replace a missing CHW name with a patient name, facility name, or default text."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Block condition\n\nIf the assigned CHW identity is incomplete, stop before the patient workflow begins.\n\nRecord setup_validation_blocked with the topology validation finding.\n\nNo clinical result, task, referral, or effect request may be created from this setup."
+    }
+  }
+}

@@ -168,6 +168,7 @@ def write_xlsform_csvs(built: BuiltXLSForm, output_dir: str) -> tuple[str, str, 
                     row.calculation,
                     row.required,
                     row.constraint,
+                    row.appearance,
                 ]
             )
         )
@@ -256,6 +257,17 @@ def _compile_predicate(predicate, document: ClinicalIRDocument) -> str:
     return expression
 
 
+def compile_xlsform_expression(
+    expr: dict[str, object],
+    document: ClinicalIRDocument,
+    *,
+    output_rows: dict[str, str] | None = None,
+) -> str:
+    """Compile one validated Clinical IR expression for a backend-owned XLSForm row."""
+
+    return _compile_expr(expr, document, output_rows)
+
+
 def _phrase_rows(output_id: str, label: str, role: str) -> list[tuple[str, str, str]]:
     rows: list[tuple[str, str, str]] = []
     row_name = f"note_{output_id}" if role == "message" else f"guidance_{output_id}"
@@ -291,6 +303,8 @@ def _compile_expr(
     if kind == "const":
         const_value = document.constants[str(expr["id"])].value
         return _compile_untyped_literal(const_value)
+    if kind == "call":
+        return _compile_helper_call(expr, document, output_rows)
     if kind == "not":
         return f"not({_compile_expr(expr['arg'], document, output_rows)})"
     if kind == "and":
@@ -314,6 +328,40 @@ def _compile_expr(
         choice = _compile_untyped_literal(expr["choice"])
         return f"selected({target}, {choice})"
     raise XLSFormBuildError(f"unsupported expression kind '{kind}' for XLSForm lowering")
+
+
+def _compile_helper_call(
+    expr: dict[str, object],
+    document: ClinicalIRDocument,
+    output_rows: dict[str, str] | None,
+) -> str:
+    fn = str(expr["fn"])
+    args = list(expr.get("args", []))
+    if fn == "is_missing":
+        if len(args) != 1:
+            raise XLSFormBuildError("is_missing requires exactly one argument")
+        target = _compile_expr(args[0], document, output_rows)
+        return f"({target} = '')"
+    if fn == "date_diff_days":
+        if len(args) != 2:
+            raise XLSFormBuildError("date_diff_days requires exactly two arguments")
+        left = _compile_expr(args[0], document, output_rows)
+        right = _compile_expr(args[1], document, output_rows)
+        missing_guard = f"(({left} = '') or ({right} = ''))"
+        return f"if({missing_guard}, '', ({left} - {right}))"
+    if fn == "age_months_from_date":
+        if len(args) != 2:
+            raise XLSFormBuildError("age_months_from_date requires exactly two arguments")
+        left = _compile_expr(args[0], document, output_rows)
+        right = _compile_expr(args[1], document, output_rows)
+        missing_guard = f"(({left} = '') or ({right} = ''))"
+        return f"if({missing_guard}, '', floor((({left} - {right}) / 30)))"
+    if fn == "floor":
+        if len(args) != 1:
+            raise XLSFormBuildError("floor requires exactly one argument")
+        target = _compile_expr(args[0], document, output_rows)
+        return f"floor({target})"
+    raise XLSFormBuildError(f"unsupported helper function '{fn}' for XLSForm lowering")
 
 
 def _compile_assignment_value(

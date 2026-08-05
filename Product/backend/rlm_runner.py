@@ -25,7 +25,6 @@ from typing import Any, Optional
 from rlm import RLM
 from rlm.logger import RLMLogger
 
-from backend.db import create_intermediate_artifact
 from backend.system_prompt import build_system_prompt, build_initial_user_message
 from backend.validators import run_all_validators
 from backend.validators.phases import (
@@ -1617,8 +1616,11 @@ def _make_emit_artifact_fn(
                 "phase": _ARTIFACT_PHASES.get(name, -1),
             }
 
-        # Persist to Neon (best-effort)
+        # Persist to Neon (best-effort).  Import lazily: local artifact-only
+        # runs must not require a generated Prisma client just to use the
+        # deterministic validators and on-disk checkpoints.
         try:
+            from backend.db import create_intermediate_artifact
             db_future = asyncio.run_coroutine_threadsafe(
                 create_intermediate_artifact(
                     run_id=run_id,

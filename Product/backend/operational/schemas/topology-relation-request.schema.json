@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/schema/gen8/topology-relation-request/1.0.0",
+  "title": "Topology relation resolution request",
+  "type": "object",
+  "required": ["relation", "cardinality", "target_backend"],
+  "properties": {
+    "relation": {
+      "enum": [
+        "contact.responsible-area",
+        "patient.assigned-chw",
+        "patient.supervising-entity",
+        "referral.eligible-facilities"
+      ]
+    },
+    "cardinality": {"enum": ["one", "collection"]},
+    "subject_external_id": {"type": "string", "minLength": 1},
+    "required_capability_codes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "at": {"type": "string", "format": "date-time"},
+    "target_backend": {"enum": ["cht", "fhir-r4"]}
+  },
+  "additionalProperties": false
+}

@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 import json
-import platform
 import shutil
-import subprocess
-import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
-import tomllib
 
 from .clinical_ir import ClinicalIRDocument
 from .compare import (
@@ -21,7 +16,16 @@ from .compare import (
     load_patient_cases,
 )
 from .dmn import import_dmn_decisions
+from .evidence_utils import allocate_timestamped_dir, compiler_metadata, describe_file, portable_relative_path
 from .mermaid_backend import build_mermaid_artifact
+from .staged_lint import (
+    lint_ir_document,
+    lint_mermaid_artifact,
+    lint_smt_artifact,
+    lint_xlsform_artifacts,
+    preflight_source_artifact,
+    render_stage_lint_report,
+)
 from .validator import validate_document
 from .xlsform_backend import build_xlsform, write_xlsform_csvs
 from .z3_backend import analyze_document, export_smt2
@@ -35,6 +39,7 @@ class BundleBuildError(Exception):
 class BundleArtifacts:
     bundle_dir: Path
     metadata_path: Path
+    hash_manifest_path: Path
     readme_path: Path
     explicit_compare_path: Path | None
     derived_compare_path: Path
@@ -102,14 +107,46 @@ def create_bundle(
         if patient_cases_path and copied_cases_path is not None:
             shutil.copy2(patient_cases_path, copied_cases_path)
 
+        input_lint_dir = input_dir / "lint"
+        input_lint_dir.mkdir(parents=True, exist_ok=True)
+        base_ir_lint_path = input_lint_dir / "base.ir.lint.json"
+        base_ir_lint_path.write_text(
+            render_stage_lint_report(lint_ir_document(base_document, source_path=str(base_ir_path))),
+            encoding="utf-8",
+        )
+        dmn_lint_path = input_lint_dir / "source.dmn.lint.json"
+        dmn_lint_path.write_text(
+            render_stage_lint_report(preflight_source_artifact("dmn", copied_dmn_path)),
+            encoding="utf-8",
+        )
+        explicit_cases_lint_path: Path | None = None
+        if copied_cases_path is not None:
+            explicit_cases_lint_path = input_lint_dir / "explicit.cases.lint.json"
+            explicit_cases_lint_path.write_text(
+                render_stage_lint_report(preflight_source_artifact("patient_cases", copied_cases_path)),
+                encoding="utf-8",
+            )
+
         merged_ir_path = output_dir / "merged.ir.json"
         merged_ir_path.write_text(json.dumps(_clean(merged_document), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_lint_dir = output_dir / "lint"
+        output_lint_dir.mkdir(parents=True, exist_ok=True)
+        merged_ir_lint_path = output_lint_dir / "merged.ir.lint.json"
+        merged_ir_lint_path.write_text(
+            render_stage_lint_report(lint_ir_document(merged_document, source_path="outputs/merged.ir.json")),
+            encoding="utf-8",
+        )
 
         xlsform_dir = output_dir / "xlsform"
         survey_path_raw, choices_path_raw, source_map_path_raw = write_xlsform_csvs(xlsform, xlsform_dir)
         survey_path = Path(survey_path_raw)
         choices_path = Path(choices_path_raw)
         source_map_path = Path(source_map_path_raw)
+        xlsform_lint_path = xlsform_dir / "lint.json"
+        xlsform_lint_path.write_text(
+            render_stage_lint_report(lint_xlsform_artifacts(survey_path, choices_path)),
+            encoding="utf-8",
+        )
 
         mermaid_dir = output_dir / "mermaid"
         mermaid_path = mermaid_dir / f"{label}.mmd"
@@ -120,11 +157,21 @@ def create_bundle(
             json.dumps({"node_sources": mermaid.node_sources}, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        mermaid_lint_path = mermaid_dir / "lint.json"
+        mermaid_lint_path.write_text(
+            render_stage_lint_report(lint_mermaid_artifact(merged_document, candidate_text=mermaid.text)),
+            encoding="utf-8",
+        )
 
         z3_dir = output_dir / "z3"
         z3_dir.mkdir(parents=True, exist_ok=True)
         smt2_path = z3_dir / f"{label}.smt2"
         smt2_path.write_text(smt2_text, encoding="utf-8")
+        smt2_lint_path = z3_dir / "smt2.lint.json"
+        smt2_lint_path.write_text(
+            render_stage_lint_report(lint_smt_artifact(merged_document, candidate_text=smt2_text)),
+            encoding="utf-8",
+        )
         z3_checks_path = z3_dir / "z3-checks.json"
         z3_checks_path.write_text(
             json.dumps(
@@ -212,16 +259,53 @@ def create_bundle(
             derived_cases_path=derived_cases_path,
             explicit_compare_path=explicit_compare_path,
             derived_compare_path=derived_compare_path,
+            hash_manifest_path=bundle_dir / "artifact_hashes.json",
+            base_ir_lint_path=base_ir_lint_path,
+            dmn_lint_path=dmn_lint_path,
+            explicit_cases_lint_path=explicit_cases_lint_path,
+            merged_ir_lint_path=merged_ir_lint_path,
+            xlsform_lint_path=xlsform_lint_path,
+            mermaid_lint_path=mermaid_lint_path,
+            smt2_lint_path=smt2_lint_path,
         )
         metadata_path = bundle_dir / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
+        key_hashes = _build_bundle_key_hashes(
+            bundle_dir,
+            copied_base_ir_path=copied_base_ir_path,
+            copied_dmn_path=copied_dmn_path,
+            copied_cases_path=copied_cases_path,
+            merged_ir_path=merged_ir_path,
+            mermaid_path=mermaid_path,
+            smt2_path=smt2_path,
+            derived_compare_path=derived_compare_path,
+            explicit_compare_path=explicit_compare_path,
+        )
+        metadata["key_artifact_hashes"] = key_hashes
+        metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
         readme_path = bundle_dir / "README.md"
         readme_path.write_text(_render_bundle_readme(metadata), encoding="utf-8")
+        hash_manifest_path = bundle_dir / "artifact_hashes.json"
+        hash_manifest_path.write_text(
+            json.dumps(
+                _build_hash_manifest(
+                    bundle_dir,
+                    metadata_path=metadata_path,
+                    readme_path=readme_path,
+                ),
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
 
         return BundleArtifacts(
             bundle_dir=bundle_dir,
             metadata_path=metadata_path,
+            hash_manifest_path=hash_manifest_path,
             readme_path=readme_path,
             explicit_compare_path=explicit_compare_path,
             derived_compare_path=derived_compare_path,
@@ -233,20 +317,15 @@ def create_bundle(
 
 
 def _allocate_bundle_dir(bundle_root: Path, label: str) -> Path:
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    slug = _slugify(label)
-    candidate = bundle_root / f"{timestamp}-{slug}"
-    counter = 2
-    while candidate.exists():
-        candidate = bundle_root / f"{timestamp}-{slug}-{counter:02d}"
-        counter += 1
-    return candidate
+    return allocate_timestamped_dir(bundle_root, label, fallback_slug="bundle")
 
 
 def _create_bundle_scaffold(bundle_dir: Path) -> None:
     for relative in (
         "inputs",
+        "inputs/lint",
         "outputs",
+        "outputs/lint",
         "outputs/xlsform",
         "outputs/mermaid",
         "outputs/z3",
@@ -319,17 +398,10 @@ def _write_mutation_manifest(mutation_dir: Path, label: str) -> None:
 
 
 def _build_metadata(**kwargs: Any) -> dict[str, Any]:
-    project_root = Path(__file__).resolve().parents[2]
     return {
         "bundle_id": kwargs["bundle_dir"].name,
         "created_at": datetime.now().isoformat(timespec="seconds"),
-        "compiler": {
-            "package": "chw-navigator",
-            "version": _load_project_version(project_root),
-            "python": sys.version.split()[0],
-            "platform": platform.platform(),
-            "git_commit": _get_git_commit(project_root),
-        },
+        "compiler": compiler_metadata(),
         "source": {
             "label": kwargs["label"],
             "source_label": kwargs["source_label"],
@@ -345,6 +417,19 @@ def _build_metadata(**kwargs: Any) -> dict[str, Any]:
                 if kwargs["copied_cases_path"] is not None
                 else None
             ),
+        },
+        "lint_reports": {
+            "base_ir": _portable_relative_path(kwargs["base_ir_lint_path"], kwargs["bundle_dir"]),
+            "dmn": _portable_relative_path(kwargs["dmn_lint_path"], kwargs["bundle_dir"]),
+            "patient_cases": (
+                _portable_relative_path(kwargs["explicit_cases_lint_path"], kwargs["bundle_dir"])
+                if kwargs["explicit_cases_lint_path"] is not None
+                else None
+            ),
+            "merged_ir": _portable_relative_path(kwargs["merged_ir_lint_path"], kwargs["bundle_dir"]),
+            "xlsform": _portable_relative_path(kwargs["xlsform_lint_path"], kwargs["bundle_dir"]),
+            "mermaid": _portable_relative_path(kwargs["mermaid_lint_path"], kwargs["bundle_dir"]),
+            "smt2": _portable_relative_path(kwargs["smt2_lint_path"], kwargs["bundle_dir"]),
         },
         "outputs": {
             "merged_ir": _portable_relative_path(kwargs["merged_ir_path"], kwargs["bundle_dir"]),
@@ -365,15 +450,18 @@ def _build_metadata(**kwargs: Any) -> dict[str, Any]:
             ),
             "derived_compare": _portable_relative_path(kwargs["derived_compare_path"], kwargs["bundle_dir"]),
         },
+        "artifact_hash_manifest": _portable_relative_path(kwargs["hash_manifest_path"], kwargs["bundle_dir"]),
     }
 
 
 def _render_bundle_readme(metadata: dict[str, Any]) -> str:
     source = metadata["source"]
     copied_inputs = metadata["copied_inputs"]
+    lint_reports = metadata["lint_reports"]
     outputs = metadata["outputs"]
     tests = metadata["tests"]
     compiler = metadata["compiler"]
+    key_hashes = metadata.get("key_artifact_hashes", {})
     lines = [
         f"# Bundle `{metadata['bundle_id']}`",
         "",
@@ -395,14 +483,38 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
         "",
         f"- Inputs: `{copied_inputs['base_ir']}`, `{copied_inputs['dmn']}`"
         + (f", `{copied_inputs['patient_cases']}`" if copied_inputs["patient_cases"] else ""),
+        f"- Lint reports: `{lint_reports['base_ir']}`, `{lint_reports['dmn']}`, `{lint_reports['merged_ir']}`, `{lint_reports['xlsform']}`, `{lint_reports['mermaid']}`, `{lint_reports['smt2']}`"
+        + (f", `{lint_reports['patient_cases']}`" if lint_reports["patient_cases"] else ""),
         f"- Canonical IR: `{outputs['merged_ir']}`",
         f"- XLSForm: `{outputs['xlsform_survey']}`, `{outputs['xlsform_choices']}`, `{outputs['xlsform_source_map']}`",
         f"- Mermaid: `{outputs['mermaid']}`, `{outputs['mermaid_source_map']}`",
         f"- Z3: `{outputs['smt2']}`, `{outputs['z3_checks']}`, `{outputs['derived_cases']}`",
         f"- Good-path tests: `{tests['derived_compare']}`"
         + (f", `{tests['explicit_compare']}`" if tests["explicit_compare"] else ""),
+        f"- Artifact hash manifest: `{metadata['artifact_hash_manifest']}`",
         "- Mutation workspace: `mutations/` with expected candidate filenames documented in `mutations/manifest.json`",
         "",
+        "## Key Evidence Hashes",
+        "",
+    ]
+    if isinstance(key_hashes, dict) and key_hashes:
+        for label, entry in key_hashes.items():
+            if not isinstance(entry, dict):
+                continue
+            lines.append(
+                f"- `{label}`: `{entry.get('path')}` sha256 `{str(entry.get('sha256', ''))[:16]}...` ({entry.get('size_bytes')} bytes)"
+            )
+        lines.extend(
+            [
+                "",
+                "The full hash list is preserved in `artifact_hashes.json` for exact verification.",
+                "",
+            ]
+        )
+    else:
+        lines.extend(["- No key hashes recorded", ""])
+    lines.extend(
+        [
         "## Expected Workflow",
         "",
         "1. Copy a new DMN and base IR into a fresh bundle by rerunning the bundle command. Do not overwrite older bundles.",
@@ -410,38 +522,55 @@ def _render_bundle_readme(metadata: dict[str, Any]) -> str:
         "3. Add deliberate drift candidates under `mutations/` when you want to prove that mismatch detection still works.",
         "4. Keep any new patient suites or reviewer notes in this bundle so the audit trail stays attached to the exact compiler version and source snapshot.",
         "",
-    ]
+        ]
+    )
     return "\n".join(lines)
 
 
-def _load_project_version(project_root: Path) -> str:
-    pyproject_path = project_root / "pyproject.toml"
-    if not pyproject_path.exists():
-        return "unknown"
-    data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
-    project = data.get("project", {})
-    version = project.get("version")
-    return str(version) if version else "unknown"
+def _build_hash_manifest(bundle_dir: Path, *, metadata_path: Path, readme_path: Path) -> dict[str, Any]:
+    files: list[Path] = []
+    for file_path in bundle_dir.rglob("*"):
+        if not file_path.is_file():
+            continue
+        if file_path.name == "artifact_hashes.json":
+            continue
+        files.append(file_path)
+    files.sort(key=lambda path: portable_relative_path(path, bundle_dir))
+    return {
+        "algorithm": "sha256",
+        "files": [describe_file(path, bundle_dir) for path in files],
+        "notes": {
+            "metadata_path": portable_relative_path(metadata_path, bundle_dir),
+            "readme_path": portable_relative_path(readme_path, bundle_dir),
+        },
+    }
 
 
-def _get_git_commit(project_root: Path) -> str | None:
-    try:
-        completed = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        return None
-    return completed.stdout.strip() or None
-
-
-def _slugify(value: str) -> str:
-    slug = "".join(character.lower() if character.isalnum() else "-" for character in value)
-    collapsed = "-".join(part for part in slug.split("-") if part)
-    return collapsed or "bundle"
+def _build_bundle_key_hashes(
+    bundle_dir: Path,
+    *,
+    copied_base_ir_path: Path,
+    copied_dmn_path: Path,
+    copied_cases_path: Path | None,
+    merged_ir_path: Path,
+    mermaid_path: Path,
+    smt2_path: Path,
+    derived_compare_path: Path,
+    explicit_compare_path: Path | None,
+) -> dict[str, Any]:
+    items = {
+        "base_ir": copied_base_ir_path,
+        "dmn": copied_dmn_path,
+        "merged_ir": merged_ir_path,
+        "mermaid": mermaid_path,
+        "smt2": smt2_path,
+        "derived_compare": derived_compare_path,
+    }
+    if copied_cases_path is not None:
+        items["patient_cases"] = copied_cases_path
+    if explicit_compare_path is not None:
+        items["explicit_compare"] = explicit_compare_path
+    return {label: describe_file(path, bundle_dir) for label, path in items.items()}
 
 
 def _portable_relative_path(path: Path, root: Path) -> str:

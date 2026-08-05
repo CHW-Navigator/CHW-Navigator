@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CHW Navigator identity-provider registry",
+  "type": "object",
+  "required": ["schemaVersion", "entries"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "status",
+          "mode",
+          "scope",
+          "offlineScope",
+          "confirmationRequiredForNewRecord",
+          "candidateDisclosureProfile",
+          "matchFeatures",
+          "residualRisk"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^identity-provider\\.[a-z0-9-]+$" },
+          "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "status": { "enum": ["reference_fixture_only", "residual_risk_only", "production_reviewed"] },
+          "mode": { "enum": ["required", "external_master_index", "not_supported"] },
+          "scope": { "const": "authorized_catchment" },
+          "offlineScope": {
+            "enum": ["local_replica_only", "cached_authorized_index", "external_index_unavailable"]
+          },
+          "confirmationRequiredForNewRecord": { "type": "boolean" },
+          "candidateDisclosureProfile": { "const": "minimal-person-match" },
+          "matchFeatures": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "program_person_identifier",
+                "household_identifier",
+                "name",
+                "name_variants",
+                "sex",
+                "date_of_birth",
+                "estimated_age",
+                "caregiver_name",
+                "telephone",
+                "location",
+                "prior_facility_identifier"
+              ]
+            }
+          },
+          "residualRisk": { "type": "string", "minLength": 20 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

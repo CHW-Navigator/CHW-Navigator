@@ -1,0 +1,104 @@
+{
+  "cases": [
+    {
+      "category": "unchanged_guardrail",
+      "name": "danger_sign_unchanged",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Clinician review case set for cutoff-shift proof",
+          "source_id": "EXAMPLE_CHANGE_REVIEW"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "danger_sign"
+      ],
+      "values": {
+        "v_age_months": 12,
+        "v_danger_sign": true,
+        "v_resp_rate": 40
+      }
+    },
+    {
+      "category": "cutpoint_neighbor",
+      "name": "old_child_just_below_cutoff",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Clinician review case set for cutoff-shift proof",
+          "source_id": "EXAMPLE_CHANGE_REVIEW"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "cutoff_minus_1"
+      ],
+      "values": {
+        "v_age_months": 12,
+        "v_danger_sign": false,
+        "v_resp_rate": 39
+      }
+    },
+    {
+      "category": "cutpoint_neighbor",
+      "name": "old_child_at_original_cutoff",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Clinician review case set for cutoff-shift proof",
+          "source_id": "EXAMPLE_CHANGE_REVIEW"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "cutoff_changed_case"
+      ],
+      "values": {
+        "v_age_months": 12,
+        "v_danger_sign": false,
+        "v_resp_rate": 40
+      }
+    },
+    {
+      "category": "cutpoint_neighbor",
+      "name": "old_child_at_new_cutoff",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Clinician review case set for cutoff-shift proof",
+          "source_id": "EXAMPLE_CHANGE_REVIEW"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "cutoff_plus_1"
+      ],
+      "values": {
+        "v_age_months": 12,
+        "v_danger_sign": false,
+        "v_resp_rate": 41
+      }
+    },
+    {
+      "category": "unchanged_guardrail",
+      "name": "infant_cutoff_unchanged",
+      "provenance": [
+        {
+          "kind": "external_suite",
+          "note": "Clinician review case set for cutoff-shift proof",
+          "source_id": "EXAMPLE_CHANGE_REVIEW"
+        }
+      ],
+      "tags": [
+        "external_designed",
+        "infant_control"
+      ],
+      "values": {
+        "v_age_months": 11,
+        "v_danger_sign": false,
+        "v_resp_rate": 50
+      }
+    }
+  ]
+}

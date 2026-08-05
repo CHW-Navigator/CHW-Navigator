@@ -25,25 +25,34 @@ from chw_navigator.form_ir import load_xlsform_workbook
 from chw_navigator.mermaid_backend import build_mermaid_artifact, compare_mermaid_text
 from chw_navigator.xlsform_backend import build_xlsform, write_xlsform_csvs
 from chw_navigator.z3_backend import compare_smt2_file, export_smt2
+from test_support import create_test_run, reset_suite_runs
 
 
 EXAMPLES = ROOT / "examples"
-TEST_ROOT = ROOT / "generated" / "test_artifacts"
-TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 class ArtifactDriftTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        reset_suite_runs("artifact_drift")
+
     def setUp(self) -> None:
         self.document = _load_document(EXAMPLES / "pneumonia.ir.json")
         self.cases = load_patient_cases(str(EXAMPLES / "pneumonia.cases.json"))
         self.good_dmn = (EXAMPLES / "pneumonia.dmn").read_text(encoding="utf-8")
+        self.test_run = create_test_run(
+            suite_name="artifact_drift",
+            test_name=self.id().split(".")[-1],
+            purpose="Mutation and drift checks for DMN, XLSForm, Mermaid, IR, and SMT-LIB artifacts.",
+            input_paths=(EXAMPLES / "pneumonia.ir.json", EXAMPLES / "pneumonia.dmn", EXAMPLES / "pneumonia.cases.json"),
+        )
 
     def test_mutated_dmn_is_detected(self) -> None:
         mutated = self.good_dmn.replace(
             '<outputEntry id="r2_o2"><text>true</text></outputEntry>',
             '<outputEntry id="r2_o2"><text>false</text></outputEntry>',
         )
-        dmn_path = TEST_ROOT / "mutated_outcome.dmn"
+        dmn_path = self.test_run.outputs_dir / "mutated_outcome.dmn"
         dmn_path.write_text(mutated, encoding="utf-8")
         results = compare_backends(self.document, dmn_path=str(dmn_path), patient_cases=self.cases)
 
@@ -62,7 +71,7 @@ class ArtifactDriftTests(unittest.TestCase):
 
     def test_mutated_xlsform_is_detected(self) -> None:
         built = build_xlsform(self.document)
-        output_dir = TEST_ROOT / "mutated_xlsform"
+        output_dir = self.test_run.outputs_dir / "mutated_xlsform"
         survey_path, choices_path, _ = write_xlsform_csvs(built, str(output_dir))
         survey_text = Path(survey_path).read_text(encoding="utf-8")
         survey_text = survey_text.replace(
@@ -79,7 +88,7 @@ class ArtifactDriftTests(unittest.TestCase):
         )
 
     def test_exported_smt2_matches_reference(self) -> None:
-        smt2_path = TEST_ROOT / "pneumonia.smt2"
+        smt2_path = self.test_run.outputs_dir / "pneumonia.smt2"
         smt2_path.write_text(export_smt2(self.document), encoding="utf-8")
         results = compare_smt2_file(self.document, str(smt2_path), self.cases)
         self.assertTrue(results)
@@ -117,7 +126,7 @@ class ArtifactDriftTests(unittest.TestCase):
             "(assert\n (= o_home_treatment (ite r2 true false)))",
             "(assert\n (= o_home_treatment (ite r2 false false)))",
         )
-        smt2_path = TEST_ROOT / "mutated_pneumonia.smt2"
+        smt2_path = self.test_run.outputs_dir / "mutated_pneumonia.smt2"
         smt2_path.write_text(mutated_text, encoding="utf-8")
         results = compare_smt2_file(self.document, str(smt2_path), self.cases, label="mutated SMT-LIB")
         self.assertTrue(any(not result.ok for result in results))

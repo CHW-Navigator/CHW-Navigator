@@ -1,0 +1,311 @@
+{
+  "schema": "chw-navigator-ws0-discovery@1",
+  "date": "2026-08-05",
+  "phase": "WS0-Part-A",
+  "status": "fail",
+  "overall_evidence_level": "E0",
+  "evidence_ceiling_reasons": [
+    "The mandatory Product Python suite has four failures.",
+    "The compiler official local-data harness test was skipped.",
+    "Four TypeScript filesystem-security tests were skipped on Windows.",
+    "Exact target CHT, live backend, offline-device, and governance evidence remains external."
+  ],
+  "repository_roots": [
+    {
+      "path": "..",
+      "git_branch": "master",
+      "git_commit": null,
+      "state": "uninitialized_git_shell_with_untracked_workspaces",
+      "used_for_execution": false
+    },
+    {
+      "path": ".",
+      "git_branch": "codex/integrate-prompt12-preparation",
+      "git_commit": "68109294878a8d53b83a18be25d704c209708d8b",
+      "state_at_discovery_start": "clean",
+      "used_for_execution": true,
+      "authoritative": "not_supplied"
+    }
+  ],
+  "compiler_git_inventory_at_discovery_start": {
+    "modified": [],
+    "untracked": [],
+    "ignored_inventory_policy": "Individual environment-specific paths are not committed. Roots, exact counts, and the full enumeration command are recorded.",
+    "ignored_enumeration_command": "git status --porcelain=v1 --ignored --untracked-files=all -- compiler",
+    "ignored_total_paths": 4798,
+    "ignored_roots": [
+      {
+        "path": "compiler/.pytest_cache/",
+        "count": 4,
+        "classification": "test_runner_cache",
+        "referenced_by_test": false
+      },
+      {
+        "path": "compiler/build/",
+        "count": 29,
+        "classification": "python_packaging_output",
+        "referenced_by_test": false
+      },
+      {
+        "path": "compiler/generated/cht-task-bridge-harness/",
+        "count": 181,
+        "classification": "generated_cht_bridge_harness_workspace",
+        "referenced_by_test": true
+      },
+      {
+        "path": "compiler/generated/t/",
+        "count": 4480,
+        "classification": "timestamped_test_and_review_scratch",
+        "referenced_by_test": true
+      },
+      {
+        "path": "compiler/scripts/__pycache__/",
+        "count": 4,
+        "classification": "python_bytecode_cache",
+        "referenced_by_test": false
+      },
+      {
+        "path": "compiler/src/chw_navigator/__pycache__/",
+        "count": 38,
+        "classification": "python_bytecode_cache",
+        "referenced_by_test": false
+      },
+      {
+        "path": "compiler/tests/__pycache__/",
+        "count": 62,
+        "classification": "python_bytecode_cache",
+        "referenced_by_test": false
+      }
+    ]
+  },
+  "local_data": {
+    "working_tree_state": "tracked",
+    "commit": "68109294878a8d53b83a18be25d704c209708d8b",
+    "commit_subject": "feat: compile registered CHT local data",
+    "focused_tests": {
+      "total": 8,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 1,
+      "not_run": 0
+    },
+    "skip_reason": "The installed xsltproc is not executable by the official CHT harness",
+    "boundary": "Product clinical_logic is not canonical Clinical IR and no deterministic adapter connects them."
+  },
+  "status_claim_findings": [
+    {
+      "id": "WS0-CLAIM-001",
+      "location": "../project_status.md:14",
+      "claim": "Active working root: CHW Navigator-work.",
+      "finding": "conflicts_with_nested_executable_git_root"
+    },
+    {
+      "id": "WS0-CLAIM-002",
+      "location": "../project_status.md:16",
+      "claim": "Current working tree has 16 uncommitted paths.",
+      "finding": "stale_and_not_bound_to_the_nested_repository"
+    },
+    {
+      "id": "WS0-CLAIM-003",
+      "location": "../project_status.md:21",
+      "claim": "NEXT_BOUNDED_MILESTONE.md is the required current milestone contract.",
+      "finding": "conflicts_with_user_supplied_ws0_ws2_contract"
+    },
+    {
+      "id": "WS0-CLAIM-004",
+      "location": "README.md:3",
+      "claim": "The pipeline produces deployment-ready artifacts.",
+      "finding": "unsupported_as_an_unqualified_current_readiness_claim"
+    },
+    {
+      "id": "WS0-CLAIM-005",
+      "location": "README.md:146",
+      "claim": "Product on main is the behavioral source of truth and Product is a submodule.",
+      "finding": "product_is_not_a_submodule_and_current_work_is_not_on_main"
+    },
+    {
+      "id": "WS0-CLAIM-006",
+      "location": "STATUS.md:19-28",
+      "claim": "Product runtime, converters, tests, and harnesses are shipped/current.",
+      "finding": "stale_scope_and_red_product_baseline"
+    },
+    {
+      "id": "WS0-CLAIM-007",
+      "location": "handoff.md:39,165",
+      "claim": "Product is the authoritative implementation submodule.",
+      "finding": "mechanically_false_in_this_checkout"
+    },
+    {
+      "id": "WS0-CLAIM-008",
+      "location": "handoff.md:58",
+      "claim": "There are on the order of 40 backend tests.",
+      "finding": "stale_current_collection_is_82"
+    }
+  ],
+  "suites": [
+    {
+      "id": "compiler-python",
+      "status": "pass_with_skip",
+      "pass": 135,
+      "fail": 0,
+      "skipped": 1,
+      "not_run": 0,
+      "warnings": 0,
+      "total": 136,
+      "subset_evidence_level": "E1"
+    },
+    {
+      "id": "product-python",
+      "status": "fail",
+      "pass": 78,
+      "fail": 4,
+      "skipped": 0,
+      "not_run": 0,
+      "warnings": 2,
+      "total": 82,
+      "subset_evidence_level": "E0",
+      "failures": [
+        "tests/test_converters.py::TestDMNConverter::test_contains_activator",
+        "tests/test_converters.py::TestCSVConverter::test_phrases_csv_has_headers",
+        "tests/test_validators.py::TestValidLogic::test_all_validators_pass",
+        "tests/test_validators.py::TestValidLogic::test_architecture_passes"
+      ]
+    },
+    {
+      "id": "pinned-typescript-oracle",
+      "status": "pass_with_skips",
+      "pass": 615,
+      "fail": 0,
+      "skipped": 4,
+      "not_run": 0,
+      "warnings": 0,
+      "total": 619,
+      "subset_evidence_level": "E1",
+      "execution_copy": "disposable_environment_copy",
+      "pinned_source_modified": false
+    }
+  ],
+  "combined_test_ledger": {
+    "status": "fail",
+    "pass": 828,
+    "fail": 4,
+    "skipped": 5,
+    "not_run": 0,
+    "total": 837
+  },
+  "skips": [
+    {
+      "suite": "compiler-python",
+      "test": "tests.test_cht_local_data.CHTLocalDataTests.test_generated_xform_reads_contact_and_uses_missing_fallback_in_official_harness",
+      "reason": "The installed xsltproc is not executable by the official CHT harness",
+      "ci_risk": "A normal compiler run can exit zero without official local-data form execution."
+    },
+    {
+      "suite": "pinned-typescript-oracle",
+      "test": "symlinked evidence is rejected",
+      "reason": "symlink semantics differ on Windows",
+      "ci_risk": "Always skipped on Windows CI."
+    },
+    {
+      "suite": "pinned-typescript-oracle",
+      "test": "malicious symlink in a managed destination path blocks planning",
+      "reason": "symlink semantics differ on Windows",
+      "ci_risk": "Always skipped on Windows CI."
+    },
+    {
+      "suite": "pinned-typescript-oracle",
+      "test": "symlinked integration state cannot authorize managed replacement",
+      "reason": "symlink semantics differ on Windows",
+      "ci_risk": "Always skipped on Windows CI."
+    },
+    {
+      "suite": "pinned-typescript-oracle",
+      "test": "symlinked bundle manifest is rejected before parsing",
+      "reason": "symlink semantics differ on Windows",
+      "ci_risk": "Always skipped on Windows CI."
+    }
+  ],
+  "source_lock": {
+    "path": "compiler/integration/prompt12-source-lock.json",
+    "status": "pass",
+    "evidence_level": "E0",
+    "mismatches": [],
+    "update_justified": false
+  },
+  "prior_prompt_status": [
+    {
+      "work": "reviewed-prompts-5-7",
+      "implementation": "typescript-oracle-history",
+      "production_python_claim": false
+    },
+    {
+      "work": "product-prompt-8",
+      "implementation": "python",
+      "commit": "a4ab6b5",
+      "status": "local_contracts_implemented"
+    },
+    {
+      "work": "product-prompt-9",
+      "implementation": "python",
+      "commit": "b51ba1e",
+      "status": "local_topology_core_implemented"
+    },
+    {
+      "work": "product-prompt-10",
+      "implementation": "python",
+      "commit": "d75a52e",
+      "status": "planning_only"
+    },
+    {
+      "work": "reviewed-prompts-11a-11b",
+      "implementation": "typescript",
+      "status": "python_gap_closing_slices_still_planned"
+    },
+    {
+      "work": "reviewed-prompts-12a-14",
+      "implementation": "typescript_source_and_python_semantic_translation",
+      "commit": "a1e134a",
+      "status": "local_python_contracts_implemented_external_runtime_limits_remain"
+    },
+    {
+      "work": "cht-task-follow-on",
+      "implementation": "python",
+      "commit": "996556a",
+      "status": "implemented_with_typescript_composer_compatibility"
+    },
+    {
+      "work": "registered-local-data-follow-on",
+      "implementation": "python",
+      "commit": "6810929",
+      "status": "implemented_with_official_harness_skip"
+    }
+  ],
+  "prompt_b": {
+    "prompt_definition_exists": true,
+    "prompt_invoked": false,
+    "pipeline_accepts_reviewed_sidecar": true,
+    "normal_session_path_supplies_sidecar": false,
+    "three_page_fixture_count": 10,
+    "fixtures_test_prompt_b": false,
+    "planned_work_spec": "WS4"
+  },
+  "canonical_boundary": {
+    "product_output": "seven-part clinical_logic",
+    "compiler_input": "ClinicalIRDocument",
+    "adapter_exists": false,
+    "planned_work_spec": "WS5"
+  },
+  "human_gate": {
+    "status": "not_supplied",
+    "template": "compiler/docs/ws0-decisions-template.md",
+    "unset_decisions": [
+      "authoritative_repository_root",
+      "conflicting_status_claim_dispositions",
+      "local_data_disposition",
+      "prior_prompt_dispositions",
+      "release_1_workflow_and_subject_scope"
+    ]
+  },
+  "part_b_started": false,
+  "ws1_started": false
+}

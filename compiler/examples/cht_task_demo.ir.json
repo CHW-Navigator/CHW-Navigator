@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "registered_encounter_form",
+    "sources": [{ "source_id": "SRC" }]
+  },
+  "variables": {
+    "v_followup_needed": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "multivalue": false,
+      "source_kind": "encounter_input",
+      "provenance": [{ "source_id": "SRC" }]
+    }
+  },
+  "predicates": {},
+  "actions": {
+    "a_schedule_followup": {
+      "kind": "create_task",
+      "outputs": [],
+      "when": { "kind": "var", "id": "v_followup_needed" },
+      "task_type": "followup_visit",
+      "due_in_days": 3,
+      "priority": "routine",
+      "assignee_role": "chw",
+      "message_key": "m_schedule_followup",
+      "provenance": [{ "source_id": "SRC", "location": "example task row" }]
+    }
+  },
+  "phrases": {
+    "m_schedule_followup": {
+      "entity_id": "a_schedule_followup",
+      "role": "message",
+      "texts": { "en": "Schedule follow-up" },
+      "provenance": [{ "source_id": "SRC" }]
+    }
+  },
+  "outputs": {},
+  "decisions": {},
+  "invariants": {},
+  "phrase_bindings": {}
+}

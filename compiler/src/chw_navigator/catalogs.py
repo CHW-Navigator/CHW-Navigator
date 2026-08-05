@@ -7,6 +7,8 @@ from json import JSONDecodeError
 from pathlib import Path
 from typing import Any
 
+from pydantic import ValidationError as PydanticValidationError
+
 from .clinical_ir import (
     ClinicalIRDocument,
     Domain,
@@ -19,6 +21,14 @@ from .clinical_ir import (
     ScalarType,
     VariableDef,
 )
+from .pydantic_models import (
+    format_pydantic_error,
+    validate_metadata_payload,
+    validate_phrase_payload,
+    validate_predicate_payload,
+    validate_variable_payload,
+)
+from .lint import lint_document
 from .validator import validate_document
 
 
@@ -41,9 +51,14 @@ class CatalogBundle:
             phrases=self.phrases,
         )
         errors = validate_document(document)
+        lint_issues = lint_document(document)
         if errors:
             message = "; ".join(f"{item.path}: {item.message}" for item in errors)
             raise CatalogLoadError(f"catalogs do not compose into a valid Clinical IR base document: {message}")
+        lint_errors = [item for item in lint_issues if item.level == "ERROR"]
+        if lint_errors:
+            message = "; ".join(f"{item.path}: {item.message}" for item in lint_errors)
+            raise CatalogLoadError(f"catalogs do not pass lint checks: {message}")
         return document
 
 
@@ -83,13 +98,37 @@ def load_variable_catalog(path: Path) -> dict[str, VariableDef]:
         variable_id = _required_string(row, "id", row_label)
         if variable_id in variables:
             raise CatalogLoadError(f"{row_label}: duplicate variable id '{variable_id}'")
+        payload = {
+            "id": variable_id,
+            "type": _required_string(row, "type", row_label),
+            "domain": _domain_to_payload(_parse_domain_row(row, row_label)),
+            "unit": _optional_string(row, "unit"),
+            "storage_unit": _optional_string(row, "storage_unit"),
+            "input_decimals": row.get("input_decimals"),
+            "display_decimals": row.get("display_decimals"),
+            "remeasure_min": row.get("remeasure_min"),
+            "remeasure_max": row.get("remeasure_max"),
+            "dont_allow_min": row.get("dont_allow_min"),
+            "dont_allow_max": row.get("dont_allow_max"),
+            "measurement_limits": _parse_optional_json_object(
+                row.get("measurement_limits"),
+                f"{row_label}.measurement_limits",
+            ),
+            "allowed_missingness": _parse_bool(row.get("allowed_missingness", False), f"{row_label}.allowed_missingness"),
+            "multivalue": _parse_bool(row.get("multivalue", False), f"{row_label}.multivalue"),
+            "provenance": [_provenance_to_payload(item) for item in _parse_provenance_field(row, row_label)],
+        }
+        try:
+            validate_variable_payload(payload)
+        except PydanticValidationError as exc:
+            raise CatalogLoadError(f"{row_label}: {format_pydantic_error(exc)}") from exc
         variables[variable_id] = VariableDef(
             id=variable_id,
-            type=ScalarType(_required_string(row, "type", row_label)),
+            type=ScalarType(payload["type"]),
             domain=_parse_domain_row(row, row_label),
-            unit=_optional_string(row, "unit"),
-            allowed_missingness=_parse_bool(row.get("allowed_missingness", False), f"{row_label}.allowed_missingness"),
-            multivalue=_parse_bool(row.get("multivalue", False), f"{row_label}.multivalue"),
+            unit=payload["unit"],
+            allowed_missingness=payload["allowed_missingness"],
+            multivalue=payload["multivalue"],
             provenance=_parse_provenance_field(row, row_label),
         )
     return variables
@@ -103,20 +142,30 @@ def load_predicate_catalog(path: Path) -> dict[str, PredicateDef]:
         predicate_id = _required_string(row, "id", row_label)
         if predicate_id in predicates:
             raise CatalogLoadError(f"{row_label}: duplicate predicate id '{predicate_id}'")
-        predicates[predicate_id] = PredicateDef(
-            id=predicate_id,
-            inputs_used=_parse_string_list(
+        payload = {
+            "id": predicate_id,
+            "inputs_used": _parse_string_list(
                 row.get("inputs_used"),
                 f"{row_label}.inputs_used",
             ),
-            expression=_parse_expression(
+            "expression": _parse_expression(
                 row.get("expression", row.get("expression_json")),
                 f"{row_label}.expression",
             ),
-            missingness_policy=MissingnessPolicy(
-                _required_string(row, "missingness_policy", row_label)
-            ),
-            description=_optional_string(row, "description"),
+            "missingness_policy": _required_string(row, "missingness_policy", row_label),
+            "description": _optional_string(row, "description"),
+            "provenance": [_provenance_to_payload(item) for item in _parse_provenance_field(row, row_label)],
+        }
+        try:
+            validate_predicate_payload(payload)
+        except PydanticValidationError as exc:
+            raise CatalogLoadError(f"{row_label}: {format_pydantic_error(exc)}") from exc
+        predicates[predicate_id] = PredicateDef(
+            id=predicate_id,
+            inputs_used=payload["inputs_used"],
+            expression=payload["expression"],
+            missingness_policy=MissingnessPolicy(payload["missingness_policy"]),
+            description=payload["description"],
             provenance=_parse_provenance_field(row, row_label),
         )
     return predicates
@@ -134,10 +183,21 @@ def load_phrase_bank(path: Path) -> dict[str, PhraseDef]:
         if not entity_id:
             raise CatalogLoadError(f"{row_label}: phrase bank row must include entity_id or variable_name")
         texts = _parse_phrase_texts(row, row_label)
+        payload = {
+            "key": key,
+            "entity_id": entity_id,
+            "role": _required_string(row, "role", row_label),
+            "texts": texts,
+            "provenance": [_provenance_to_payload(item) for item in _parse_provenance_field(row, row_label)],
+        }
+        try:
+            validate_phrase_payload(payload)
+        except PydanticValidationError as exc:
+            raise CatalogLoadError(f"{row_label}: {format_pydantic_error(exc)}") from exc
         phrases[key] = PhraseDef(
             key=key,
             entity_id=entity_id,
-            role=PhraseRole(_required_string(row, "role", row_label)),
+            role=PhraseRole(payload["role"]),
             texts=texts,
             provenance=_parse_provenance_field(row, row_label),
         )
@@ -148,6 +208,7 @@ def _load_metadata(path: Path) -> Metadata:
     data = _load_json(path, "metadata file")
     payload = dict(data.get("metadata", data))
     try:
+        validate_metadata_payload(payload)
         return Metadata(
             ir_version=int(payload["ir_version"]),
             guideline_id=str(payload["guideline_id"]),
@@ -155,6 +216,8 @@ def _load_metadata(path: Path) -> Metadata:
             generated_at=payload.get("generated_at"),
             sources=list(payload.get("sources", [])),
         )
+    except PydanticValidationError as exc:
+        raise CatalogLoadError(f"metadata file '{path}' is invalid: {format_pydantic_error(exc)}") from exc
     except KeyError as exc:
         raise CatalogLoadError(f"metadata file '{path}' is missing required key '{exc.args[0]}'") from exc
 
@@ -375,6 +438,23 @@ def _parse_provenance_record(value: Any, row_label: str) -> ProvenanceRecord:
     )
 
 
+def _domain_to_payload(domain: Domain | None) -> dict[str, Any] | None:
+    if domain is None:
+        return None
+    payload: dict[str, Any] = {}
+    if domain.min is not None:
+        payload["min"] = domain.min
+    if domain.max is not None:
+        payload["max"] = domain.max
+    if domain.values is not None:
+        payload["values"] = domain.values
+    return payload or None
+
+
+def _provenance_to_payload(record: ProvenanceRecord) -> dict[str, Any]:
+    return record.to_dict()
+
+
 def _parse_optional_int(value: str | None, label: str) -> int | None:
     if value is None:
         return None
@@ -389,3 +469,19 @@ def _try_parse_json(value: str, label: str) -> Any:
         return json.loads(value)
     except JSONDecodeError as exc:
         raise CatalogLoadError(f"{label} is not valid JSON: {exc.msg}") from exc
+
+
+def _parse_optional_json_object(value: Any, label: str) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        parsed = _try_parse_json(text, label)
+        if not isinstance(parsed, dict):
+            raise CatalogLoadError(f"{label} must decode to a JSON object")
+        return parsed
+    raise CatalogLoadError(f"{label} must be an object or JSON object string")

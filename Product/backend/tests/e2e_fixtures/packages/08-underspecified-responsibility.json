@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "underspecified-responsibility",
+  "title": "Synthetic Training Manual: Ambiguous Team Notification",
+  "fixture_status": "source_blocked",
+  "function_profile": {
+    "kind": "topology_lookup",
+    "library": "unresolved",
+    "functions": []
+  },
+  "manual_pages": [
+    {"page": 1, "title": "Synthetic trigger", "sections": ["SYNTHETIC TRAINING ONLY. This is not clinical guidance.", "When the synthetic flag is present, notify the team soon.", "Record that the flag was observed."]},
+    {"page": 2, "title": "Deliberate omission", "sections": ["This manual does not identify which team member receives the notification.", "This manual does not name a facility, topology relation, priority, time limit, approved template, or policy.", "No additional instruction appears in this synthetic manual."]},
+    {"page": 3, "title": "Review expectation", "sections": ["This incomplete source is a negative fixture.", "Do not infer that the assigned CHW, supervisor, caregiver, or any facility is the intended recipient.", "Do not create a task, referral, or external-effect request from this wording."]}
+  ],
+  "source_oracle": {
+    "must_include": ["notify the team soon", "does not identify", "Do not infer"],
+    "must_not_invent": ["patient.assigned-chw", "patient.supervising-entity", "deadline", "template"],
+    "expected_integration_status": "manual_review_required",
+    "required_finding": "underspecified_responsibility"
+  },
+  "setup": {"topology": "../common/topology-package.json", "required_context": ["patient.synthetic_flag"]},
+  "patient_cases": [
+    {"id": "team-is-ambiguous", "inputs": {"patient_id": "patient-edge", "synthetic_flag": true}, "expected": {"status": "blocked", "reason": "underspecified_responsibility", "forbidden_outputs": ["task", "referral", "external_effect_request"]}},
+    {"id": "no-flag", "inputs": {"patient_id": "patient-edge", "synthetic_flag": false}, "expected": {"status": "not_requested"}}
+  ]
+}

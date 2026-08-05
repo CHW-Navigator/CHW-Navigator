@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Synthetic Training Manual: Age-Banded Breathing Screen",
+    "fixture_id": "fast-breathing-age-bands",
+    "synthetic": true,
+    "not_for_clinical_use": true,
+    "page_count": 3
+  },
+  "sections": {
+    "page_1": {
+      "title": "Purpose and inputs",
+      "page_start": 1,
+      "page_end": 1,
+      "raw_text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nA CHW records age in completed months and respiratory rate in breaths per minute for a child with cough.\n\nIf either required value is absent, stop this screen and record an incomplete assessment. Do not classify the child as not fast breathing.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 1,
+          "text": "Purpose and inputs"
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "SYNTHETIC TRAINING ONLY. This is not clinical guidance."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "A CHW records age in completed months and respiratory rate in breaths per minute for a child with cough."
+        },
+        {
+          "type": "paragraph",
+          "page": 1,
+          "text": "If either required value is absent, stop this screen and record an incomplete assessment. Do not classify the child as not fast breathing."
+        }
+      ]
+    },
+    "page_2": {
+      "title": "Age-banded rule",
+      "page_start": 2,
+      "page_end": 2,
+      "raw_text": "Age-banded rule\n\nFor age 2 months up to but not including 12 months, fast breathing means respiratory rate greater than or equal to 50 breaths per minute.\n\nFor age 12 months up to but not including 60 months, fast breathing means respiratory rate greater than or equal to 40 breaths per minute.\n\nAge below 2 months or age 60 months and older is outside this synthetic manual and requires review.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 2,
+          "text": "Age-banded rule"
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "For age 2 months up to but not including 12 months, fast breathing means respiratory rate greater than or equal to 50 breaths per minute."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "For age 12 months up to but not including 60 months, fast breathing means respiratory rate greater than or equal to 40 breaths per minute."
+        },
+        {
+          "type": "paragraph",
+          "page": 2,
+          "text": "Age below 2 months or age 60 months and older is outside this synthetic manual and requires review."
+        }
+      ]
+    },
+    "page_3": {
+      "title": "Disposition",
+      "page_start": 3,
+      "page_end": 3,
+      "raw_text": "Disposition\n\nIf fast breathing is present, record SYNTHETIC_FAST and request facility review.\n\nIf fast breathing is absent and both inputs are present, record SYNTHETIC_NOT_FAST.\n\nRecord the input values and the rule quotation used for the result.",
+      "blocks": [
+        {
+          "type": "heading",
+          "page": 3,
+          "text": "Disposition"
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "If fast breathing is present, record SYNTHETIC_FAST and request facility review."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "If fast breathing is absent and both inputs are present, record SYNTHETIC_NOT_FAST."
+        },
+        {
+          "type": "paragraph",
+          "page": 3,
+          "text": "Record the input values and the rule quotation used for the result."
+        }
+      ]
+    }
+  },
+  "pages": {
+    "1": {
+      "page_number": 1,
+      "text": "Purpose and inputs\n\nSYNTHETIC TRAINING ONLY. This is not clinical guidance.\n\nA CHW records age in completed months and respiratory rate in breaths per minute for a child with cough.\n\nIf either required value is absent, stop this screen and record an incomplete assessment. Do not classify the child as not fast breathing."
+    },
+    "2": {
+      "page_number": 2,
+      "text": "Age-banded rule\n\nFor age 2 months up to but not including 12 months, fast breathing means respiratory rate greater than or equal to 50 breaths per minute.\n\nFor age 12 months up to but not including 60 months, fast breathing means respiratory rate greater than or equal to 40 breaths per minute.\n\nAge below 2 months or age 60 months and older is outside this synthetic manual and requires review."
+    },
+    "3": {
+      "page_number": 3,
+      "text": "Disposition\n\nIf fast breathing is present, record SYNTHETIC_FAST and request facility review.\n\nIf fast breathing is absent and both inputs are present, record SYNTHETIC_NOT_FAST.\n\nRecord the input values and the rule quotation used for the result."
+    }
+  }
+}

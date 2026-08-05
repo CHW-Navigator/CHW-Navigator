@@ -1,0 +1,57 @@
+{
+  "schema": "oracle-overlap-map@1",
+  "cases": [
+    {
+      "case_id": "gestational-age.naegele.basic",
+      "python_entrypoint": "chw_navigator.special_functions.calculate_gestational_age_from_lmp",
+      "typescript_entrypoint": "packages/special-functions/dist/index.js#calculateGestationalAgeFromLmp",
+      "comparability": "comparable",
+      "normalization": "status_and_technical_snake_case",
+      "input": {
+        "lmp_date": "2026-01-01",
+        "as_of_date": "2026-01-08",
+        "function_version": "1.0.0",
+        "reference_data_version": "calendar-280-day-v1"
+      },
+      "reason": null
+    },
+    {
+      "case_id": "gestational-age.naegele.invalid-date",
+      "python_entrypoint": "chw_navigator.special_functions.calculate_gestational_age_from_lmp",
+      "typescript_entrypoint": "packages/special-functions/dist/index.js#calculateGestationalAgeFromLmp",
+      "comparability": "comparable",
+      "normalization": "status_and_technical_snake_case",
+      "input": {
+        "lmp_date": "2026-02-30",
+        "as_of_date": "2026-03-01",
+        "function_version": "1.0.0",
+        "reference_data_version": "calendar-280-day-v1"
+      },
+      "reason": null
+    },
+    {
+      "case_id": "gestational-age.naegele.domain-edge-44-weeks",
+      "python_entrypoint": "chw_navigator.special_functions.calculate_gestational_age_from_lmp",
+      "typescript_entrypoint": "packages/special-functions/dist/index.js#calculateGestationalAgeFromLmp",
+      "comparability": "comparable",
+      "normalization": "status_and_technical_snake_case",
+      "input": {
+        "lmp_date": "2026-01-01",
+        "as_of_date": "2026-11-05",
+        "function_version": "1.0.0",
+        "reference_data_version": "calendar-280-day-v1"
+      },
+      "reason": null
+    },
+    {
+      "case_id": "weight-for-age.native-chart-equivalence",
+      "python_entrypoint": null,
+      "typescript_entrypoint": "packages/special-functions/dist/index.js#calculateWeightForAgeZScore",
+      "comparability": "not_comparable",
+      "normalization": null,
+      "input": null,
+      "reason": "The target CHT native z-score chart document is deployment-controlled and its exact bytes/version are not supplied, so reference equivalence has no defined comparison input."
+    }
+  ],
+  "demotions": []
+}

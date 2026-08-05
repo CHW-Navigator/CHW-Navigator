@@ -36,7 +36,7 @@ This `handoff.md` **does not** replace the Word doc for stakeholder narrative; i
 | Root docs | `STATUS.md`, `RUNBOOK.md`, `ARTIFACTS.md`, `QUALITY_AND_VERIFICATION.md`, `PLATFORM_INTEGRATION.md`, `PROVENANCE_TRACE.md`. |
 | `old/` | Legacy; **do not use** for current architecture. |
 
-### Product submodule (authoritative implementation)
+### Product authoring application
 
 **Ingest time:** PDF → render → **Unstructured.io hi_res** → assemble **`guide_json`** → cache in **Neon** (SHA256 of PDF).  
 **Extraction time (Gen 7 v2):** micro-chunk → **Opus labeling** (2 calls/chunk + dedup) → inject reconstructed guide + labels into REPL context → **REPL** (`rlm_runner.py`) phases (scan/plan, parallel Module Maker, Python dispatcher, flat artifacts) → **`clinical_logic.json`** → **deterministic converters** → `.dmn`, `form.xlsx`, `flowchart.md`, CSVs.
@@ -55,7 +55,7 @@ Canonical engineering write-up: **`Product/ARCHITECTURE.md`**. Staged research v
 - **Converters:** JSON → DMN XML, XLSForm, Mermaid, CSV (`Product/backend/converters/`).
 - **Validators / catchers:** substantial JSON + DMN validation layer (`Product/backend/validators/`, `Product/backend/prompts/validators/`); hybrid audit documented in `Product/HYBRID_AUDIT_REPORT.md`.
 - **Eval gate harness:** `Product/backend/eval/gate_harness.py` for comparative runs (documented in hybrid audit — **note:** `ARCHITECTURE.md` §13.12 still says “no eval harness”; treat the code as superseding that bullet until the doc is edited).
-- **Automated tests:** on the order of **40** backend tests listed in `Product/ARCHITECTURE.md` §12.3 (chunker, labeler, pipeline stub, converters, session manager, rlm_runner).
+- **Automated tests:** use the current WS0 baseline manifest rather than a prose count; Product and compiler suites are separate mandatory ledgers.
 - **Top-level docs:** `README.md` maps folders; `Product/` contains deep specs, arena notes, `Automating_CHT_v25.xlsx`, final test artifacts under `Product/4-14-final-test-artifacts/`.
 - **Testing folder:** Gigi’s JSON runner README, Angelina DMN preprocessor + docs, Aaron CHT harness + orchestrator fixtures.
 
@@ -110,7 +110,7 @@ From historical handoff notes and engineering docs (non-exhaustive):
 
 ## Recommended next steps
 
-1. **Triage `Product/issues.txt`** against current `main`: reproduce blockers, file tracked issues, fix or document false positives — especially REPL sandbox and upload limits.
+1. **Triage `Product/issues.txt`** against the authoritative implementation in [GitHub issue #2](https://github.com/CHW-Navigator/CHW-Navigator/issues/2): reproduce blockers, split confirmed defects into focused child issues, fix or document false positives — especially REPL sandbox and upload limits.
 2. **Reconcile docs:** update `Product/ARCHITECTURE.md` §13.12 to mention `gate_harness.py`; link this `handoff.md` from `README.md` if desired.
 3. **Ship “happy path” for contributors:** single script or Makefile target: submodule init, `docker compose` or local backend+frontend, one small PDF test (`WHO_CHW_guide_2012_test.pdf`).
 4. **Gold standard:** commit `backend/eval/gold/who_chw_guide.json` (or equivalent) and a pytest that diffs semantics, per §13.12 proposal.
@@ -152,7 +152,7 @@ Use this when transferring to a new lead, vendor, or community squad.
 - [ ] Run `cd Product/backend && pytest -v`
 - [ ] Run one **ingestion + extraction** on `WHO_CHW_guide_2012_test.pdf` (or full guide if budget approved)
 - [ ] Inspect outputs: `clinical_logic.json`, `form.xlsx`, `clinical_logic.dmn`, `flowchart.md`
-- [ ] Review **`Product/issues.txt`** and either close items or migrate to GitHub Issues
+- [x] Migrate **`Product/issues.txt`** to the explicit triage lifecycle in [GitHub issue #2](https://github.com/CHW-Navigator/CHW-Navigator/issues/2); the audit findings remain unverified until that issue records evidence
 - [ ] Confirm **who pays** API invoices and **who holds** MOH relationship for clinical sign-off
 - [ ] Export or archive **Neon/Redis** data policy (PII, retention) if user uploads go beyond test PDFs
 - [ ] Update **this file** and root docs (`STATUS.md`, `RUNBOOK.md`, `ARTIFACTS.md`) together when behavior changes
@@ -162,7 +162,11 @@ Use this when transferring to a new lead, vendor, or community squad.
 ## Ownership transfer notes
 
 - **Intent (from Word doc):** Move toward **CHT open-source community** collaboration via a **time-bounded squad**; early involvement as **mentors**, then **review**, then hands-off support; named contacts in the source doc include **Mariam**, **Bailey** (needs assessment), and a commitment that **Atharva** (and the author of “Promise me…”) remain reachable for questions — **update names and contact channels here when ownership changes.**
-- **Code ownership:** Day-to-day implementation lives in the **`Product` submodule**; issues and PRs should target that repository for application changes. This **`ChatCHW`** repo can hold umbrella policy PDFs, handoff materials, medical teaching artifacts, and integration tests that span folders.
+- **Code ownership:** `Product/` owns manual authoring and the current seven-part
+  `clinical_logic` contract. `compiler/` owns canonical Clinical IR and the
+  Python production compiler. Both are ordinary tracked directories in the
+  authoritative `CHW-Navigator-current` repository. The contracts are not yet
+  joined by an end-to-end adapter.
 - **Binary / non-code assets:** `Medical/*.xlsx`, `Medical/*.pptx` and external program briefs — ensure the receiving org has **license and redistribution** rights for WHO PDFs and internal decks.
 - **Legacy:** Do not route new work through `old/`; it exists for archaeology only.
 

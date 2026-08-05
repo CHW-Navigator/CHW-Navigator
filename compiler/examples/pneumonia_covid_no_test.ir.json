@@ -1,0 +1,282 @@
+{
+  "metadata": {
+    "ir_version": 1,
+    "guideline_id": "pneumonia_covid_no_test",
+    "compiler_version": "0.1.0",
+    "generated_at": "2026-05-02T12:00:00Z",
+    "sources": [
+      {
+        "id": "chw_manual_v1",
+        "kind": "manual",
+        "ref": "Pneumonia chapter"
+      },
+      {
+        "id": "moh_covid_memo_v1",
+        "kind": "memo",
+        "ref": "COVID circulation counseling addendum"
+      }
+    ]
+  },
+  "variables": {
+    "v_age_months": {
+      "type": "int",
+      "domain": { "min": 0, "max": 120 },
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 1 }]
+    },
+    "v_resp_rate": {
+      "type": "int",
+      "domain": { "min": 0, "max": 120 },
+      "unit": "breaths_per_min",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 2 }]
+    },
+    "v_danger_sign": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 3 }]
+    },
+    "v_has_cough": {
+      "type": "bool",
+      "allowed_missingness": false,
+      "provenance": [{ "source_id": "variable_catalog", "row": 4 }]
+    }
+  },
+  "constants": {
+    "c_covid_circulating": {
+      "type": "bool",
+      "value": true,
+      "provenance": [{ "source_id": "moh_covid_memo_v1", "row": 1 }]
+    }
+  },
+  "predicates": {
+    "p_danger_sign": {
+      "inputs_used": ["v_danger_sign"],
+      "expression": {
+        "kind": "var",
+        "id": "v_danger_sign"
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 1 }]
+    },
+    "p_fast_breathing": {
+      "inputs_used": ["v_age_months", "v_resp_rate"],
+      "expression": {
+        "kind": "or",
+        "args": [
+          {
+            "kind": "and",
+            "args": [
+              {
+                "kind": "<",
+                "left": { "kind": "var", "id": "v_age_months" },
+                "right": { "kind": "literal", "type": "int", "value": 12 }
+              },
+              {
+                "kind": ">=",
+                "left": { "kind": "var", "id": "v_resp_rate" },
+                "right": { "kind": "literal", "type": "int", "value": 50 }
+              }
+            ]
+          },
+          {
+            "kind": "and",
+            "args": [
+              {
+                "kind": ">=",
+                "left": { "kind": "var", "id": "v_age_months" },
+                "right": { "kind": "literal", "type": "int", "value": 12 }
+              },
+              {
+                "kind": ">=",
+                "left": { "kind": "var", "id": "v_resp_rate" },
+                "right": { "kind": "literal", "type": "int", "value": 40 }
+              }
+            ]
+          }
+        ]
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 2 }]
+    },
+    "p_has_cough": {
+      "inputs_used": ["v_has_cough"],
+      "expression": {
+        "kind": "var",
+        "id": "v_has_cough"
+      },
+      "missingness_policy": "require_inputs",
+      "provenance": [{ "source_id": "predicate_table", "row": 3 }]
+    }
+  },
+  "phrases": {
+    "m_v_age_months": {
+      "entity_id": "v_age_months",
+      "role": "label",
+      "texts": { "en": "Child age (months)" },
+      "provenance": [{ "source_id": "phrase_bank", "row": 1 }]
+    },
+    "m_v_resp_rate": {
+      "entity_id": "v_resp_rate",
+      "role": "label",
+      "texts": { "en": "Respiratory rate" },
+      "provenance": [{ "source_id": "phrase_bank", "row": 2 }]
+    },
+    "m_v_danger_sign": {
+      "entity_id": "v_danger_sign",
+      "role": "label",
+      "texts": { "en": "Danger sign present" },
+      "provenance": [{ "source_id": "phrase_bank", "row": 3 }]
+    },
+    "m_v_has_cough": {
+      "entity_id": "v_has_cough",
+      "role": "label",
+      "texts": { "en": "Cough present" },
+      "provenance": [{ "source_id": "phrase_bank", "row": 4 }]
+    },
+    "m_referral": {
+      "entity_id": "o_referral",
+      "role": "message",
+      "texts": { "en": "Refer urgently to facility." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 5 }]
+    },
+    "m_referral_followup": {
+      "entity_id": "o_referral",
+      "role": "guidance",
+      "texts": { "en": "Explain urgency and arrange immediate transport if possible." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 6 }]
+    },
+    "m_home_treatment": {
+      "entity_id": "o_home_treatment",
+      "role": "message",
+      "texts": { "en": "Treat pneumonia at home and advise the caregiver on warning signs." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 7 }]
+    },
+    "m_isolation_advice": {
+      "entity_id": "o_isolation_advice",
+      "role": "message",
+      "texts": { "en": "Give home isolation and household protection advice." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 8 }]
+    },
+    "m_no_action": {
+      "entity_id": "o_no_action",
+      "role": "message",
+      "texts": { "en": "No pneumonia action is needed today." },
+      "provenance": [{ "source_id": "phrase_bank", "row": 9 }]
+    }
+  },
+  "outputs": {
+    "o_referral": {
+      "type": "bool",
+      "provenance": [{ "source_id": "dmn_triage", "column": "o_referral" }]
+    },
+    "o_home_treatment": {
+      "type": "bool",
+      "provenance": [{ "source_id": "dmn_triage", "column": "o_home_treatment" }]
+    },
+    "o_isolation_advice": {
+      "type": "bool",
+      "provenance": [{ "source_id": "moh_covid_memo_v1", "column": "o_isolation_advice" }]
+    },
+    "o_no_action": {
+      "type": "bool",
+      "provenance": [{ "source_id": "dmn_triage", "column": "o_no_action" }]
+    }
+  },
+  "decisions": {
+    "d_triage": {
+      "hit_policy": "FIRST",
+      "provenance": [{ "source_id": "dmn_triage", "table": "triage" }],
+      "rules": [
+        {
+          "id": "r1",
+          "when": {
+            "kind": "pred",
+            "id": "p_danger_sign"
+          },
+          "then": {
+            "o_referral": true
+          },
+          "provenance": [{ "source_id": "dmn_triage", "row": 1 }]
+        },
+        {
+          "id": "r2",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "pred", "id": "p_fast_breathing" },
+              {
+                "kind": "not",
+                "arg": { "kind": "pred", "id": "p_danger_sign" }
+              }
+            ]
+          },
+          "then": {
+            "o_home_treatment": true
+          },
+          "provenance": [{ "source_id": "dmn_triage", "row": 2 }]
+        },
+        {
+          "id": "r3",
+          "when": {
+            "kind": "and",
+            "args": [
+              { "kind": "pred", "id": "p_has_cough" },
+              {
+                "kind": "not",
+                "arg": { "kind": "pred", "id": "p_danger_sign" }
+              },
+              {
+                "kind": "=",
+                "left": { "kind": "const", "id": "c_covid_circulating" },
+                "right": { "kind": "literal", "type": "bool", "value": true }
+              }
+            ]
+          },
+          "then": {
+            "o_isolation_advice": true
+          },
+          "provenance": [{ "source_id": "moh_covid_memo_v1", "row": 3 }]
+        },
+        {
+          "id": "r4",
+          "when": { "kind": "else" },
+          "then": {
+            "o_no_action": true
+          },
+          "provenance": [{ "source_id": "dmn_triage", "row": 4 }]
+        }
+      ]
+    }
+  },
+  "invariants": {
+    "i_single_endpoint": {
+      "severity": "error",
+      "expression": {
+        "kind": "exactly_one",
+        "args": [
+          { "kind": "output", "id": "o_referral" },
+          { "kind": "output", "id": "o_home_treatment" },
+          { "kind": "output", "id": "o_isolation_advice" },
+          { "kind": "output", "id": "o_no_action" }
+        ]
+      },
+      "provenance": [{ "source_id": "qa_policy", "row": 1 }]
+    }
+  },
+  "phrase_bindings": {
+    "o_referral": {
+      "message_key": "m_referral",
+      "guidance_key": "m_referral_followup"
+    },
+    "o_home_treatment": {
+      "message_key": "m_home_treatment"
+    },
+    "o_isolation_advice": {
+      "message_key": "m_isolation_advice"
+    },
+    "o_no_action": {
+      "message_key": "m_no_action"
+    }
+  }
+}
