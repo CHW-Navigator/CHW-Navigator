@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/approval-attestation.schema.json",
+  "title": "CHW Navigator registry approval attestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "content_digest", "registry_set_digest", "role", "decision",
+    "approver_id", "organization_id", "signed_at", "expires_at", "signing_key_id",
+    "signature_algorithm", "signature"
+  ],
+  "properties": {
+    "schema_version": {"const": "approval-attestation@1.0.0"},
+    "content_digest": {"$ref": "#/$defs/digest"},
+    "registry_set_digest": {"$ref": "#/$defs/digest"},
+    "role": {"enum": ["clinical", "data_governance", "technical"]},
+    "decision": {"enum": ["approved", "rejected"]},
+    "approver_id": {"type": "string", "minLength": 1},
+    "organization_id": {"type": "string", "minLength": 1},
+    "signed_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": ["string", "null"], "format": "date-time"},
+    "signing_key_id": {"type": "string", "minLength": 1},
+    "signature_algorithm": {"const": "detached-external"},
+    "signature": {"type": "string", "minLength": 1}
+  },
+  "$defs": {"digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

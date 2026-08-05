@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/registry-set-v2.schema.json",
+  "title": "CHW Navigator governed registry set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "content_digest", "data_dictionary", "capability_registry",
+    "capability_governance", "target_profile"
+  ],
+  "properties": {
+    "schema_version": {"const": "registry-set@2.0.0"},
+    "content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "data_dictionary": {"$ref": "data-dictionary.schema.json"},
+    "capability_registry": {"$ref": "capability-registry.schema.json"},
+    "capability_governance": {"$ref": "capability-governance.schema.json"},
+    "target_profile": {"$ref": "target-profile.schema.json"}
+  }
+}

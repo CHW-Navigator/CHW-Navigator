@@ -12,6 +12,9 @@ authoring inputs:
 
 - `registry-set.schema.json`, `capability-registry.schema.json`, and
   `target-profile.schema.json` define the minimal WS1 content-addressed contract;
+- `registry-set-v2.schema.json`, `data-dictionary.schema.json`,
+  `capability-governance.schema.json`, `approval-attestation.schema.json`, and
+  `registry-release.schema.json` define the WS3 governed-release layer;
 - `special-function-registry.json`
 - `identity-providers.json` and `identity-providers.schema.json`
 - `conflict-policies.json` and `conflict-policies.schema.json`
@@ -39,6 +42,11 @@ Files:
 - `registry-set.schema.json`
 - `capability-registry.schema.json`
 - `target-profile.schema.json`
+- `registry-set-v2.schema.json`
+- `data-dictionary.schema.json`
+- `capability-governance.schema.json`
+- `approval-attestation.schema.json`
+- `registry-release.schema.json`
 - `examples/tracer/valid-registry-set.json` and `negative-cases.json`
 - `variable-catalog.contract.md`
 - `predicate-catalog.contract.md`
@@ -63,6 +71,13 @@ WS1 capability `evidence_status` is deliberately limited to `candidate` and
 to resolve; it is not approval, clinical evidence, deployment readiness, or proof
 that the planned implementation binding already exists. WS2 must supply and test
 that binding before it can earn executable evidence.
+
+WS3 does not add approval fields to the executable capability. A governed v2
+set binds data concepts and capability-governance entries to exact v1 content
+digests. Activation is a separate operation requiring distinct clinical,
+data-governance, and technical attestations whose detached signatures verify
+against the exact set. The committed fixture uses only `synthetic-test-*`
+identities; it is test evidence, never a ministry approval record.
 
 Supporting guidance:
 

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/registry-release.schema.json",
+  "title": "CHW Navigator governed registry release",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "content_digest", "release_id", "version", "registry_set_digest",
+    "attestation_digests", "effective_from", "expires_at", "supersedes_release_digest"
+  ],
+  "properties": {
+    "schema_version": {"const": "registry-release@1.0.0"},
+    "content_digest": {"$ref": "#/$defs/digest"},
+    "release_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "registry_set_digest": {"$ref": "#/$defs/digest"},
+    "attestation_digests": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}},
+    "effective_from": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": ["string", "null"], "format": "date-time"},
+    "supersedes_release_digest": {"anyOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]}
+  },
+  "$defs": {"digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}
