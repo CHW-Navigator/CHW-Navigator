@@ -156,8 +156,12 @@ class ActionDef:
     mappings: list[ActionMappingDef] = field(default_factory=list)
     fail_mode: str | None = None
     expression: dict[str, Any] | None = None
+    capability_id: str | None = None
+    arguments: dict[str, str] = field(default_factory=dict)
+    status_target_var: str | None = None
     task_type: str | None = None
     due_in_days: int | None = None
+    due_in_days_output: str | None = None
     due_at_expr: dict[str, Any] | None = None
     priority: str | None = None
     assignee_role: str | None = None
@@ -337,8 +341,18 @@ def _parse_action(identifier: str, data: dict[str, Any]) -> ActionDef:
         mappings=[_parse_action_mapping(item) for item in data.get("mappings", [])],
         fail_mode=str(data["fail_mode"]) if data.get("fail_mode") is not None else None,
         expression=dict(data["expression"]) if isinstance(data.get("expression"), dict) else None,
+        capability_id=str(data["capability_id"]) if data.get("capability_id") is not None else None,
+        arguments={str(key): str(value) for key, value in data.get("arguments", {}).items()},
+        status_target_var=(
+            str(data["status_target_var"]) if data.get("status_target_var") is not None else None
+        ),
         task_type=str(data["task_type"]) if data.get("task_type") is not None else None,
         due_in_days=int(data["due_in_days"]) if data.get("due_in_days") is not None else None,
+        due_in_days_output=(
+            str(data["due_in_days_output"])
+            if data.get("due_in_days_output") is not None
+            else None
+        ),
         due_at_expr=dict(data["due_at_expr"]) if isinstance(data.get("due_at_expr"), dict) else None,
         priority=str(data["priority"]) if data.get("priority") is not None else None,
         assignee_role=str(data["assignee_role"]) if data.get("assignee_role") is not None else None,

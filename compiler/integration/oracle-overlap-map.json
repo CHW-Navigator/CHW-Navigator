@@ -44,6 +44,18 @@
       "reason": null
     },
     {
+      "case_id": "gestational-age.naegele.tracer-day-remainder",
+      "python_entrypoint": "chw_navigator.special_functions.calculate_gestational_age_naegele",
+      "typescript_entrypoint": "packages/special-functions/dist/index.js#calculateGestationalAgeFromLmp",
+      "comparability": "comparable",
+      "normalization": "status_edd_and_decimal_week_overlap",
+      "input": {
+        "lmp_date": "2026-01-01",
+        "reference_date": "2026-01-09"
+      },
+      "reason": null
+    },
+    {
       "case_id": "weight-for-age.native-chart-equivalence",
       "python_entrypoint": null,
       "typescript_entrypoint": "packages/special-functions/dist/index.js#calculateWeightForAgeZScore",

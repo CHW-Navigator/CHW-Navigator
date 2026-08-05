@@ -23,6 +23,7 @@ class SurveyRow:
     constraint: str = ""
     appearance: str = ""
     role: str = ""
+    bind_type: str = ""
 
 
 @dataclass(slots=True)

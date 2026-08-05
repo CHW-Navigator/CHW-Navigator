@@ -138,6 +138,46 @@ def _validate_actions(document: ClinicalIRDocument, errors: list[ValidationError
 
         if action.kind == "compute" and action.expression is not None:
             _infer_expr_type(action.expression, document, f"actions.{action.id}.expression", errors)
+        if action.kind == "invoke_capability":
+            for name, variable_id in action.arguments.items():
+                if variable_id not in document.variables:
+                    errors.append(
+                        ValidationError(
+                            f"actions.{action.id}.arguments.{name}",
+                            f"unknown variable reference '{variable_id}'",
+                        )
+                    )
+            if action.status_target_var not in document.variables:
+                errors.append(
+                    ValidationError(
+                        f"actions.{action.id}.status_target_var",
+                        f"unknown status target '{action.status_target_var}'",
+                    )
+                )
+            for index, mapping in enumerate(action.mappings):
+                if mapping.target_var not in document.variables:
+                    errors.append(
+                        ValidationError(
+                            f"actions.{action.id}.mappings[{index}].target_var",
+                            f"unknown variable reference '{mapping.target_var}'",
+                        )
+                    )
+        if action.kind == "create_task" and action.due_in_days_output is not None:
+            output = document.outputs.get(action.due_in_days_output)
+            if output is None:
+                errors.append(
+                    ValidationError(
+                        f"actions.{action.id}.due_in_days_output",
+                        f"unknown output reference '{action.due_in_days_output}'",
+                    )
+                )
+            elif output.type != ScalarType.INT:
+                errors.append(
+                    ValidationError(
+                        f"actions.{action.id}.due_in_days_output",
+                        "task due-day decision output must have type int",
+                    )
+                )
 
 
 def _validate_decisions(document: ClinicalIRDocument, errors: list[ValidationError]) -> None:

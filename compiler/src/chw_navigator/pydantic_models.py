@@ -429,15 +429,19 @@ class ActionMappingModel(StrictModel):
 
 class ActionModel(StrictModel):
     id: str
-    kind: Literal["read_history", "read_local_data", "ask", "compute", "create_task"]
+    kind: Literal["read_history", "read_local_data", "ask", "compute", "invoke_capability", "create_task"]
     outputs: list[str] = Field(default_factory=list)
     when: ExprModel | None = None
     source: str | None = None
     mappings: list[ActionMappingModel] = Field(default_factory=list)
     fail_mode: Literal["soft_missing", "ask_if_missing", "hard_error"] | None = None
     expression: ExprModel | None = None
+    capability_id: str | None = None
+    arguments: dict[str, str] = Field(default_factory=dict)
+    status_target_var: str | None = None
     task_type: str | None = None
     due_in_days: int | None = None
+    due_in_days_output: str | None = None
     due_at_expr: ExprModel | None = None
     priority: str | None = None
     assignee_role: str | None = None
@@ -468,12 +472,34 @@ class ActionModel(StrictModel):
                     raise ValueError("local-data read output target must use legacy h_ ids or the newer _h suffix")
         if self.kind == "compute" and self.expression is None:
             raise ValueError("compute actions require expression")
+        if self.kind == "invoke_capability":
+            if not self.capability_id:
+                raise ValueError("invoke_capability actions require capability_id")
+            if not self.arguments:
+                raise ValueError("invoke_capability actions require named arguments")
+            if not self.mappings:
+                raise ValueError("invoke_capability actions require output mappings")
+            if not self.status_target_var:
+                raise ValueError("invoke_capability actions require status_target_var")
+            for variable_id in self.arguments.values():
+                _require_prefix(variable_id, ("v_", "h_", "st_"), "capability argument variable")
+            _require_prefix(self.status_target_var, ("v_", "h_", "st_"), "status_target_var")
         if self.kind == "create_task" and self.task_type is None:
             raise ValueError("create_task actions require task_type")
         if self.due_in_days is not None and self.due_in_days < 0:
             raise ValueError("due_in_days cannot be negative")
-        if self.due_in_days is not None and self.due_at_expr is not None:
-            raise ValueError("create_task actions must not set both due_in_days and due_at_expr")
+        if self.due_in_days_output is not None:
+            _require_prefix(self.due_in_days_output, ("o_",), "due_in_days_output")
+        schedule_fields = (
+            self.due_in_days is not None,
+            self.due_in_days_output is not None,
+            self.due_at_expr is not None,
+        )
+        if sum(schedule_fields) > 1:
+            raise ValueError(
+                "create_task actions must set at most one of due_in_days, "
+                "due_in_days_output, and due_at_expr"
+            )
         return self
 
 

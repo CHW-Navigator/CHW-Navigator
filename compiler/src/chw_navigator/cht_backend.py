@@ -25,6 +25,7 @@ from .cht_tasks import (
     CHTTaskLoweringError,
     build_task_intent_plans,
     generate_tasks_js,
+    resolve_static_due_in_days,
     task_intent_rows,
     task_plan_payload,
 )
@@ -192,7 +193,7 @@ def build_cht_lowering_plan(
                     action_id=action.id,
                     task_type=action.task_type or "unspecified_task",
                     trigger_expr=action.when,
-                    due_in_days=action.due_in_days,
+                    due_in_days=resolve_static_due_in_days(document, action),
                     priority=action.priority,
                     assignee_role=action.assignee_role,
                     message_key=action.message_key,

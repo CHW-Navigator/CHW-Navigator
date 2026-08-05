@@ -37,7 +37,8 @@ When this file and `Product/` disagree, trust `Product/`.
 
 | Capability | Status | Why it matters | Primary refs |
 |---|---|---|---|
-| WS1 minimum registry and target contracts | Implemented on WS1 branch | Gives the WS2 tracer a content-addressed, fail-closed capability boundary without adding approval machinery | `compiler/contracts/*registry*.schema.json`, `compiler/contracts/target-profile.schema.json`, `compiler/src/chw_navigator/registry_set.py` |
+| WS1 minimum registry and target contracts | Implemented; E1 isolated evidence | Gives the WS2 tracer a content-addressed, fail-closed capability boundary without adding approval machinery | `compiler/contracts/*registry*.schema.json`, `compiler/contracts/target-profile.schema.json`, `compiler/src/chw_navigator/registry_set.py` |
+| WS2 early CHT tracer | Implemented; E2 only, not deployment-ready | Proves one hand-written IR can resolve a capability and produce a deterministic CHT form/task bundle while preserving non-pass evidence | `compiler/examples/tracer/`, `compiler/src/chw_navigator/tracer.py`, `compiler/docs/work-log.md` |
 | Stable equivalence workflow vs medical reference DMNs | In progress | Real-world deployment confidence requires repeatable comparison criteria | `workflow.md`, `Testing/`, `Medical/` |
 | Determinism and semantic diff checks | In progress | Distinguish harmless reorderings from behavioral drift | `Product/ARCHITECTURE.md` open issues |
 | Pipeline docs harmonization (spec vs shipped) | In progress | Reduce confusion between long-horizon pipeline and Gen7 shipped path | `Product/PIPELINE.md`, `workflow.md` |

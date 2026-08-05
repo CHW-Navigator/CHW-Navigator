@@ -26,6 +26,9 @@ GESTATIONAL_AGE_FUNCTION_ID = "special.technical.gestational-age-and-edd-from-lm
 GESTATIONAL_AGE_FUNCTION_VERSION = "1.0.0"
 GESTATIONAL_AGE_REFERENCE_VERSION = "calendar-280-day-v1"
 GESTATIONAL_AGE_REFERENCE_SHA256 = "sha256:24a7f281b2356f585f883d459f49b8f74b7059308039b96cedac2b7d1b9123eb"
+NAEGELE_FUNCTION_ID = "technical.gestational-age.naegele"
+NAEGELE_FUNCTION_VERSION = "1.0.0"
+NAEGELE_REFERENCE_VERSION = "naegele@1.0.0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +104,60 @@ def calculate_gestational_age_from_lmp(
             "reference_data_version": GESTATIONAL_AGE_REFERENCE_VERSION,
             "reference_data_sha256": GESTATIONAL_AGE_REFERENCE_SHA256,
             "rounding": "half-even-1",
+        },
+    )
+
+
+def calculate_gestational_age_naegele(
+    *,
+    lmp_date: str | None,
+    reference_date: str | None,
+    function_version: str | None = NAEGELE_FUNCTION_VERSION,
+    reference_data_version: str | None = NAEGELE_REFERENCE_VERSION,
+    reference_available: bool = True,
+) -> SpecialFunctionResult:
+    """Technical calendar arithmetic only; this function makes no clinical classification."""
+
+    if not reference_available:
+        return SpecialFunctionResult(
+            status="reference_data_unavailable",
+            reason="The pinned Naegele calendar convention is unavailable.",
+        )
+    if None in (lmp_date, reference_date, function_version, reference_data_version):
+        return SpecialFunctionResult(
+            status="input_missing",
+            reason="lmp_date, reference_date, function_version, and reference_data_version are required.",
+        )
+    if function_version != NAEGELE_FUNCTION_VERSION or reference_data_version != NAEGELE_REFERENCE_VERSION:
+        return SpecialFunctionResult(
+            status="version_mismatch",
+            reason="Function or reference convention does not match the registered capability.",
+        )
+    lmp = _parse_iso_date(lmp_date)
+    reference = _parse_iso_date(reference_date)
+    if lmp is None or reference is None:
+        return SpecialFunctionResult(status="input_invalid", reason="Dates must be real ISO 8601 calendar dates.")
+    elapsed_days = (reference - lmp).days
+    if elapsed_days < 0:
+        return SpecialFunctionResult(status="input_invalid", reason="reference_date must not precede lmp_date.")
+    if elapsed_days > 314:
+        return SpecialFunctionResult(
+            status="outside_supported_domain",
+            reason="The supported domain ends at 44 completed weeks and 6 days.",
+        )
+    try:
+        weeks, remainder = divmod(elapsed_days, 7)
+        edd = (lmp + timedelta(days=280)).isoformat()
+    except (ArithmeticError, OverflowError, ValueError):
+        return SpecialFunctionResult(status="numeric_failure", reason="Calendar arithmetic failed.")
+    return SpecialFunctionResult(
+        status="ok",
+        technical={"ga_weeks": weeks, "ga_days_remainder": remainder, "edd": edd},
+        provenance={
+            "function_id": NAEGELE_FUNCTION_ID,
+            "function_version": NAEGELE_FUNCTION_VERSION,
+            "reference_data_version": NAEGELE_REFERENCE_VERSION,
+            "rounding": "none",
         },
     )
 
