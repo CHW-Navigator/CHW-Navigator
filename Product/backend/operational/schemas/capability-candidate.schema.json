@@ -13,7 +13,6 @@
     "output_types": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "backend": {"type": "string", "minLength": 1},
     "requires_human_review": {"type": "boolean"},
-    "review_approval": {"type": "string", "minLength": 1},
     "source": {
       "type": "object",
       "required": ["document_id", "page", "section", "quote"],
@@ -23,8 +22,8 @@
         "section": {"type": "string", "minLength": 1},
         "quote": {"type": "string", "minLength": 1}
       },
-      "additionalProperties": true
+      "additionalProperties": false
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

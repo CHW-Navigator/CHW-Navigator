@@ -23,6 +23,12 @@ from .topology import (
     validate_topology_package,
 )
 from .external_effects import build_external_effect_package
+from .capability_scan import (
+    CapabilityScanValidationError,
+    build_capability_scan_request,
+    parse_candidate_needs,
+    scan_capability_needs,
+)
 
 __all__ = [
     "OperationalValidationError",
@@ -39,4 +45,8 @@ __all__ = [
     "validate_topology_requirements_against_package",
     "validate_topology_package",
     "build_external_effect_package",
+    "CapabilityScanValidationError",
+    "build_capability_scan_request",
+    "parse_candidate_needs",
+    "scan_capability_needs",
 ]

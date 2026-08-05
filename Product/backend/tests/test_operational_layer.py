@@ -105,6 +105,35 @@ class TestCapabilityResolution(unittest.TestCase):
         self.assertEqual(resolution["status"], "blocked")
         self.assertEqual(resolution["reason"], "ambiguous_exact_match")
 
+    def test_human_review_evidence_is_separate_from_the_candidate(self):
+        candidate = dict(CANDIDATE, requires_human_review=True)
+        blocked = resolve_capability(candidate, REGISTRY["entries"])
+        self.assertEqual(blocked["reason"], "human_review_required")
+        resolved = resolve_capability(
+            candidate,
+            REGISTRY["entries"],
+            reviewed_candidate_ids={candidate["id"]},
+        )
+        self.assertEqual(resolved["status"], "resolved")
+
+        with self.assertRaisesRegex(OperationalValidationError, "unknown fields: review_approval"):
+            resolve_capability(
+                {**candidate, "review_approval": "invented approval"},
+                REGISTRY["entries"],
+            )
+
+        with self.assertRaisesRegex(OperationalValidationError, "must be a boolean"):
+            resolve_capability(
+                {**candidate, "requires_human_review": "false"},
+                REGISTRY["entries"],
+            )
+
+        with self.assertRaisesRegex(OperationalValidationError, "source has unknown fields"):
+            resolve_capability(
+                {**candidate, "source": {**candidate["source"], "approval": "approved"}},
+                REGISTRY["entries"],
+            )
+
 
 class TestEpisodeLifecycle(unittest.TestCase):
     def test_recovery_requires_current_clinical_guard_evidence(self):
@@ -341,6 +370,7 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
         schemas = Path(__file__).parents[1] / "operational" / "schemas"
         expected = {
             "capability-candidate.schema.json",
+            "capability-needs.schema.json",
             "registry-resolution.schema.json",
             "lifecycle-definition.schema.json",
             "episode-event.schema.json",
@@ -357,7 +387,10 @@ class TestGen8IntegrationBoundary(unittest.TestCase):
         for path in schemas.glob("*.schema.json"):
             document = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(document["$schema"], "https://json-schema.org/draft/2020-12/schema")
-            self.assertTrue(document["$id"].startswith("https://chw-navigator.org/schema/gen8/"))
+            self.assertTrue(
+                document["$id"].startswith("https://chw-navigator.org/schema/gen8/")
+                or document["$id"].startswith("https://chw-navigator.org/schema/prompt-b/")
+            )
 
     def test_pipeline_exposes_only_gated_operational_sidecars(self):
         """Keep the optional companion boundary visible without loading API deps."""
