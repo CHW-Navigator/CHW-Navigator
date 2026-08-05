@@ -1,0 +1,90 @@
+{
+  "base": "valid-registry-set.json",
+  "cases": [
+    {
+      "name": "missing-input-unit",
+      "operation": "delete",
+      "path": ["capability_registry", "capabilities", 0, "inputs", 0, "unit"],
+      "reseal": false,
+      "stage": "parse",
+      "expected_code": "CHWN-REG-001"
+    },
+    {
+      "name": "missing-capability-version",
+      "operation": "delete",
+      "path": ["capability_registry", "capabilities", 0, "version"],
+      "reseal": false,
+      "stage": "parse",
+      "expected_code": "CHWN-REG-002"
+    },
+    {
+      "name": "missing-capability-digest",
+      "operation": "delete",
+      "path": ["capability_registry", "capabilities", 0, "content_digest"],
+      "reseal": false,
+      "stage": "parse",
+      "expected_code": "CHWN-REG-003"
+    },
+    {
+      "name": "missing-subject-scope",
+      "operation": "delete",
+      "path": ["capability_registry", "capabilities", 0, "subject_scope"],
+      "reseal": false,
+      "stage": "parse",
+      "expected_code": "CHWN-SCOPE-002"
+    },
+    {
+      "name": "missing-target-feature-declaration",
+      "operation": "delete",
+      "path": ["target_profile", "required_local_data_features"],
+      "reseal": false,
+      "stage": "parse",
+      "expected_code": "CHWN-TARGET-002"
+    },
+    {
+      "name": "unknown-capability-field",
+      "operation": "set",
+      "path": ["capability_registry", "capabilities", 0, "approval_state"],
+      "value": "approved",
+      "reseal": false,
+      "stage": "parse",
+      "expected_code": "CHWN-REG-006"
+    },
+    {
+      "name": "locked-source-mutated",
+      "operation": "set",
+      "path": ["capability_registry", "capabilities", 0, "operation"],
+      "value": "drifted_operation",
+      "reseal": false,
+      "stage": "parse",
+      "expected_code": "CHWN-REG-004"
+    },
+    {
+      "name": "schema-valid-candidate-cannot-resolve",
+      "operation": "set",
+      "path": ["capability_registry", "capabilities", 0, "evidence_status"],
+      "value": "candidate",
+      "reseal": true,
+      "stage": "resolve",
+      "expected_code": "CHWN-REG-005"
+    },
+    {
+      "name": "unsupported-target-profile",
+      "operation": "set",
+      "path": ["capability_registry", "capabilities", 0, "supported_target_profiles"],
+      "value": ["cht-core-4.22@1.0.0"],
+      "reseal": true,
+      "stage": "resolve",
+      "expected_code": "CHWN-TARGET-001"
+    },
+    {
+      "name": "required-target-feature-unavailable",
+      "operation": "set",
+      "path": ["target_profile", "required_local_data_features"],
+      "value": ["contact_summary", "registered_local_read", "latest_value_ordering"],
+      "reseal": true,
+      "stage": "resolve_with_recorded_at",
+      "expected_code": "CHWN-TARGET-002"
+    }
+  ]
+}

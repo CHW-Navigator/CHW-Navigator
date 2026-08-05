@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/capability-registry.schema.json",
+  "title": "CHW Navigator capability registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_digest", "capabilities"],
+  "properties": {
+    "schema_version": {"const": "capability-registry@1.0.0"},
+    "content_digest": {"$ref": "#/$defs/digest"},
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/capability"}
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "value_type": {
+      "enum": ["boolean", "string", "integer", "decimal", "date", "datetime", "choice"]
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "unit", "cardinality"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "type": {"$ref": "#/$defs/value_type"},
+        "unit": {"type": "string", "minLength": 1},
+        "cardinality": {"enum": ["required", "optional", "repeated"]}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "unit", "binding_path"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "type": {"$ref": "#/$defs/value_type"},
+        "unit": {"type": "string", "minLength": 1},
+        "binding_path": {"type": "string", "pattern": "^technical\\.[a-z0-9_.-]+$"}
+      }
+    },
+    "supported_domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basis", "minimum", "maximum", "unit"],
+      "properties": {
+        "basis": {"type": "string", "minLength": 1},
+        "minimum": {"type": "number"},
+        "maximum": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1}
+      }
+    },
+    "implementation_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "python_module", "python_symbol", "cht_extension_module"],
+      "properties": {
+        "kind": {"const": "python_cht_extension"},
+        "python_module": {"type": "string", "minLength": 1},
+        "python_symbol": {"type": "string", "minLength": 1},
+        "cht_extension_module": {"type": "string", "pattern": "^[a-z0-9_.-]+\\.js$"}
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "version", "content_digest", "family", "operation", "inputs", "outputs",
+        "status_set", "supported_domain", "rounding", "determinism", "side_effects",
+        "implementation_binding", "evidence_status", "supported_target_profiles", "subject_scope"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+$"},
+        "version": {"$ref": "#/$defs/version"},
+        "content_digest": {"$ref": "#/$defs/digest"},
+        "family": {"type": "string", "minLength": 1},
+        "operation": {"type": "string", "minLength": 1},
+        "inputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/input"}},
+        "outputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/output"}},
+        "status_set": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ok", "input_missing", "input_invalid", "outside_supported_domain",
+              "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"
+            ]
+          }
+        },
+        "supported_domain": {"$ref": "#/$defs/supported_domain"},
+        "rounding": {"enum": ["none", "half_even"]},
+        "determinism": {"enum": ["deterministic", "nondeterministic"]},
+        "side_effects": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "implementation_binding": {"$ref": "#/$defs/implementation_binding"},
+        "evidence_status": {"enum": ["candidate", "tracer_enabled"]},
+        "supported_target_profiles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+@[0-9]+\\.[0-9]+\\.[0-9]+$"}
+        },
+        "subject_scope": {"enum": ["current_contact", "household", "service_area", "cohort"]}
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/target-profile.schema.json",
+  "title": "CHW Navigator CHT target profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "id", "version", "content_digest", "cht_core_version",
+    "cht_conf_version", "form_engine", "extension_support", "required_local_data_features"
+  ],
+  "properties": {
+    "schema_version": {"const": "target-profile@1.0.0"},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "cht_core_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "cht_conf_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "form_engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "extension_support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extension_lib_xpath", "extension_lib_expression"],
+      "properties": {
+        "extension_lib_xpath": {"type": "boolean"},
+        "extension_lib_expression": {"type": "boolean"}
+      }
+    },
+    "required_local_data_features": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["contact_summary", "registered_local_read", "latest_value_ordering", "recorded_at_freshness"]
+      }
+    }
+  }
+}

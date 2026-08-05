@@ -10,6 +10,8 @@ These contracts define the recommended upstream authoring formats for:
 The directory also contains versioned platform registries that are not clinical
 authoring inputs:
 
+- `registry-set.schema.json`, `capability-registry.schema.json`, and
+  `target-profile.schema.json` define the minimal WS1 content-addressed contract;
 - `special-function-registry.json`
 - `identity-providers.json` and `identity-providers.schema.json`
 - `conflict-policies.json` and `conflict-policies.schema.json`
@@ -34,6 +36,10 @@ Cross-cutting rules:
 
 Files:
 
+- `registry-set.schema.json`
+- `capability-registry.schema.json`
+- `target-profile.schema.json`
+- `examples/tracer/valid-registry-set.json` and `negative-cases.json`
 - `variable-catalog.contract.md`
 - `predicate-catalog.contract.md`
 - `phrase-bank.contract.md`
@@ -51,6 +57,12 @@ The CHT task-binding contract is deployment-owned. It maps a Clinical IR `task_t
 to the exact CHT follow-up form, translation, permission, timing window, role, icon,
 and priority. CHT lowering fails closed when a `create_task` action has no matching
 binding; the compiler does not infer deployment values from clinical text.
+
+WS1 capability `evidence_status` is deliberately limited to `candidate` and
+`tracer_enabled`. `tracer_enabled` permits the hand-written WS2 technical tracer
+to resolve; it is not approval, clinical evidence, deployment readiness, or proof
+that the planned implementation binding already exists. WS2 must supply and test
+that binding before it can earn executable evidence.
 
 Supporting guidance:
 
