@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/capability-governance.schema.json",
+  "title": "CHW Navigator capability governance catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_digest", "entries"],
+  "properties": {
+    "schema_version": {"const": "capability-governance@1.0.0"},
+    "content_digest": {"$ref": "#/$defs/digest"},
+    "entries": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/entry"}}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "reference": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+@[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "location"],
+      "properties": {"source_id": {"type": "string", "minLength": 1}, "location": {"type": "string", "minLength": 1}}
+    },
+    "entry": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "capability_id", "capability_version", "capability_content_digest", "content_digest",
+        "evidence_sources", "owner_roles", "invocation_policy_ref", "review_requirements", "concept_bindings",
+        "lifecycle_state"
+      ],
+      "properties": {
+        "capability_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+$"},
+        "capability_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "capability_content_digest": {"$ref": "#/$defs/digest"},
+        "content_digest": {"$ref": "#/$defs/digest"},
+        "evidence_sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+        "owner_roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "invocation_policy_ref": {"$ref": "#/$defs/reference"},
+        "review_requirements": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"enum": ["clinical", "data_governance", "technical"]}
+        },
+        "concept_bindings": {
+          "type": "array", "items": {"$ref": "#/$defs/concept_binding"}
+        },
+        "lifecycle_state": {"enum": ["candidate", "reviewed", "approved", "retired"]}
+      }
+    },
+    "concept_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["direction", "parameter_name", "concept_id", "concept_version", "concept_content_digest"],
+      "properties": {
+        "direction": {"enum": ["input", "output"]},
+        "parameter_name": {"type": "string", "minLength": 1},
+        "concept_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+$"},
+        "concept_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "concept_content_digest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  }
+}

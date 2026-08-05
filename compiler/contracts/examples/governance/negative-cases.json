@@ -1,0 +1,14 @@
+{
+  "schema_version": "governance-negative-cases@1.0.0",
+  "cases": [
+    {"name": "wrong-set-digest", "expected_code": "CHWN-REG-008"},
+    {"name": "missing-role", "expected_code": "CHWN-REG-009"},
+    {"name": "duplicate-role", "expected_code": "CHWN-REG-010"},
+    {"name": "unverified-signature", "expected_code": "CHWN-REG-011"},
+    {"name": "rejected-decision", "expected_code": "CHWN-REG-012"},
+    {"name": "inactive-input", "expected_code": "CHWN-REG-013"},
+    {"name": "expired-attestation", "expected_code": "CHWN-REG-014"},
+    {"name": "v1-activation", "expected_code": "CHWN-REG-007"},
+    {"name": "invalid-concept-binding", "expected_code": "CHWN-REG-015"}
+  ]
+}
