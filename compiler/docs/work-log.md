@@ -17,3 +17,21 @@
 **Evidence level earned:** E0 overall. All executable unit suites have zero failures, but one official local-data harness case and four TypeScript filesystem-security cases are skipped; mandatory non-pass results cannot earn E1 in the combined manifest.
 
 **Blocked on:** E3 local-data harness execution requires a working `xsltproc`; four TypeScript symlink-security cases require a non-Windows required CI job or Windows-native equivalent; E4-E6 target-runtime, offline/server, clinical, governance, security, and deployment evidence remains external.
+
+## WS1 - Minimum viable contracts - 2026-08-05
+
+**Delivered:** Content-addressed registry-set, capability-registry, and exact CHT target-profile schemas; a strict Python loader/resolver; a sealed tracer fixture and mutation-based negative corpus; stable `CHWN-REG-*`, `CHWN-TARGET-*`, and `CHWN-SCOPE-*` diagnostics; and the three named WS1 test modules. Capability fields are limited to the WS1 list, unknown fields fail closed, input order is preserved, output bindings are restricted to `technical.*`, and Release 1 accepts only `current_contact`.
+
+**Deviations:** The resolvable evidence state is named `tracer_enabled`, not `verified` or `approved`. It enables only the hand-written WS2 contract tracer and deliberately makes no implementation, clinical, governance, or deployment claim. The planned `calculate_gestational_age_naegele` implementation binding is recorded but is not supplied in WS1; implementing and executing it belongs to WS2.
+
+**Defects found:** The first draft used `verified` before a matching WS2 implementation existed, which would have inflated evidence. The initial target-feature resolver considered local-data features but not extension support. Hand-maintained JSON Schemas and runtime models also had no parity check and could have drifted independently.
+
+**Root cause:** Contract resolvability, implementation evidence, and approval were represented too close together, and target capabilities were split across two fields without one resolution view. Stored schemas and runtime validation were separate artifacts without a shared executable invariant.
+
+**Generalized guardrail:** Candidate entries always parse but never resolve; the only WS1 resolvable state is explicitly non-approval `tracer_enabled`. Resolution combines declared local-data and enabled extension features, rejects unsupported profiles, and emits stable diagnostics. Tests compare schema root fields with runtime models, assert the exact capability surface, derive the set digest independently from named member digests, mutate capability/target/input-order sources, run every negative fixture, and exercise every declared diagnostic.
+
+**Status ledger:** WS1 focused suite: 16 pass, 0 fail, 0 skipped. Full compiler suite: 164 pass, 0 fail, 1 environment-dependent official-harness skip across 165 tests. No Product or TypeScript behavior was changed by WS1.
+
+**Evidence level earned:** E1 for the isolated WS1 deterministic unit/negative-fixture suite. The repository-wide evidence floor remains E0 because the pre-existing official local-data harness check is skipped on this Windows environment.
+
+**Blocked on:** Nothing within WS1. WS2 must implement the planned binding, execute the tracer through generated artifacts and the local harness, and keep any skipped or unavailable runtime evidence explicit.

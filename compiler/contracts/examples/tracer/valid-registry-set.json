@@ -1,0 +1,73 @@
+{
+  "schema_version": "registry-set@1.0.0",
+  "content_digest": "sha256:12ec4a1322292e2e080cd790ad4c130e06f81b91687273aa735edb24e71ead7a",
+  "capability_registry": {
+    "schema_version": "capability-registry@1.0.0",
+    "content_digest": "sha256:71e9c68159a07e156f169d81b4b4c0b463f16b0c78cbd1db585469bc65b9bfa4",
+    "capabilities": [
+      {
+        "id": "technical.gestational-age.naegele",
+        "version": "1.0.0",
+        "content_digest": "sha256:d294d108015f6c6e2447f1820b720d4ad5d67b68466536c399627fd1e0e6ab41",
+        "family": "calendar_arithmetic",
+        "operation": "gestational_age_and_estimated_delivery_date",
+        "inputs": [
+          {"name": "lmp_date", "type": "date", "unit": "calendar_date", "cardinality": "required"},
+          {"name": "reference_date", "type": "date", "unit": "calendar_date", "cardinality": "required"}
+        ],
+        "outputs": [
+          {"name": "ga_weeks", "type": "integer", "unit": "completed_weeks", "binding_path": "technical.ga_weeks"},
+          {"name": "ga_days_remainder", "type": "integer", "unit": "days", "binding_path": "technical.ga_days_remainder"},
+          {"name": "edd", "type": "date", "unit": "calendar_date", "binding_path": "technical.edd"}
+        ],
+        "status_set": [
+          "ok",
+          "input_missing",
+          "input_invalid",
+          "outside_supported_domain",
+          "reference_data_unavailable",
+          "numeric_failure",
+          "version_mismatch",
+          "execution_failure"
+        ],
+        "supported_domain": {
+          "basis": "elapsed_days_from_lmp_to_reference_date",
+          "minimum": 0,
+          "maximum": 314,
+          "unit": "days"
+        },
+        "rounding": "none",
+        "determinism": "deterministic",
+        "side_effects": [],
+        "implementation_binding": {
+          "kind": "python_cht_extension",
+          "python_module": "chw_navigator.special_functions",
+          "python_symbol": "calculate_gestational_age_naegele",
+          "cht_extension_module": "gestational-age-from-lmp.js"
+        },
+        "evidence_status": "tracer_enabled",
+        "supported_target_profiles": ["cht-core-5.2@1.0.0"],
+        "subject_scope": "current_contact"
+      }
+    ]
+  },
+  "target_profile": {
+    "schema_version": "target-profile@1.0.0",
+    "id": "cht-core-5.2",
+    "version": "1.0.0",
+    "content_digest": "sha256:14f72cd11f189319df9ac2395231d324d2d9b83da46ab7713259c13e2a4a0e0b",
+    "cht_core_version": "5.2.0",
+    "cht_conf_version": "6.4.1",
+    "form_engine": {"name": "cht-form-runner", "version": "4.11.0"},
+    "extension_support": {
+      "extension_lib_xpath": true,
+      "extension_lib_expression": true
+    },
+    "required_local_data_features": [
+      "contact_summary",
+      "registered_local_read",
+      "latest_value_ordering",
+      "recorded_at_freshness"
+    ]
+  }
+}

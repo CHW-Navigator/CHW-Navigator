@@ -37,6 +37,7 @@ When this file and `Product/` disagree, trust `Product/`.
 
 | Capability | Status | Why it matters | Primary refs |
 |---|---|---|---|
+| WS1 minimum registry and target contracts | Implemented on WS1 branch | Gives the WS2 tracer a content-addressed, fail-closed capability boundary without adding approval machinery | `compiler/contracts/*registry*.schema.json`, `compiler/contracts/target-profile.schema.json`, `compiler/src/chw_navigator/registry_set.py` |
 | Stable equivalence workflow vs medical reference DMNs | In progress | Real-world deployment confidence requires repeatable comparison criteria | `workflow.md`, `Testing/`, `Medical/` |
 | Determinism and semantic diff checks | In progress | Distinguish harmless reorderings from behavioral drift | `Product/ARCHITECTURE.md` open issues |
 | Pipeline docs harmonization (spec vs shipped) | In progress | Reduce confusion between long-horizon pipeline and Gen7 shipped path | `Product/PIPELINE.md`, `workflow.md` |
