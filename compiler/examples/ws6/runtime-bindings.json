@@ -1,0 +1,20 @@
+{
+  "schema_version": "cht-runtime-bindings@1.0.0",
+  "content_digest": "sha256:61a7673cfe9d34b126544b8cc6112ec00c12094a4994068f323b6909a8922fea",
+  "target_profile_digest": "sha256:14f72cd11f189319df9ac2395231d324d2d9b83da46ab7713259c13e2a4a0e0b",
+  "target_cht_version": "5.2.0",
+  "bindings": [
+    {
+      "variable_id": "st_lmp_availability",
+      "calculation": "${local_status__st_lmp_date_h}",
+      "bind_type": "string",
+      "role": "local_data_status_alias"
+    },
+    {
+      "variable_id": "st_reference_date",
+      "calculation": "today()",
+      "bind_type": "date",
+      "role": "capability_input"
+    }
+  ]
+}

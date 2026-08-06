@@ -82,6 +82,16 @@ def _literal_values(expression: Any) -> set[str]:
     return set()
 
 
+def _references_variable(expression: Any, variable_id: str) -> bool:
+    if isinstance(expression, dict):
+        if expression.get("kind") == "var" and expression.get("id") == variable_id:
+            return True
+        return any(_references_variable(value, variable_id) for value in expression.values())
+    if isinstance(expression, list):
+        return any(_references_variable(value, variable_id) for value in expression)
+    return False
+
+
 def validate_capability_invocation(document: ClinicalIRDocument, capability: Capability) -> None:
     actions = [item for item in document.actions.values() if item.kind == "invoke_capability"]
     diagnostics: list[Diagnostic] = []
@@ -116,7 +126,7 @@ def validate_capability_invocation(document: ClinicalIRDocument, capability: Cap
         covered: set[str] = set()
         for decision in document.decisions.values():
             for rule in decision.rules:
-                if action.status_target_var and action.status_target_var in json.dumps(rule.when, sort_keys=True):
+                if action.status_target_var and _references_variable(rule.when, action.status_target_var):
                     covered.update(_literal_values(rule.when))
         missing = sorted(set(capability.status_set) - covered)
         if missing:

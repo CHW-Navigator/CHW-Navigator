@@ -49,6 +49,7 @@ Supporting process docs:
 - reviewed CHT 4.22/5.2 special-function lowering with an isolated official harness
 - platform-owned person registration and mutable administrative-conflict contracts
 - bounded Product-to-canonical bridge with exact governed capability resolution
+- bounded Python-owned CHT production build, task composition, rollback, and stale-topology queue checks
 
 ## Validation layers
 
@@ -95,6 +96,9 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `src/chw_navigator/mutable_conflicts.py`: assertion-preserving mutable-field correction resolver
 - `src/chw_navigator/cht_tasks.py`: versioned CHT task bindings, form task-intent rows, and deterministic `tasks.js` generation
 - `src/chw_navigator/canonical_bridge.py`: WS5 Product adapter, reviewed-need binding, exact resolver, loss report, and resolution lock
+- `src/chw_navigator/cht_production.py`: WS6 governed CHT build, registry-selected capability lowering, runtime bindings, and evidence manifest
+- `src/chw_navigator/cht_task_composer.py`: Python-owned, content-aware `tasks.js` composition with trusted replacement state and exact rollback
+- `src/chw_navigator/queued_topology.py`: strict queued-operation and topology-snapshot contracts with boundary re-resolution
 - `tests/test_dmn_fail_loud.py`: fail-loud coverage for unsupported DMN inputs
 - `tests/test_artifact_drift.py`: mutated artifact drift detection across DMN, XLSForm, Mermaid, and IR
 - `tests/test_multi_module_router.py`: multi-table traffic-cop example with module priority and follow-on treatment/dosing tables
@@ -137,6 +141,33 @@ python -m chw_navigator.cli bridge-product `
   compiler/examples/ws5/target-profile.json `
   compiler/generated/ws5
 ```
+
+## Build the bounded WS6 CHT bundle
+
+Run this after the WS5 command above. The production command is Python-owned;
+Node and the reviewed TypeScript implementation are used only by differential
+tests. The example activation and registry are synthetic test inputs.
+
+```powershell
+$env:PYTHONPATH='compiler/src'
+python -m chw_navigator.cli build-cht-production `
+  compiler/generated/ws5/canonical-ir.json `
+  compiler/generated/ws5/resolution-lock.json `
+  compiler/contracts/examples/governance/valid-registry-set-v2.json `
+  compiler/examples/ws5/synthetic-activated-release.json `
+  compiler/examples/ws5/target-profile.json `
+  compiler/examples/tracer/task-bindings.json `
+  compiler/examples/tracer/local-data-bindings.json `
+  compiler/examples/ws6/runtime-bindings.json `
+  compiler/examples/tracer/existing-tasks.js `
+  compiler/generated/ws6
+```
+
+The command emits the generated CHT files, a composed `tasks.js`, the exact
+rollback file, queue/topology JSON Schemas, and an evidence manifest. The
+manifest remains E2 unless the separate official harness actually runs. Exact
+CHT sandbox and device execution remain external evidence. See
+`docs/ws6-cht-production.md`.
 
 ## Run the validator
 
