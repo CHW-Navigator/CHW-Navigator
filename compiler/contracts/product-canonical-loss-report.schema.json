@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/product-canonical-loss-report/1.0.0",
+  "title": "Product to canonical loss report",
+  "type": "object",
+  "required": ["schema_version", "status", "product_content_digest", "adapter_content_digest", "sections", "diagnostics"],
+  "properties": {
+    "schema_version": {"const": "product-canonical-loss-report@1.0.0"},
+    "status": {"enum": ["complete", "blocked"]},
+    "product_content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "adapter_content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "sections": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["section", "source_digest", "status", "mappings"],
+        "properties": {
+          "section": {"enum": ["supply_list", "variables", "predicates", "modules", "router", "integrative", "phrase_bank"]},
+          "source_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "status": {"enum": ["mapped", "mapped_empty", "blocked"]},
+          "mappings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["source_path", "target_path"],
+              "properties": {
+                "source_path": {"type": "string", "minLength": 1},
+                "target_path": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message", "path"],
+        "properties": {
+          "code": {"type": "string", "pattern": "^CHWN-BRIDGE-[0-9]{3}$|^CHT-LOCAL-[0-9]{3}$"},
+          "message": {"type": "string", "minLength": 1},
+          "path": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -6,7 +6,7 @@
   },
   "variables": {
     "st_lmp_date_h": {
-      "type": "string", "allowed_missingness": true, "multivalue": false, "source_kind": "history",
+      "type": "string", "unit": "calendar_date", "allowed_missingness": true, "multivalue": false, "source_kind": "history",
       "history_binding": {"record_key": "local.person.lmp_date@1.0.0", "freshness_max_age_days": 300},
       "provenance": [{"source_id": "LOCAL_DATA_CODEBOOK"}]
     },
@@ -21,7 +21,7 @@
       "provenance": [{"source_id": "TRACER_POLICY"}]
     },
     "st_reference_date": {
-      "type": "string", "allowed_missingness": false, "multivalue": false, "source_kind": "derived",
+      "type": "string", "unit": "calendar_date", "allowed_missingness": false, "multivalue": false, "source_kind": "derived",
       "provenance": [{"source_id": "TRACER_POLICY"}]
     },
     "st_ga_status": {
@@ -32,7 +32,7 @@
     },
     "st_ga_weeks": {"type": "int", "unit": "completed_weeks", "allowed_missingness": true, "multivalue": false, "source_kind": "derived", "provenance": [{"source_id": "TRACER_POLICY"}]},
     "st_ga_days_remainder": {"type": "int", "unit": "days", "allowed_missingness": true, "multivalue": false, "source_kind": "derived", "provenance": [{"source_id": "TRACER_POLICY"}]},
-    "st_edd": {"type": "string", "allowed_missingness": true, "multivalue": false, "source_kind": "derived", "provenance": [{"source_id": "TRACER_POLICY"}]}
+    "st_edd": {"type": "string", "unit": "calendar_date", "allowed_missingness": true, "multivalue": false, "source_kind": "derived", "provenance": [{"source_id": "TRACER_POLICY"}]}
   },
   "constants": {},
   "predicates": {},

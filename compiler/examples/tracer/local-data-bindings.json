@@ -6,6 +6,7 @@
       "semantic_name": "most_recent_lmp_date",
       "description": "Most recent recorded LMP date and observation date for the current contact.",
       "value_type": "string",
+      "unit": "calendar_date",
       "subject": "current_person",
       "adapter": {"kind": "cht_contact_summary", "path": "most_recent_lmp_date"},
       "available_contexts": ["contact"],

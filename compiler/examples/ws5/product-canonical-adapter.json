@@ -1,0 +1,28 @@
+{
+  "schema_version": "product-canonical-adapter@1.0.0",
+  "content_digest": "sha256:f091e14f320c8c1580b091cd63c9ad14299e2ceb4e0dee1e5950394f834c5e84",
+  "guideline_id": "synthetic_ws5_tracer",
+  "source_id": "SYNTHETIC_WS5_PRODUCT",
+  "product_schema_version": "clinical-logic@gen8-v1",
+  "local_data_reads": [
+    {
+      "action_id": "a_read_lmp",
+      "binding_id": "local.person.lmp_date@1.0.0",
+      "target_var": "st_lmp_date_h",
+      "recorded_at_target_var": "st_lmp_recorded_at_h",
+      "fail_mode": "soft_missing"
+    }
+  ],
+  "task_intents": [
+    {
+      "action_id": "a_schedule_followup",
+      "task_type": "antenatal_tracer_followup",
+      "when_output": "o_gestational_age_naegele_usable",
+      "due_in_days": 7,
+      "priority": "routine",
+      "assignee_role": "chw",
+      "message_key": "m_schedule_followup",
+      "message_text": "Schedule synthetic tracer follow-up"
+    }
+  ]
+}

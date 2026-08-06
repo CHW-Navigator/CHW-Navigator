@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/product-canonical-adapter/1.0.0",
+  "title": "Product to canonical Clinical IR adapter",
+  "type": "object",
+  "required": ["schema_version", "content_digest", "guideline_id", "source_id", "product_schema_version", "local_data_reads", "task_intents"],
+  "properties": {
+    "schema_version": {"const": "product-canonical-adapter@1.0.0"},
+    "content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "guideline_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+$"},
+    "source_id": {"type": "string", "minLength": 1},
+    "product_schema_version": {"const": "clinical-logic@gen8-v1"},
+    "local_data_reads": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/local_data_read"}
+    },
+    "task_intents": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/task_intent"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "local_data_read": {
+      "type": "object",
+      "required": ["action_id", "binding_id", "target_var", "recorded_at_target_var", "fail_mode"],
+      "properties": {
+        "action_id": {"type": "string", "pattern": "^a_[a-z0-9_]+$"},
+        "binding_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+@[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "target_var": {"type": "string", "pattern": "^(h_|st_)[a-z0-9_]+(?:_h)?$"},
+        "recorded_at_target_var": {"type": ["string", "null"], "pattern": "^(h_|st_)[a-z0-9_]+(?:_h)?$"},
+        "fail_mode": {"enum": ["soft_missing", "ask_if_missing", "hard_error"]}
+      },
+      "additionalProperties": false
+    },
+    "task_intent": {
+      "type": "object",
+      "required": ["action_id", "task_type", "when_output", "due_in_days", "priority", "assignee_role", "message_key", "message_text"],
+      "properties": {
+        "action_id": {"type": "string", "pattern": "^a_[a-z0-9_]+$"},
+        "task_type": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "when_output": {"type": "string", "pattern": "^o_[a-z0-9_]+$"},
+        "due_in_days": {"type": "integer", "minimum": 0},
+        "priority": {"type": "string", "minLength": 1},
+        "assignee_role": {"type": "string", "minLength": 1},
+        "message_key": {"type": "string", "pattern": "^m_[a-z0-9_]+$"},
+        "message_text": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "target-profile@1.0.0",
+  "id": "cht-core-5.2",
+  "version": "1.0.0",
+  "content_digest": "sha256:14f72cd11f189319df9ac2395231d324d2d9b83da46ab7713259c13e2a4a0e0b",
+  "cht_core_version": "5.2.0",
+  "cht_conf_version": "6.4.1",
+  "form_engine": {"name": "cht-form-runner", "version": "4.11.0"},
+  "extension_support": {"extension_lib_xpath": true, "extension_lib_expression": true},
+  "required_local_data_features": [
+    "contact_summary",
+    "registered_local_read",
+    "latest_value_ordering",
+    "recorded_at_freshness"
+  ]
+}

@@ -3,6 +3,22 @@
 from .bundles import BundleArtifacts, BundleBuildError, create_bundle
 from .catalogs import CatalogBundle, CatalogLoadError, compose_document_from_catalogs, load_catalog_bundle
 from .change_control import ChangeReviewArtifacts, ChangeReviewBuildError, create_change_review_package, load_change_memo
+from .canonical_bridge import (
+    CanonicalBridgeError,
+    ProductCanonicalAdapter,
+    ReviewedCapabilityNeeds,
+    WS5Package,
+    adapt_product_logic,
+    apply_resolution_to_ir,
+    build_ws5_package,
+    parse_product_adapter,
+    parse_reviewed_needs,
+    resolve_reviewed_needs,
+    seal_product_adapter,
+    seal_reviewed_needs,
+    verify_reviewed_source_candidate,
+    write_ws5_package,
+)
 from .clinical_ir import ClinicalIRDocument
 from .cht_special_functions import (
     CHTSpecialFunctionBundle,
@@ -305,5 +321,19 @@ __all__ = [
     "write_cht_special_function_bundle",
     "write_cht_adapter_bundle",
     "write_smt2",
+    "CanonicalBridgeError",
+    "ProductCanonicalAdapter",
+    "ReviewedCapabilityNeeds",
+    "WS5Package",
+    "adapt_product_logic",
+    "apply_resolution_to_ir",
+    "build_ws5_package",
+    "parse_product_adapter",
+    "parse_reviewed_needs",
+    "resolve_reviewed_needs",
+    "seal_product_adapter",
+    "seal_reviewed_needs",
+    "verify_reviewed_source_candidate",
+    "write_ws5_package",
     "XLSFormImportError",
 ]
