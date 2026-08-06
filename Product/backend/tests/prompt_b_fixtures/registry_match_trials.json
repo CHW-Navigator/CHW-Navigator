@@ -1,0 +1,362 @@
+{
+  "evidence_notice": "Exploratory isolated-model outputs recorded on 2026-08-06. They are not production-adapter, clinical, governance, or deployment evidence.",
+  "synthetic_catalogue": [
+    {
+      "entry_id": "local.person.birth_event_date@2.1.0",
+      "kind": "local_data_read",
+      "semantic_name": "birth_event_date",
+      "outputs": [{"name": "birth_event_date", "type": "date", "unit": "calendar_date"}],
+      "subject_scope": "current_contact",
+      "context": "contact",
+      "statuses": ["ok", "not_found", "invalid_record", "access_denied", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0"
+    },
+    {
+      "entry_id": "local.person.registration_date@1.0.0",
+      "kind": "local_data_read",
+      "semantic_name": "registration_date",
+      "outputs": [{"name": "registration_date", "type": "date", "unit": "calendar_date"}],
+      "subject_scope": "current_contact",
+      "context": "contact",
+      "statuses": ["ok", "not_found", "invalid_record", "access_denied", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0"
+    },
+    {
+      "entry_id": "technical.growth.who-hfa-zscore@1.0.0",
+      "kind": "technical_calculation",
+      "family": "growth_reference",
+      "operation": "height_for_age_z_score_who",
+      "inputs": [
+        {"name": "sex", "type": "code", "unit": "none"},
+        {"name": "birth_date", "type": "date", "unit": "calendar_date"},
+        {"name": "measurement_date", "type": "date", "unit": "calendar_date"},
+        {"name": "height_cm", "type": "decimal", "unit": "cm"}
+      ],
+      "outputs": [{"name": "z_score", "type": "decimal", "unit": "z_score"}],
+      "subject_scope": "current_contact",
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0"
+    },
+    {
+      "entry_id": "technical.growth.who-wfa-zscore@1.0.0",
+      "kind": "technical_calculation",
+      "family": "growth_reference",
+      "operation": "weight_for_age_z_score_who",
+      "inputs": [
+        {"name": "sex", "type": "code", "unit": "none"},
+        {"name": "birth_date", "type": "date", "unit": "calendar_date"},
+        {"name": "measurement_date", "type": "date", "unit": "calendar_date"},
+        {"name": "weight_kg", "type": "decimal", "unit": "kg"}
+      ],
+      "outputs": [{"name": "z_score", "type": "decimal", "unit": "z_score"}],
+      "subject_scope": "current_contact",
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0"
+    },
+    {
+      "entry_id": "technical.calendar.bikram-sambat-elapsed-days@1.0.0",
+      "kind": "technical_calculation",
+      "family": "calendar_arithmetic",
+      "operation": "elapsed_days_bikram_sambat",
+      "inputs": [
+        {"name": "start_date", "type": "date", "unit": "bikram_sambat_date"},
+        {"name": "end_date", "type": "date", "unit": "bikram_sambat_date"}
+      ],
+      "outputs": [{"name": "elapsed_days", "type": "integer", "unit": "days"}],
+      "subject_scope": "none",
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0"
+    },
+    {
+      "entry_id": "technical.calendar.gregorian-elapsed-days@1.0.0",
+      "kind": "technical_calculation",
+      "family": "calendar_arithmetic",
+      "operation": "elapsed_days_gregorian",
+      "inputs": [
+        {"name": "start_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "end_date", "type": "date", "unit": "gregorian_date"}
+      ],
+      "outputs": [{"name": "elapsed_days", "type": "integer", "unit": "days"}],
+      "subject_scope": "none",
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0"
+    }
+  ],
+  "cases": [
+    {
+      "id": "dob_local_read",
+      "manual": {
+        "document_id": "mini-dob-local",
+        "sections": [
+          {
+            "page": "1",
+            "section": "Prior information",
+            "text": "Before assessment, read the date of birth stored on the current person's local CHT contact record. If no date of birth is stored, stop and report that the value is missing."
+          }
+        ]
+      },
+      "expected_need_kind": "local_data_read",
+      "expected_registry_entry_id": "local.person.birth_event_date@2.1.0",
+      "registry_blind_output": {
+        "schema_version": "capability-needs@1.0.0",
+        "candidates": [
+          {
+            "local_id": "need_date_of_birth_local_read",
+            "need_kind": "local_data_read",
+            "problem": "Read the date of birth stored on the current person's local CHT contact record before assessment.",
+            "inputs": [],
+            "outputs": [{"name": "date_of_birth", "data_type": "date", "unit": null}],
+            "required_statuses": ["success", "missing_input"],
+            "failure_behavior": "block",
+            "subject_scope": "current_contact",
+            "uncertainty": {"status": "none", "details": null},
+            "source": {
+              "document_id": "mini-dob-local",
+              "page": "1",
+              "section": "Prior information",
+              "quote": "Before assessment, read the date of birth stored on the current person's local CHT contact record. If no date of birth is stored, stop and report that the value is missing."
+            },
+            "provenance": {
+              "origin": "manual",
+              "source_digest": "cb8aa38b2ec34ee9708f6ea8b02e60bcd66847dfe5528c539dac0ee345358f63"
+            }
+          }
+        ]
+      },
+      "hidden_registry_guess": {
+        "guessed_registry_id": "cht_date_of_birth_read_v1.0.0",
+        "kind": "local_data_read",
+        "family": "person_demographics",
+        "operation": "read_date_of_birth",
+        "inputs": [],
+        "outputs": [{"name": "date_of_birth", "type": "date", "unit": "none"}],
+        "required_statuses": ["date_of_birth_present"],
+        "target_profile": "cht",
+        "subject_scope": "current_person"
+      }
+    },
+    {
+      "id": "who_height_for_age",
+      "manual": {
+        "document_id": "mini-who-haz",
+        "sections": [
+          {
+            "page": "2",
+            "section": "Growth assessment",
+            "text": "For each child, use the WHO height-for-age standard available in CHT to calculate the child's height-for-age z-score from sex, date of birth, measurement date, and standing height in centimeters. If required reference data are unavailable, do not classify the child."
+          }
+        ]
+      },
+      "expected_need_kind": "technical_calculation",
+      "expected_registry_entry_id": "technical.growth.who-hfa-zscore@1.0.0",
+      "registry_blind_output": {
+        "schema_version": "capability-needs@1.0.0",
+        "candidates": [
+          {
+            "local_id": "need_height_for_age_z_score",
+            "need_kind": "technical_calculation",
+            "problem": "Calculate each child's height-for-age z-score using the WHO height-for-age standard available in CHT.",
+            "inputs": [
+              {"name": "sex", "data_type": "code", "unit": null},
+              {"name": "date_of_birth", "data_type": "date", "unit": null},
+              {"name": "measurement_date", "data_type": "date", "unit": null},
+              {"name": "standing_height", "data_type": "decimal", "unit": "cm"}
+            ],
+            "outputs": [{"name": "height_for_age_z_score", "data_type": "decimal", "unit": null}],
+            "required_statuses": ["success", "missing_reference_data"],
+            "failure_behavior": "block",
+            "subject_scope": "individual",
+            "uncertainty": {"status": "none", "details": null},
+            "source": {
+              "document_id": "mini-who-haz",
+              "page": "2",
+              "section": "Growth assessment",
+              "quote": "For each child, use the WHO height-for-age standard available in CHT to calculate the child's height-for-age z-score from sex, date of birth, measurement date, and standing height in centimeters. If required reference data are unavailable, do not classify the child."
+            },
+            "provenance": {
+              "origin": "manual",
+              "source_digest": "1744f74934076bf0e7aee6d1349caf0eca9f6b719343497c504537722de116d6"
+            }
+          }
+        ]
+      },
+      "hidden_registry_guess": {
+        "guessed_registry_id": "who_height_for_age_z_score_v1.0.0",
+        "kind": "technical_calculation",
+        "family": "child_anthropometry",
+        "operation": "calculate_height_for_age_z_score",
+        "inputs": [
+          {"name": "sex", "type": "coded_string", "unit": "none"},
+          {"name": "date_of_birth", "type": "date", "unit": "none"},
+          {"name": "measurement_date", "type": "date", "unit": "none"},
+          {"name": "standing_height", "type": "decimal", "unit": "centimeter"}
+        ],
+        "outputs": [{"name": "height_for_age_z_score", "type": "decimal", "unit": "z_score"}],
+        "required_statuses": ["who_reference_data_available"],
+        "target_profile": "cht",
+        "subject_scope": "each_child"
+      }
+    },
+    {
+      "id": "nepali_elapsed_days",
+      "manual": {
+        "document_id": "mini-nepali-days",
+        "sections": [
+          {
+            "page": "3",
+            "section": "Calendar calculation",
+            "text": "Use the approved CHT extension library to calculate the number of elapsed days between the start date and end date, both recorded in the Nepali Bikram Sambat calendar. If either date is missing or invalid, do not continue."
+          }
+        ]
+      },
+      "expected_need_kind": "technical_calculation",
+      "expected_registry_entry_id": "technical.calendar.bikram-sambat-elapsed-days@1.0.0",
+      "registry_blind_output": {
+        "schema_version": "capability-needs@1.0.0",
+        "candidates": [
+          {
+            "local_id": "need_nepali_elapsed_days",
+            "need_kind": "technical_calculation",
+            "problem": "Calculate the number of elapsed days between a start date and an end date recorded in the Nepali Bikram Sambat calendar.",
+            "inputs": [
+              {"name": "start_date", "data_type": "date", "unit": null},
+              {"name": "end_date", "data_type": "date", "unit": null}
+            ],
+            "outputs": [{"name": "elapsed_days", "data_type": "integer", "unit": "day"}],
+            "required_statuses": ["success", "missing_input", "invalid_input"],
+            "failure_behavior": "block",
+            "subject_scope": "unknown",
+            "uncertainty": {"status": "none", "details": null},
+            "source": {
+              "document_id": "mini-nepali-days",
+              "page": "3",
+              "section": "Calendar calculation",
+              "quote": "calculate the number of elapsed days between the start date and end date, both recorded in the Nepali Bikram Sambat calendar. If either date is missing or invalid, do not continue."
+            },
+            "provenance": {
+              "origin": "manual",
+              "source_digest": "f14017eeb9c4cc5e9c8e7168cfdab0d1da9575080dbda7d54b3b587a0e7da767"
+            }
+          }
+        ]
+      },
+      "hidden_registry_guess": {
+        "guessed_registry_id": "bikram_sambat_elapsed_days_v1.0.0",
+        "kind": "technical_calculation",
+        "family": "calendar_date_arithmetic",
+        "operation": "calculate_elapsed_days",
+        "inputs": [
+          {"name": "start_date", "type": "bikram_sambat_date", "unit": "none"},
+          {"name": "end_date", "type": "bikram_sambat_date", "unit": "none"}
+        ],
+        "outputs": [{"name": "elapsed_days", "type": "integer", "unit": "day"}],
+        "required_statuses": ["start_date_present", "start_date_valid", "end_date_present", "end_date_valid"],
+        "target_profile": "cht",
+        "subject_scope": "none"
+      }
+    }
+  ],
+  "catalogue_visible_trials": {
+    "structured_copy_fidelity": [
+      {
+        "case_id": "dob_local_read",
+        "status": "matched",
+        "entry_id": "local.person.birth_event_date@2.1.0",
+        "copied_signature": {
+          "entry_id": "local.person.birth_event_date@2.1.0",
+          "kind": "local_data_read",
+          "semantic_name": "birth_event_date",
+          "outputs": [{"name": "birth_event_date", "type": "date", "unit": "calendar_date"}],
+          "subject_scope": "current_contact",
+          "context": "contact",
+          "statuses": ["ok", "not_found", "invalid_record", "access_denied", "execution_failure"],
+          "target_profile": "cht-core-5.2@1.0.0"
+        }
+      },
+      {
+        "case_id": "who_height_for_age",
+        "status": "matched",
+        "entry_id": "technical.growth.who-hfa-zscore@1.0.0",
+        "copied_signature": {
+          "entry_id": "technical.growth.who-hfa-zscore@1.0.0",
+          "kind": "technical_calculation",
+          "family": "growth_reference",
+          "operation": "height_for_age_z_score_who",
+          "inputs": [
+            {"name": "sex", "type": "code", "unit": "none"},
+            {"name": "birth_date", "type": "date", "unit": "calendar_date"},
+            {"name": "measurement_date", "type": "date", "unit": "calendar_date"},
+            {"name": "height_cm", "type": "decimal", "unit": "cm"}
+          ],
+          "outputs": [{"name": "z_score", "type": "decimal", "unit": "z_score"}],
+          "subject_scope": "current_contact",
+          "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+          "target_profile": "cht-core-5.2@1.0.0"
+        }
+      },
+      {
+        "case_id": "nepali_elapsed_days",
+        "status": "matched",
+        "entry_id": "technical.calendar.bikram-sambat-elapsed-days@1.0.0",
+        "copied_signature": {
+          "entry_id": "technical.calendar.bikram-sambat-elapsed-days@1.0.0",
+          "kind": "technical_calculation",
+          "family": "calendar_arithmetic",
+          "operation": "elapsed_days_bikram_sambat",
+          "inputs": [
+            {"name": "start_date", "type": "date", "unit": "bikram_sambat_date"},
+            {"name": "end_date", "type": "date", "unit": "bikram_sambat_date"}
+          ],
+          "outputs": [{"name": "elapsed_days", "type": "integer", "unit": "days"}],
+          "subject_scope": "none",
+          "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+          "target_profile": "cht-core-5.2@1.0.0"
+        }
+      }
+    ],
+    "unclarified": [
+      {
+        "case_id": "dob_local_read",
+        "status": "matched",
+        "entry_id": "local.person.birth_event_date@2.1.0"
+      },
+      {
+        "case_id": "who_height_for_age",
+        "status": "no_match",
+        "entry_id": null
+      },
+      {
+        "case_id": "nepali_elapsed_days",
+        "status": "no_match",
+        "entry_id": null
+      }
+    ],
+    "clarified_matching_assumptions": [
+      {
+        "case_id": "dob_local_read",
+        "status": "matched",
+        "entry_id": "local.person.birth_event_date@2.1.0"
+      },
+      {
+        "case_id": "who_height_for_age",
+        "status": "matched",
+        "entry_id": "technical.growth.who-hfa-zscore@1.0.0"
+      },
+      {
+        "case_id": "nepali_elapsed_days",
+        "status": "matched",
+        "entry_id": "technical.calendar.bikram-sambat-elapsed-days@1.0.0"
+      },
+      {
+        "case_id": "dob_entry_absent",
+        "status": "no_match",
+        "entry_id": null
+      },
+      {
+        "case_id": "dob_entry_ambiguous",
+        "status": "ambiguous",
+        "entry_id": null
+      }
+    ]
+  }
+}

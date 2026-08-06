@@ -8,6 +8,12 @@ canonical Clinical IR. It is E2 tracer evidence, not deployment approval.
 No. Prompt B is registry-blind and may describe a manual-grounded need in its
 own local words. Those words never select a capability.
 
+The focused mini-manual experiment in
+`registry-keyword-mini-manual-evaluation.md` confirms why: an isolated model
+found three of three needs but guessed zero of three unseen exact registry
+IDs. Catalogue-visible suggestions may assist review, but only the reviewed
+semantic binding and deterministic resolver can select executable behavior.
+
 The boundary is:
 
 ```text
