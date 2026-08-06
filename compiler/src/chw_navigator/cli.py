@@ -28,6 +28,7 @@ from .equivalence import build_case_suite_equivalence_report
 from .json_schema_export import write_json_schemas
 from .mermaid_backend import MermaidOptions, build_mermaid_artifact
 from .quality_checks import run_quality_checks
+from .registry_match import RegistryMatchError, write_registry_match_review
 from .staged_lint import (
     lint_ir_document,
     lint_mermaid_artifact,
@@ -255,6 +256,17 @@ def main(argv: list[str] | None = None) -> int:
     bridge_parser.add_argument("target_profile_path")
     bridge_parser.add_argument("output_dir")
 
+    match_review_parser = subparsers.add_parser(
+        "build-registry-match-review",
+        help="validate a registry-visible AI proposal and write a non-executable human review package",
+    )
+    match_review_parser.add_argument("source_candidate_path")
+    match_review_parser.add_argument("proposal_path")
+    match_review_parser.add_argument("product_logic_path")
+    match_review_parser.add_argument("registry_set_path")
+    match_review_parser.add_argument("local_data_bindings_path")
+    match_review_parser.add_argument("output_path")
+
     production_parser = subparsers.add_parser(
         "build-cht-production",
         help="build the bounded WS6 Python-owned CHT bundle from governed WS5 outputs",
@@ -387,6 +399,15 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.target_profile_path),
             Path(args.output_dir),
         )
+    if args.command == "build-registry-match-review":
+        return _handle_registry_match_review(
+            Path(args.source_candidate_path),
+            Path(args.proposal_path),
+            Path(args.product_logic_path),
+            Path(args.registry_set_path),
+            Path(args.local_data_bindings_path),
+            Path(args.output_path),
+        )
     if args.command == "build-cht-production":
         return _handle_build_cht_production(
             Path(args.canonical_ir_path),
@@ -438,6 +459,30 @@ def _handle_bridge_product(
         print(str(exc))
         return 1
     print(f"wrote WS5 canonical IR, loss report, and resolution lock to {output_dir}")
+    return 0
+
+
+def _handle_registry_match_review(
+    source_candidate_path: Path,
+    proposal_path: Path,
+    product_logic_path: Path,
+    registry_set_path: Path,
+    local_data_bindings_path: Path,
+    output_path: Path,
+) -> int:
+    try:
+        write_registry_match_review(
+            source_candidate_path=source_candidate_path,
+            proposal_path=proposal_path,
+            product_logic_path=product_logic_path,
+            registry_set_path=registry_set_path,
+            local_data_registry_path=local_data_bindings_path,
+            output_path=output_path,
+        )
+    except RegistryMatchError as exc:
+        print(str(exc))
+        return 1
+    print(f"wrote non-executable registry match review to {output_path}")
     return 0
 
 

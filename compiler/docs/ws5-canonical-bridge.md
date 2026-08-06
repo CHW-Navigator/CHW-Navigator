@@ -19,11 +19,19 @@ The boundary is:
 ```text
 manual
   -> Prompt B candidate (source-grounded, registry-blind)
+  -> optional registry-visible AI proposal (entry ref + variable mappings only)
+  -> deterministic non-executable match review package
   -> reviewed semantic binding (content-addressed, still no capability ID)
   -> exact deterministic resolver
   -> capability ID + resolution lock
   -> canonical IR
 ```
+
+The optional stage is implemented in `registry_match.py` and documented in
+`registry-visible-match-review.md`. Code copies the selected catalogue entry;
+the model never rewrites registry fields. Confidence is advisory, all review
+packages say `executable_eligible=false`, and the existing human-reviewed
+binding remains mandatory.
 
 The reviewed binding records the normalized family and operation, ordered
 parameter names/types/units, complete required status set, target profile,

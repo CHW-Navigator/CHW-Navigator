@@ -47,6 +47,11 @@ manual
 
 The optional AI step may copy an entry and explain the field-by-field comparison. It cannot approve the entry, change the catalogue, activate a release, invent missing fields, or make a fuzzy match executable. The existing WS5 reviewed semantic binding and exact resolver remain the authority.
 
+This boundary is now implemented by `registry_match.py`. The model proposes an
+existing entry reference and parameter mappings; deterministic code copies the
+structured entry, runs the hard checks, and produces a review-only package.
+See `registry-visible-match-review.md`.
+
 The field-copy trial initially changed shapes when the catalogue had been presented as prose, such as changing `outputs` to `output` and `target_profile` to `target`. It copied all fields exactly when given the structured JSON catalogue. Production code should perform that copy deterministically after a reviewed selection; there is no benefit in asking the model to retype it.
 
 ## What the next test set should contain
