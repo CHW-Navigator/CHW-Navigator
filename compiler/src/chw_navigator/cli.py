@@ -9,6 +9,7 @@ from pathlib import Path
 from .bundles import BundleBuildError, create_bundle
 from .catalogs import CatalogLoadError, compose_document_from_catalogs
 from .change_control import ChangeReviewBuildError, create_change_review_package, load_change_memo
+from .canonical_bridge import CanonicalBridgeError, write_ws5_package
 from .clinical_ir import ClinicalIRDocument
 from .cht_backend import build_cht_lowering_plan, write_cht_adapter_bundle
 from .cht_local_data import CHTLocalDataLoweringError, load_cht_local_data_registry
@@ -239,6 +240,20 @@ def main(argv: list[str] | None = None) -> int:
     change_review_parser.add_argument("--baseline-dmn", dest="baseline_dmn_path")
     change_review_parser.add_argument("--updated-dmn", dest="updated_dmn_path")
 
+    bridge_parser = subparsers.add_parser(
+        "bridge-product",
+        help="convert bounded Product logic and exactly resolve reviewed capability needs",
+    )
+    bridge_parser.add_argument("product_logic_path")
+    bridge_parser.add_argument("source_candidate_path")
+    bridge_parser.add_argument("adapter_path")
+    bridge_parser.add_argument("local_data_bindings_path")
+    bridge_parser.add_argument("reviewed_needs_path")
+    bridge_parser.add_argument("registry_set_path")
+    bridge_parser.add_argument("activated_release_path")
+    bridge_parser.add_argument("target_profile_path")
+    bridge_parser.add_argument("output_dir")
+
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
 
     if args.command == "validate":
@@ -344,6 +359,18 @@ def main(argv: list[str] | None = None) -> int:
             args.baseline_dmn_path,
             args.updated_dmn_path,
         )
+    if args.command == "bridge-product":
+        return _handle_bridge_product(
+            Path(args.product_logic_path),
+            Path(args.source_candidate_path),
+            Path(args.adapter_path),
+            Path(args.local_data_bindings_path),
+            Path(args.reviewed_needs_path),
+            Path(args.registry_set_path),
+            Path(args.activated_release_path),
+            Path(args.target_profile_path),
+            Path(args.output_dir),
+        )
     raise AssertionError(f"unknown command '{args.command}'")
 
 
@@ -352,6 +379,36 @@ def _handle_write_json_schemas(output_dir: Path) -> int:
     print(f"wrote {len(written)} JSON Schema files to {output_dir}")
     for name, path in sorted(written.items()):
         print(f"- {name}: {path}")
+    return 0
+
+
+def _handle_bridge_product(
+    product_logic_path: Path,
+    source_candidate_path: Path,
+    adapter_path: Path,
+    local_data_bindings_path: Path,
+    reviewed_needs_path: Path,
+    registry_set_path: Path,
+    activated_release_path: Path,
+    target_profile_path: Path,
+    output_dir: Path,
+) -> int:
+    try:
+        write_ws5_package(
+            product_logic_path=product_logic_path,
+            source_candidate_path=source_candidate_path,
+            adapter_path=adapter_path,
+            local_data_bindings_path=local_data_bindings_path,
+            reviewed_needs_path=reviewed_needs_path,
+            registry_set_path=registry_set_path,
+            activated_release_path=activated_release_path,
+            target_profile_path=target_profile_path,
+            output_dir=output_dir,
+        )
+    except CanonicalBridgeError as exc:
+        print(str(exc))
+        return 1
+    print(f"wrote WS5 canonical IR, loss report, and resolution lock to {output_dir}")
     return 0
 
 

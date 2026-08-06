@@ -755,8 +755,19 @@ without fuzzy or model-driven selection.
 
 Create a versioned Product-to-canonical adapter contract, a loss report, a
 deterministic capability-need resolver, and a root command that accepts Product
-logic, candidate needs, an activated registry release, and an exact target
-profile. The result is canonical IR plus a resolution lock.
+logic, the exact registry-blind candidate artifact, a separately reviewed
+semantic binding, an activated registry release, and an exact target profile.
+The result is canonical IR plus a resolution lock.
+
+Prompt B's candidate cannot safely supply registry vocabulary, deployment
+status names, target configuration, or Product variable IDs because those are
+not present in the manual and the prompt must remain registry-blind. Require a
+content-addressed reviewed binding between WS4 and resolution. It normalizes
+family/operation, ordered semantic contracts, statuses, target/scope, and
+variable mappings, but cannot contain a capability or implementation ID. Bind
+it to the exact source-candidate digest and verify that digest at the compiler
+boundary. Candidate prose and problem wording are audit evidence, never
+resolver inputs.
 
 The adapter maps all seven Product sections or emits a stable unsupported-field
 diagnostic. Silent dropping, renaming, defaulting of clinical values, and
@@ -781,6 +792,9 @@ resolution rule version, and deterministic rationale.
 - Zero and multiple matches fail with distinct stable diagnostics.
 - Unit, status-set, target-profile, and subject-scope mismatches fail closed.
 - Candidate origin (Prompt B versus human-authored) does not change output.
+- Candidate prose changes do not change resolution, while changing a reviewed
+  semantic field fails closed; changing a candidate after review breaks its
+  digest binding.
 - The resolved tracer IR contains only capability ID and variable mappings; no
   implementation binding leaks into clinical IR.
 - Two clean runs produce byte-identical canonical IR and resolution locks.

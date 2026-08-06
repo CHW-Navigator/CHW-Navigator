@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/reviewed-capability-needs/1.0.0",
+  "title": "Reviewed semantic capability needs",
+  "type": "object",
+  "required": ["schema_version", "content_digest", "authoring_origin", "source_candidate_digest", "needs"],
+  "properties": {
+    "schema_version": {"const": "reviewed-capability-needs@1.0.0"},
+    "content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "authoring_origin": {"enum": ["prompt_b", "human"]},
+    "source_candidate_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "needs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/need"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "parameter": {
+      "type": "object",
+      "required": ["name", "type", "unit", "variable_id"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "type": {"enum": ["boolean", "string", "integer", "decimal", "date", "datetime", "choice"]},
+        "unit": {"type": "string", "minLength": 1},
+        "variable_id": {"type": "string", "pattern": "^(v_|h_|st_)[a-z0-9_]+$"}
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["document_id", "page", "section", "quote"],
+      "properties": {
+        "document_id": {"type": "string", "minLength": 1},
+        "page": {"type": "string", "minLength": 1},
+        "section": {"type": "string", "minLength": 1},
+        "quote": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "need": {
+      "type": "object",
+      "required": ["need_id", "family", "operation", "inputs", "outputs", "required_statuses", "status_target_var", "target_profile", "subject_scope", "source"],
+      "properties": {
+        "need_id": {"type": "string", "pattern": "^need_[a-z0-9_]+$"},
+        "family": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "operation": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "inputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/parameter"}},
+        "outputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/parameter"}},
+        "required_statuses": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "status_target_var": {"type": "string", "pattern": "^st_[a-z0-9_]+$"},
+        "target_profile": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+@[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "subject_scope": {"enum": ["current_contact", "household", "service_area", "cohort"]},
+        "source": {"$ref": "#/$defs/source"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

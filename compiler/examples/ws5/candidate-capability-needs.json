@@ -1,0 +1,63 @@
+{
+  "schema_version": "capability-needs@1.0.0",
+  "candidates": [
+    {
+      "local_id": "need_gestational_age_naegele",
+      "need_kind": "technical_calculation",
+      "problem": "Calculate gestational age and estimated delivery date from the recorded last menstrual period date.",
+      "inputs": [
+        {
+          "name": "last_menstrual_period_date",
+          "data_type": "date",
+          "unit": "calendar_date"
+        },
+        {
+          "name": "reference_date",
+          "data_type": "date",
+          "unit": "calendar_date"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "gestational_age_weeks",
+          "data_type": "integer",
+          "unit": "completed_weeks"
+        },
+        {
+          "name": "gestational_age_days_remainder",
+          "data_type": "integer",
+          "unit": "days"
+        },
+        {
+          "name": "estimated_delivery_date",
+          "data_type": "date",
+          "unit": "calendar_date"
+        }
+      ],
+      "required_statuses": [
+        "success",
+        "missing_input",
+        "invalid_input",
+        "out_of_range",
+        "missing_reference_data",
+        "error"
+      ],
+      "failure_behavior": "return_status",
+      "subject_scope": "current_contact",
+      "uncertainty": {
+        "status": "none",
+        "details": null
+      },
+      "source": {
+        "document_id": "synthetic-ws5-tracer",
+        "page": "1",
+        "section": "Technical calculation",
+        "quote": "Calculate gestational age and estimated delivery date from the recorded last menstrual period date."
+      },
+      "provenance": {
+        "origin": "manual",
+        "source_digest": "895270ff18ee3ff47eecc93cbe8f206be87cbdcb6fa0ade868d463e82ec06c4d"
+      }
+    }
+  ]
+}

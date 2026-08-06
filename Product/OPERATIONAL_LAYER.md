@@ -14,6 +14,7 @@ operational intent and never sends a message or writes to a deployment system.
 source-grounded clinical pipeline
   -> clinical_logic.json (existing and authoritative for clinical logic)
   -> capability candidates (non-authoritative)
+  -> reviewed semantic binding (content-addressed; no capability ID)
   -> exact registry resolution (deterministic)
   -> operational package (planned only)
   -> topology validation and abstract relation resolution
@@ -34,6 +35,15 @@ The parser requires local `need_*` IDs, exact source substrings at the declared
 location, ordered typed/unit-bearing parameters, closed statuses and subject
 scope, uncertainty, and matching provenance. Unknown fields fail closed, so
 approval, activation, and resolved capability IDs cannot enter this artifact.
+
+WS5 does not ask the model to find the registry's preferred words. A reviewer
+binds the exact candidate digest to normalized family/operation, ordered
+parameter types and units, required statuses, target profile, subject scope,
+and Product variable IDs. That reviewed artifact still cannot contain a
+capability or implementation ID. The compiler then resolves by exact equality;
+candidate prose, implementation names, registry order, similarity, and
+"closest match" are never selectors. The bounded implementation and its
+descope behavior are documented in `../compiler/docs/ws5-canonical-bridge.md`.
 
 Ten recorded mini-manual cases exercise no-need, date arithmetic, local reads,
 decision-policy boundaries, ambiguity, unit mismatch, unsupported group scope,

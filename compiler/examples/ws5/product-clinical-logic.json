@@ -1,0 +1,110 @@
+{
+  "supply_list": [],
+  "variables": [
+    {
+      "id": "st_lmp_date_h",
+      "display_name": "Most recent last menstrual period date",
+      "kind": "history",
+      "unit": "calendar_date",
+      "data_type": "date",
+      "source_quote": "Read the most recent recorded last menstrual period date.",
+      "source_section_id": "tracer-inputs",
+      "allowed_missingness": true,
+      "domain": null
+    },
+    {
+      "id": "st_lmp_recorded_at_h",
+      "display_name": "Time the last menstrual period date was recorded",
+      "kind": "history",
+      "unit": "none",
+      "data_type": "datetime",
+      "source_quote": "Read when the last menstrual period date was recorded.",
+      "source_section_id": "tracer-inputs",
+      "allowed_missingness": true,
+      "domain": null
+    },
+    {
+      "id": "st_reference_date",
+      "display_name": "Assessment reference date",
+      "kind": "derived",
+      "unit": "calendar_date",
+      "data_type": "date",
+      "source_quote": "Use the assessment date as the calculation reference date.",
+      "source_section_id": "tracer-inputs",
+      "allowed_missingness": false,
+      "domain": null
+    },
+    {
+      "id": "st_lmp_availability",
+      "display_name": "Last menstrual period data availability",
+      "kind": "derived",
+      "unit": "none",
+      "data_type": "choice",
+      "source_quote": "Treat absent, invalid, or stale prior data as unavailable for calculation.",
+      "source_section_id": "tracer-inputs",
+      "allowed_missingness": false,
+      "domain": ["available", "missing", "invalid", "stale"]
+    },
+    {
+      "id": "st_ga_status",
+      "display_name": "Gestational age calculation status",
+      "kind": "derived",
+      "unit": "none",
+      "data_type": "choice",
+      "source_quote": "Handle every declared technical calculation status explicitly.",
+      "source_section_id": "tracer-status",
+      "allowed_missingness": false,
+      "domain": [
+        "ok",
+        "input_missing",
+        "input_invalid",
+        "outside_supported_domain",
+        "reference_data_unavailable",
+        "numeric_failure",
+        "version_mismatch",
+        "execution_failure"
+      ]
+    },
+    {
+      "id": "st_ga_weeks",
+      "display_name": "Completed gestational weeks",
+      "kind": "derived",
+      "unit": "completed_weeks",
+      "data_type": "integer",
+      "source_quote": "Return gestational age in completed weeks and remaining days.",
+      "source_section_id": "tracer-output",
+      "allowed_missingness": true,
+      "domain": null
+    },
+    {
+      "id": "st_ga_days_remainder",
+      "display_name": "Remaining gestational days",
+      "kind": "derived",
+      "unit": "days",
+      "data_type": "integer",
+      "source_quote": "Return gestational age in completed weeks and remaining days.",
+      "source_section_id": "tracer-output",
+      "allowed_missingness": true,
+      "domain": null
+    },
+    {
+      "id": "st_edd",
+      "display_name": "Estimated delivery date",
+      "kind": "derived",
+      "unit": "calendar_date",
+      "data_type": "date",
+      "source_quote": "Return the estimated delivery date.",
+      "source_section_id": "tracer-output",
+      "allowed_missingness": true,
+      "domain": null
+    }
+  ],
+  "predicates": [],
+  "modules": [],
+  "router": {"rules": []},
+  "integrative": {
+    "description": "Synthetic technical tracer only; no clinical decision is inferred.",
+    "rules": []
+  },
+  "phrase_bank": []
+}

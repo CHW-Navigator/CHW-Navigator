@@ -1,0 +1,41 @@
+{
+  "schema_version": "reviewed-capability-needs@1.0.0",
+  "content_digest": "sha256:897906b91ba1433dd5373f512907881f25455b09749443d515a4fb60f0d51e3a",
+  "authoring_origin": "prompt_b",
+  "source_candidate_digest": "sha256:efb5302f18ba7d17a0c188d4c9321b7ca42c9b8f7fed770d700a05c2aa42de85",
+  "needs": [
+    {
+      "need_id": "need_gestational_age_naegele",
+      "family": "calendar_arithmetic",
+      "operation": "gestational_age_and_estimated_delivery_date",
+      "inputs": [
+        {"name": "lmp_date", "type": "date", "unit": "calendar_date", "variable_id": "st_lmp_date_h"},
+        {"name": "reference_date", "type": "date", "unit": "calendar_date", "variable_id": "st_reference_date"}
+      ],
+      "outputs": [
+        {"name": "ga_weeks", "type": "integer", "unit": "completed_weeks", "variable_id": "st_ga_weeks"},
+        {"name": "ga_days_remainder", "type": "integer", "unit": "days", "variable_id": "st_ga_days_remainder"},
+        {"name": "edd", "type": "date", "unit": "calendar_date", "variable_id": "st_edd"}
+      ],
+      "required_statuses": [
+        "ok",
+        "input_missing",
+        "input_invalid",
+        "outside_supported_domain",
+        "reference_data_unavailable",
+        "numeric_failure",
+        "version_mismatch",
+        "execution_failure"
+      ],
+      "status_target_var": "st_ga_status",
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "source": {
+        "document_id": "synthetic-ws5-tracer",
+        "page": "1",
+        "section": "Technical calculation",
+        "quote": "Calculate gestational age and estimated delivery date from the recorded last menstrual period date."
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chw-navigator.org/contracts/capability-resolution-lock/1.0.0",
+  "title": "Exact capability resolution lock",
+  "type": "object",
+  "required": ["schema_version", "content_digest", "registry_set_digest", "target_profile_digest", "release_digest", "resolution_rule_version", "resolutions"],
+  "properties": {
+    "schema_version": {"const": "capability-resolution-lock@1.0.0"},
+    "content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "registry_set_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "target_profile_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "release_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "resolution_rule_version": {"const": "exact-semantic-resolution@1.0.0"},
+    "resolutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["need_id", "capability_id", "capability_version", "capability_content_digest", "registry_set_digest", "target_profile_digest", "release_digest", "resolution_rule_version", "rationale"],
+        "properties": {
+          "need_id": {"type": "string", "pattern": "^need_[a-z0-9_]+$"},
+          "capability_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]+$"},
+          "capability_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+          "capability_content_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "registry_set_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "target_profile_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "release_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "resolution_rule_version": {"const": "exact-semantic-resolution@1.0.0"},
+          "rationale": {
+            "type": "object",
+            "required": ["rule", "matched_fields", "forbidden_selectors"],
+            "properties": {
+              "rule": {"const": "exact_equality_only"},
+              "matched_fields": {"type": "array", "items": {"type": "string"}},
+              "forbidden_selectors": {"type": "array", "items": {"type": "string"}}
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
