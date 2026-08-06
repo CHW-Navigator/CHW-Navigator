@@ -13,6 +13,7 @@ from .canonical_bridge import CanonicalBridgeError, write_ws5_package
 from .clinical_ir import ClinicalIRDocument
 from .cht_backend import build_cht_lowering_plan, write_cht_adapter_bundle
 from .cht_local_data import CHTLocalDataLoweringError, load_cht_local_data_registry
+from .cht_production import CHTProductionError, build_cht_production_bundle
 from .cht_tasks import CHTTaskLoweringError, load_cht_task_bindings
 from .compare import (
     ComparisonError,
@@ -254,6 +255,21 @@ def main(argv: list[str] | None = None) -> int:
     bridge_parser.add_argument("target_profile_path")
     bridge_parser.add_argument("output_dir")
 
+    production_parser = subparsers.add_parser(
+        "build-cht-production",
+        help="build the bounded WS6 Python-owned CHT bundle from governed WS5 outputs",
+    )
+    production_parser.add_argument("canonical_ir_path")
+    production_parser.add_argument("resolution_lock_path")
+    production_parser.add_argument("registry_set_path")
+    production_parser.add_argument("activated_release_path")
+    production_parser.add_argument("target_profile_path")
+    production_parser.add_argument("task_bindings_path")
+    production_parser.add_argument("local_data_bindings_path")
+    production_parser.add_argument("runtime_bindings_path")
+    production_parser.add_argument("existing_tasks_path")
+    production_parser.add_argument("output_dir")
+
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
 
     if args.command == "validate":
@@ -371,6 +387,19 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.target_profile_path),
             Path(args.output_dir),
         )
+    if args.command == "build-cht-production":
+        return _handle_build_cht_production(
+            Path(args.canonical_ir_path),
+            Path(args.resolution_lock_path),
+            Path(args.registry_set_path),
+            Path(args.activated_release_path),
+            Path(args.target_profile_path),
+            Path(args.task_bindings_path),
+            Path(args.local_data_bindings_path),
+            Path(args.runtime_bindings_path),
+            Path(args.existing_tasks_path),
+            Path(args.output_dir),
+        )
     raise AssertionError(f"unknown command '{args.command}'")
 
 
@@ -409,6 +438,38 @@ def _handle_bridge_product(
         print(str(exc))
         return 1
     print(f"wrote WS5 canonical IR, loss report, and resolution lock to {output_dir}")
+    return 0
+
+
+def _handle_build_cht_production(
+    canonical_ir_path: Path,
+    resolution_lock_path: Path,
+    registry_set_path: Path,
+    activated_release_path: Path,
+    target_profile_path: Path,
+    task_bindings_path: Path,
+    local_data_bindings_path: Path,
+    runtime_bindings_path: Path,
+    existing_tasks_path: Path,
+    output_dir: Path,
+) -> int:
+    try:
+        build_cht_production_bundle(
+            canonical_ir_path=canonical_ir_path,
+            resolution_lock_path=resolution_lock_path,
+            registry_set_path=registry_set_path,
+            activated_release_path=activated_release_path,
+            target_profile_path=target_profile_path,
+            task_bindings_path=task_bindings_path,
+            local_data_bindings_path=local_data_bindings_path,
+            runtime_bindings_path=runtime_bindings_path,
+            existing_tasks_path=existing_tasks_path,
+            output_dir=output_dir,
+        )
+    except CHTProductionError as exc:
+        print(str(exc))
+        return 1
+    print(f"wrote WS6 bounded CHT production bundle to {output_dir}")
     return 0
 
 

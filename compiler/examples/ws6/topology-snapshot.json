@@ -1,0 +1,16 @@
+{
+  "schema_version": "topology-snapshot@1.0.0",
+  "content_digest": "sha256:f9a5a49a736ae3139519a6b793c1e2041467de1258d144b3c7ff1d4f7e2b9188",
+  "snapshot_id": "synthetic-ws6-2026-08-06",
+  "generated_at": "2026-08-06T12:00:00Z",
+  "assignments": [
+    {
+      "assignment_id": "synthetic-patient-a-chw",
+      "subject_id": "synthetic-patient-a",
+      "assignee_role": "chw",
+      "assignee_id": "synthetic-chw-a",
+      "active_from": "2026-08-01T00:00:00Z",
+      "active_to": null
+    }
+  ]
+}
