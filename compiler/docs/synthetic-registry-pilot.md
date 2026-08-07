@@ -44,6 +44,8 @@ are labelled `synthetic_assumption`.
   session, not independently timestamped proof of blindness.
 - `simulated-ministry-catalogue.json` is a strict, content-addressed nine-entry
   pilot catalogue with a separate digest for every complete entry projection.
+- `PILOT-NO-CLINICAL-USE.txt` remains beside the standalone source files so a
+  copied or detached pretend catalogue is still plainly marked as non-clinical.
 
 Every source quotation must be exact text within its cited section of the bound
 mini-manual. The registry-visible matcher may not alter the first AI's artifact.

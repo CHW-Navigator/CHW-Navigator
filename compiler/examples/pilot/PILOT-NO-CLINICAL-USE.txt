@@ -1,0 +1,5 @@
+PILOT: NO CLINICAL USE
+
+This directory contains invented registry entries and simulated Ministry input.
+It may be used only to test software matching mechanics. It is not approved for
+patient care, clinical decisions, deployment, or production registry import.

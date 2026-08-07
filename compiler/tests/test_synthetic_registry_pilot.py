@@ -35,6 +35,7 @@ MATCH_PATH = PILOT_DIR / "independent-model-proposals.json"
 MANUAL_PATH = PILOT_DIR / "clarified-mini-manuals.md"
 EXPECTED_PATH = PILOT_DIR / "predeclared-expected-results.json"
 MINISTRY_RESPONSE_PATH = PILOT_DIR / "simulated-ministry-response.md"
+PILOT_NOTICE_PATH = PILOT_DIR / "PILOT-NO-CLINICAL-USE.txt"
 
 
 def _digest(value: object) -> str:
@@ -95,6 +96,12 @@ def _reseal_catalogue(payload: dict, changed_entry_index: int) -> None:
 
 
 class SyntheticRegistryPilotTests(unittest.TestCase):
+    def test_standalone_pilot_catalogue_has_adjacent_no_clinical_use_notice(self) -> None:
+        notice = PILOT_NOTICE_PATH.read_text(encoding="utf-8")
+        self.assertTrue(notice.startswith("PILOT: NO CLINICAL USE\n"))
+        self.assertIn("invented registry entries", notice)
+        self.assertIn("not approved for", notice)
+
     def test_three_case_pilot_is_watermarked_e2_and_non_production(self) -> None:
         pilot = _pilot()
         report = run_synthetic_registry_pilot(pilot)

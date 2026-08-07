@@ -179,3 +179,11 @@
 **Evidence level earned:** E1 for strict contracts, canonical bindings, and adversarial tests; E2 for the retained two-model, three-case deterministic replay. No E3-E6 claim is made.
 
 **Blocked on:** A larger predeclared evaluation with fresh repeated calls, paraphrases, abstention cases, prompt injection, absent and duplicate correct entries, and calibrated error estimates; extension of the governed production capability schema to carry parameter value sets, requiredness, ownership, and reference-data identity; real Ministry catalogue facts and attestations; verified Product local actions and deployed extension implementations; exact CHT sandbox and handset evidence; and clinical, data-governance, privacy, security, operational, and deployment approval.
+
+## Detached pilot-catalogue warning - 2026-08-06
+
+**Delivered:** The populated nine-entry pretend registry now has an adjacent `PILOT-NO-CLINICAL-USE.txt` notice stating that its entries and Ministry input are invented and prohibiting patient care, clinical decisions, deployment, and production import. A regression test requires the notice and its exact leading label.
+
+**Root cause:** The generated pilot package was strongly watermarked, but the standalone catalogue source depended on `pilot.*` entry IDs, simulated evidence labels, and surrounding documentation. A copied source file could therefore lose the most prominent warning.
+
+**Generalized guardrail:** Synthetic source collections must carry a plain-text safety notice at the same directory boundary as detachable machine-readable inputs, and tests must fail if that notice disappears or is weakened.
