@@ -6,3 +6,7 @@
 
 # Golden-vector digests are byte-exact; prevent Windows checkout conversion.
 compiler/examples/special_functions/gestational-age-vectors.json text eol=lf
+# Pilot evidence binds canonical UTF-8 source text. Keep its retained Markdown
+# stable across checkouts rather than treating it as freely convertible prose.
+compiler/examples/pilot/clarified-mini-manuals.md text eol=lf
+compiler/examples/pilot/simulated-ministry-response.md text eol=lf
