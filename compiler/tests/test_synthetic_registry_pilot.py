@@ -162,9 +162,11 @@ class SyntheticRegistryPilotTests(unittest.TestCase):
             manual_digest,
             "01a19e7372a9fd5e28c93be8b5847cb12e9d920ce8e09ab71101c42c500141ec",
         )
-        raw_file_digest = hashlib.sha256(MANUAL_PATH.read_bytes()).hexdigest()
-        self.assertEqual(evidence["run_metadata"]["source_sha256"], raw_file_digest)
-        self.assertNotEqual(manual_digest, raw_file_digest)
+        canonical_source_digest = hashlib.sha256(
+            MANUAL_PATH.read_text(encoding="utf-8").encode("utf-8")
+        ).hexdigest()
+        self.assertEqual(evidence["run_metadata"]["source_sha256"], canonical_source_digest)
+        self.assertNotEqual(manual_digest, canonical_source_digest)
         for artifact in evidence["raw_artifacts"]:
             for candidate in artifact["candidates"]:
                 self.assertEqual(candidate["provenance"]["source_digest"], manual_digest)
@@ -330,7 +332,9 @@ class SyntheticRegistryPilotTests(unittest.TestCase):
 
     def test_all_catalogue_entries_are_pilot_namespaced_and_source_bound(self) -> None:
         catalogue = _json(CATALOGUE_PATH)
-        response_digest = "sha256:" + hashlib.sha256(MINISTRY_RESPONSE_PATH.read_bytes()).hexdigest()
+        response_digest = "sha256:" + hashlib.sha256(
+            MINISTRY_RESPONSE_PATH.read_text(encoding="utf-8").encode("utf-8")
+        ).hexdigest()
         self.assertEqual(len(catalogue["entries"]), 9)
         for entry in catalogue["entries"]:
             self.assertTrue(entry["entry_ref"].startswith("pilot."))

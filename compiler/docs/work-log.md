@@ -187,3 +187,15 @@
 **Root cause:** The generated pilot package was strongly watermarked, but the standalone catalogue source depended on `pilot.*` entry IDs, simulated evidence labels, and surrounding documentation. A copied source file could therefore lose the most prominent warning.
 
 **Generalized guardrail:** Synthetic source collections must carry a plain-text safety notice at the same directory boundary as detachable machine-readable inputs, and tests must fail if that notice disappears or is weakened.
+
+## Larger predeclared registry-match evaluation - 2026-08-07
+
+**Delivered:** A frozen 36-case, non-clinical matrix now separates registry-blind extraction from catalogue-visible matching. It includes positive, clarification, no-match, ambiguity, adversarial, and production-schema-gap cases. The evaluator supplies adapters only a case identifier and manual text, never the frozen expected answer or its group. It separately counts wrong unique matches, so a plausible but unsafe selection cannot be hidden by aggregate accuracy. The recorded perfect replay is deliberately labelled evaluator-only; its 36/36 result is not a live-model quality claim.
+
+**Finding that drives the next contract change:** Four schema-gap cases establish that a production catalogue projection needs exact parameter value sets, parameter requiredness, parameter ownership, and reference-data identity. The current pilot can represent these facts, but the governed production capability contract cannot yet project them all.
+
+**Defects found:** The evaluator initially validated a placeholder digest before sealing, and its adapter input exposed the case group, which would have leaked the expected outcome class. Broader regression also exposed that byte-oriented pilot-evidence tests depended on Windows checkout line endings despite source digests being computed from canonical UTF-8 text.
+
+**Generalized guardrail:** Validate a real content digest only after canonical sealing; adapters receive no answer-bearing evaluation metadata; every synthetic evaluation result declares whether it is a recorded replay or a fresh model run; and textual evidence digests use canonical UTF-8 text while Git attributes preserve LF for the retained pilot sources. A future governed schema revision must distinguish facts absent from the registry from facts present in data concepts but omitted from the matching projection.
+
+**Environment evidence correction:** The full compiler suite found that MSYS `xsltproc --version` can pass while the official CHT harness fails later with its documented `fatal error - add_item` mount-table error. That narrow condition is now an explicit environment-dependent `not_run`, never a conversion pass or a product defect. Other harness failures still fail the test.

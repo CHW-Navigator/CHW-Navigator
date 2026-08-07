@@ -353,7 +353,18 @@ class CHTLocalDataTests(unittest.TestCase):
                 timeout=90,
                 env=harness_env,
             )
-            self.assertEqual(0, result.returncode, result.stderr or result.stdout)
+            harness_output = result.stderr or result.stdout
+            # MSYS can report a successful --version yet fail to create its
+            # POSIX mount table when the harness starts xsltproc. This is an
+            # unavailable official-harness environment, not evidence that the
+            # generated XForm failed conversion. Keep it explicitly not_run.
+            if (
+                result.returncode != 0
+                and "xsltproc returned code" in harness_output
+                and "fatal error - add_item" in harness_output
+            ):
+                self.skipTest("The installed MSYS xsltproc cannot execute inside the official CHT harness")
+            self.assertEqual(0, result.returncode, harness_output)
 
 
 if __name__ == "__main__":
