@@ -52,6 +52,21 @@ existing entry reference and parameter mappings; deterministic code copies the
 structured entry, runs the hard checks, and produces a review-only package.
 See `registry-visible-match-review.md`.
 
+## Hardened three-case pilot
+
+The follow-up pilot keeps the two model stages separate and adds a nine-entry
+catalogue with one obvious and one same-shape distractor for each case. The
+registry-visible model selected all three intended entries, mapped every
+parameter, and assessed all eight unselected entries per case. Deterministic
+replay found zero hidden-answer mismatches. The date-of-birth case also proved
+that a local action name must come from an explicit Product allow-list; without
+that list the matcher now requests clarification, and an invented action ID
+fails.
+
+This is still only a three-case synthetic software pilot. Its 3/3 result is not
+a reliability estimate and provides no clinical or deployment evidence. See
+`synthetic-registry-pilot.md` for the retained inputs, output, and limits.
+
 The field-copy trial initially changed shapes when the catalogue had been presented as prose, such as changing `outputs` to `output` and `target_profile` to `target`. It copied all fields exactly when given the structured JSON catalogue. Production code should perform that copy deterministically after a reviewed selection; there is no benefit in asking the model to retype it.
 
 ## What the next test set should contain
@@ -78,4 +93,9 @@ Run multiple fresh model calls and keep the expected entries hidden from the reg
 
 ## Evidence limits
 
-This was one isolated model run per condition against a synthetic six-entry catalogue. The output is committed and parser-tested, so it is recorded E2 evidence for this narrow experiment. It did not use the Product live-model adapter, an approved ministry registry, an exact CHT runtime, or human clinical/governance approval. Those remain `not_run` or `not_supplied`.
+The first experiment used one isolated model run per condition against a
+synthetic six-entry catalogue. The hardened follow-up used a separate retained
+blind extraction and registry-visible run against nine synthetic entries. Both
+are recorded E2 evidence for narrow software mechanics only. Neither used the
+Product live-model adapter, an approved ministry registry, an exact CHT runtime,
+or human clinical/governance approval. Those remain `not_run` or `not_supplied`.

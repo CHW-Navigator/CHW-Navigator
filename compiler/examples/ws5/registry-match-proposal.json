@@ -1,7 +1,9 @@
 {
-  "schema_version": "registry-match-proposal@1.0.0",
+  "schema_version": "registry-match-proposal@2.0.0",
   "source_candidate_digest": "sha256:efb5302f18ba7d17a0c188d4c9321b7ca42c9b8f7fed770d700a05c2aa42de85",
-  "catalogue_digest": "sha256:d3c87ce83efa92c3966375490fea852ba50f071a9eac6cc761e43efe2376e901",
+  "catalogue_digest": "sha256:b435043b7b8bbaf1928f6e040259e2eca7df944ef9fd0bc336e0236cc08f1906",
+  "product_variables_digest": "sha256:e7b27629afd09e9e6598130fa6a01efdc8d282c1a8bb7b7b063d09bfd3073663",
+  "product_binding_context_digest": "sha256:a19aed482171d5d98f9af191bf1cd76ddc03dd4219c7b22a1ab1ded613616a23",
   "need_id": "need_gestational_age_naegele",
   "outcome": "unique_match",
   "selected_entry_ref": "technical.gestational-age.naegele@1.0.0",
@@ -42,6 +44,7 @@
   "status_target_var": "st_ga_status",
   "local_action_id": null,
   "local_fail_mode": null,
+  "local_recorded_at_target_var": null,
   "unresolved_questions": [],
   "rationale": "The operation, ordered data contract, target, and scope correspond."
 }

@@ -1,0 +1,182 @@
+{
+  "watermark": {
+    "text": "SYNTHETIC SOFTWARE PILOT ONLY - NOT FOR PATIENT CARE OR DEPLOYMENT",
+    "synthetic": true,
+    "clinical_use": false,
+    "deployment_use": false
+  },
+  "run_metadata": {
+    "run_id": "unavailable",
+    "created_at": "unavailable",
+    "provider": "unavailable",
+    "model": "unavailable",
+    "mode": "registry-blind",
+    "source_path": "compiler/examples/pilot/clarified-mini-manuals.md",
+    "source_encoding": "UTF-8",
+    "source_sha256": "ff9bef3887ac5ed98af30531ae27844800b19e9e19a583eac77e60e8fece7103"
+  },
+  "retention_flags": {
+    "raw_artifacts_retained": true,
+    "source_quotes_retained": true,
+    "full_source_copy_retained": false,
+    "prompt_request_retained": false,
+    "model_response_transcript_retained": false,
+    "registry_context_retained": false
+  },
+  "raw_artifacts": [
+    {
+      "schema_version": "capability-needs@1.0.0",
+      "candidates": [
+        {
+          "local_id": "need_current_contact_date_of_birth",
+          "need_kind": "local_data_read",
+          "problem": "Read date_of_birth from the current person's CHT contact document before assessment.",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "date_of_birth",
+              "data_type": "date",
+              "unit": "gregorian_date"
+            }
+          ],
+          "required_statuses": [
+            "success",
+            "missing_input"
+          ],
+          "failure_behavior": "return_status",
+          "subject_scope": "current_contact",
+          "uncertainty": {
+            "status": "none",
+            "details": null
+          },
+          "source": {
+            "document_id": "clarified-mini-manuals.md",
+            "page": "1",
+            "section": "Prior information",
+            "quote": "Before assessment, read `date_of_birth` from the current person's CHT contact\ndocument in either contact or task context. It is an immutable Gregorian\n`YYYY-MM-DD` date. If it is absent, stop and report `missing`."
+          },
+          "provenance": {
+            "origin": "manual",
+            "source_digest": "01a19e7372a9fd5e28c93be8b5847cb12e9d920ce8e09ab71101c42c500141ec"
+          }
+        }
+      ]
+    },
+    {
+      "schema_version": "capability-needs@1.0.0",
+      "candidates": [
+        {
+          "local_id": "need_height_for_age_z_score",
+          "need_kind": "technical_calculation",
+          "problem": "Calculate the WHO 2006 standing-height-for-age z-score for the current person using the stated fixed reference-data contract.",
+          "inputs": [
+            {
+              "name": "sex",
+              "data_type": "code",
+              "unit": "none"
+            },
+            {
+              "name": "birth_date",
+              "data_type": "date",
+              "unit": "gregorian_date"
+            },
+            {
+              "name": "measurement_date",
+              "data_type": "date",
+              "unit": "gregorian_date"
+            },
+            {
+              "name": "standing_height",
+              "data_type": "decimal",
+              "unit": "cm"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "standing_height_for_age_z_score",
+              "data_type": "decimal",
+              "unit": "z_score"
+            }
+          ],
+          "required_statuses": [
+            "success",
+            "missing_input",
+            "invalid_input",
+            "out_of_range",
+            "missing_reference_data",
+            "version_mismatch"
+          ],
+          "failure_behavior": "return_status",
+          "subject_scope": "current_contact",
+          "uncertainty": {
+            "status": "none",
+            "details": null
+          },
+          "source": {
+            "document_id": "clarified-mini-manuals.md",
+            "page": "1",
+            "section": "Growth assessment",
+            "quote": "For the current person in a CHT form or task, calculate the WHO 2006\nstanding-height-for-age z-score at 730 through 1825 completed days from sex\n(`male` or `female`), Gregorian birth date, Gregorian measurement date, and\nstanding height in centimeters. Use synthetic pilot reference table\n`WHO_CHILD_GROWTH_2006_HEIGHT_FOR_AGE`, standard version `2006`, data version\n`synthetic-pilot-placeholder-0.1`, SHA-256\n`cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc`.\nPerform no additional rounding, and do not classify when an input or reference\ntable is missing, invalid, outside the supported range, or has the wrong version."
+          },
+          "provenance": {
+            "origin": "manual",
+            "source_digest": "01a19e7372a9fd5e28c93be8b5847cb12e9d920ce8e09ab71101c42c500141ec"
+          }
+        }
+      ]
+    },
+    {
+      "schema_version": "capability-needs@1.0.0",
+      "candidates": [
+        {
+          "local_id": "need_bikram_sambat_elapsed_days",
+          "need_kind": "technical_calculation",
+          "problem": "Calculate integer elapsed days between two Bikram Sambat dates for the current person's workflow using the stated fixed conversion-table contract.",
+          "inputs": [
+            {
+              "name": "start_date",
+              "data_type": "date",
+              "unit": "bikram_sambat_date"
+            },
+            {
+              "name": "end_date",
+              "data_type": "date",
+              "unit": "bikram_sambat_date"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "elapsed_days",
+              "data_type": "integer",
+              "unit": "days"
+            }
+          ],
+          "required_statuses": [
+            "success",
+            "missing_input",
+            "invalid_input",
+            "out_of_range",
+            "missing_reference_data",
+            "version_mismatch"
+          ],
+          "failure_behavior": "return_status",
+          "subject_scope": "current_contact",
+          "uncertainty": {
+            "status": "none",
+            "details": null
+          },
+          "source": {
+            "document_id": "clarified-mini-manuals.md",
+            "page": "1",
+            "section": "Calendar calculation",
+            "quote": "In the current person's workflow, calculate integer elapsed days between two\nBikram Sambat dates for BS years 2000 through 2089 as end minus start, excluding\nthe end date from any additional count. The same date returns zero; reversed\ndates are invalid. Use synthetic pilot conversion table\n`MEDIC_BIKRAM_SAMBAT_TABLE`, standard version `pilot-assumption`, data version\n`synthetic-pilot-placeholder-0.1`, SHA-256\n`eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`, without\nrounding. Stop for missing, invalid, out-of-range, or wrong-version input or\nreference data."
+          },
+          "provenance": {
+            "origin": "manual",
+            "source_digest": "01a19e7372a9fd5e28c93be8b5847cb12e9d920ce8e09ab71101c42c500141ec"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -589,6 +589,23 @@ Arbitrary local report/PouchDB search remains deliberately unsupported. See
 [`docs/local-data-authoring-handoff.md`](docs/local-data-authoring-handoff.md) for
 the exact upstream LLM handoff and the Product-to-Clinical-IR boundary that remains.
 
+## Run the synthetic registry-matching pilot
+
+This is a non-clinical E2 software experiment. It replays a recorded
+registry-blind extraction and a separate recorded registry-visible match
+against a source-backed synthetic catalogue and emits
+only watermarked, non-production artifacts:
+
+```powershell
+$env:PYTHONPATH='compiler/src'
+.\.venv\Scripts\python -m chw_navigator.cli run-synthetic-registry-pilot `
+  compiler/examples/pilot/simulated-ministry-catalogue.json `
+  compiler/generated/synthetic-registry-pilot
+```
+
+See [the pilot limits and tests](docs/synthetic-registry-pilot.md) and the
+[plain-language Ministry/NGO catalogue request](docs/prompts/ministry-catalogue-completion-prompt.md).
+
 - Form structure is intentionally minimal today. Groups, repeats, and multivalue variables are not yet supported by the current validator/runtime path.
 - The XLSForm importer is intentionally narrow. It does not yet support general question `relevant`, general `constraint`, repeats, groups, or arbitrary legacy production forms.
 - External lookup tables and nonlinear or lookup-backed math are not supported in the current Z3 boundary. Unsupported constructs should be rejected rather than approximated.

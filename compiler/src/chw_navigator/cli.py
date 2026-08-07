@@ -29,6 +29,8 @@ from .json_schema_export import write_json_schemas
 from .mermaid_backend import MermaidOptions, build_mermaid_artifact
 from .quality_checks import run_quality_checks
 from .registry_match import RegistryMatchError, write_registry_match_review
+from .synthetic_registry_pilot import SyntheticRegistryPilotError
+from .synthetic_registry_pilot_example import write_synthetic_registry_pilot_example
 from .staged_lint import (
     lint_ir_document,
     lint_mermaid_artifact,
@@ -267,6 +269,13 @@ def main(argv: list[str] | None = None) -> int:
     match_review_parser.add_argument("local_data_bindings_path")
     match_review_parser.add_argument("output_path")
 
+    pilot_parser = subparsers.add_parser(
+        "run-synthetic-registry-pilot",
+        help="run the isolated three-case software pilot and emit only watermarked non-clinical artifacts",
+    )
+    pilot_parser.add_argument("simulated_catalogue_path")
+    pilot_parser.add_argument("output_dir")
+
     production_parser = subparsers.add_parser(
         "build-cht-production",
         help="build the bounded WS6 Python-owned CHT bundle from governed WS5 outputs",
@@ -408,6 +417,11 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.local_data_bindings_path),
             Path(args.output_path),
         )
+    if args.command == "run-synthetic-registry-pilot":
+        return _handle_synthetic_registry_pilot(
+            Path(args.simulated_catalogue_path),
+            Path(args.output_dir),
+        )
     if args.command == "build-cht-production":
         return _handle_build_cht_production(
             Path(args.canonical_ir_path),
@@ -483,6 +497,23 @@ def _handle_registry_match_review(
         print(str(exc))
         return 1
     print(f"wrote non-executable registry match review to {output_path}")
+    return 0
+
+
+def _handle_synthetic_registry_pilot(
+    simulated_catalogue_path: Path,
+    output_dir: Path,
+) -> int:
+    try:
+        report = write_synthetic_registry_pilot_example(
+            simulated_catalogue_path,
+            output_dir,
+        )
+    except (SyntheticRegistryPilotError, RegistryMatchError, OSError, json.JSONDecodeError) as exc:
+        print(str(exc))
+        return 1
+    print("SYNTHETIC SOFTWARE PILOT ONLY — NOT FOR PATIENT CARE OR DEPLOYMENT")
+    print(f"pilot status={report['overall_status']} report={output_dir / 'pilot-report.json'}")
     return 0
 
 

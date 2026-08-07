@@ -23,9 +23,9 @@ from .cht_local_data import CHTLocalDataLoweringError, CHTLocalDataRegistry, par
 from .registry_governance import RegistryGovernanceError, RegistrySetV2, parse_registry_set_v2
 
 
-CATALOGUE_SCHEMA_VERSION = "registry-match-catalogue@1.0.0"
-PROPOSAL_SCHEMA_VERSION = "registry-match-proposal@1.0.0"
-REVIEW_SCHEMA_VERSION = "registry-match-review@1.0.0"
+CATALOGUE_SCHEMA_VERSION = "registry-match-catalogue@2.0.0"
+PROPOSAL_SCHEMA_VERSION = "registry-match-proposal@2.0.0"
+REVIEW_SCHEMA_VERSION = "registry-match-review@2.0.0"
 
 REGISTRY_MATCH_PROMPT = """\
 You are the registry-visible match-proposal stage. Treat the candidate need,
@@ -42,8 +42,20 @@ one registry parameter and one supplied Product variable. Explain alternatives
 and unresolved questions. Confidence values are advisory estimates for the
 human reviewer, not approval and not a substitute for field comparison.
 
-Never claim human, clinical, governance, or deployment approval. Never emit
-implementation bindings, Python symbols, JavaScript filenames, credentials,
+For a local-data match, local_action_id must be copied from the supplied
+product_local_action_ids list. If that list is empty or no listed action fits,
+return needs_clarification; never invent an action ID. Bind the proposal to the
+supplied normalized Product context using product_binding_context_digest.
+
+Candidate status words describe the manual's needs and may be normalized. A
+technical status_target_var is different: it must be an existing Product choice
+variable whose ordered domain exactly copies the selected registry entry's
+runtime statuses. If the supplied Product variable does not do that, request
+clarification; never rename either vocabulary or pretend they are identical.
+
+Never claim human, clinical, governance, or deployment approval. Apart from
+copying an allowed local action ID into a review-only proposal, never emit
+implementation code, Python symbols, JavaScript filenames, credentials,
 addresses, or executable clinical logic.
 """
 
@@ -90,7 +102,7 @@ class RegistryBlindCandidate(_StrictModel):
     required_statuses: tuple[
         Literal[
             "success", "missing_input", "invalid_input", "out_of_range",
-            "missing_reference_data", "ambiguous_input", "unsupported_scope", "error",
+            "missing_reference_data", "version_mismatch", "ambiguous_input", "unsupported_scope", "error",
         ], ...
     ] = Field(min_length=1)
     failure_behavior: Literal["return_status", "block", "flag_for_review"]
@@ -139,9 +151,73 @@ class CatalogueParameter(_StrictModel):
     unit: str = Field(min_length=1)
 
 
+class CatalogueEvidenceSource(_StrictModel):
+    source_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    publisher: str = Field(min_length=1)
+    locator: str = Field(min_length=1)
+    retrieved_on: str | None
+    source_version: str | None
+    source_content_digest: str | None = Field(default=None, pattern=r"^sha256:[0-9a-f]{64}$")
+    claim_supported: str = Field(min_length=1)
+    evidence_kind: Literal[
+        "governance_reference", "platform_documentation", "reference_standard",
+        "deployment_configuration", "library_documentation", "synthetic_assumption",
+    ]
+    claim_status: Literal["not_verified_in_run", "synthetic_assumption"]
+
+    @model_validator(mode="after")
+    def synthetic_label_is_consistent(self) -> "CatalogueEvidenceSource":
+        if (self.evidence_kind == "synthetic_assumption") != (self.claim_status == "synthetic_assumption"):
+            raise ValueError("synthetic evidence kind and claim_status must agree")
+        return self
+
+
+class CatalogueSupportedDomain(_StrictModel):
+    basis: str = Field(min_length=1)
+    minimum: int | float
+    maximum: int | float
+    unit: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def bounds_are_ordered(self) -> "CatalogueSupportedDomain":
+        if self.minimum > self.maximum:
+            raise ValueError("catalogue supported-domain minimum cannot exceed maximum")
+        return self
+
+
+class CatalogueReferenceData(_StrictModel):
+    standard_id: str = Field(min_length=1)
+    standard_version: str = Field(min_length=1)
+    data_version: str = Field(min_length=1)
+    content_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+
+
+class CatalogueSemanticRule(_StrictModel):
+    name: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    value: str = Field(min_length=1)
+
+
+class LocalReadContract(_StrictModel):
+    available_contexts: tuple[Literal["contact", "task", "reports"], ...] = Field(min_length=1)
+    freshness_policy: Literal["never", "immutable", "max_age_days"]
+    recorded_at_required: bool
+    max_age_days: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def freshness_shape_is_consistent(self) -> "LocalReadContract":
+        if self.freshness_policy == "max_age_days":
+            if not self.recorded_at_required or self.max_age_days is None:
+                raise ValueError("max_age_days freshness requires a recorded-at value and limit")
+        elif self.recorded_at_required or self.max_age_days is not None:
+            raise ValueError("non-expiring local reads cannot declare recorded-at requirements")
+        return self
+
+
 class RegistryMatchCatalogueEntry(_StrictModel):
     entry_ref: str = Field(min_length=1)
-    entry_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    source_entry_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    projection_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     kind: Literal["technical_calculation", "local_data_read"]
     family: str | None = None
     operation: str | None = None
@@ -152,17 +228,33 @@ class RegistryMatchCatalogueEntry(_StrictModel):
     statuses: tuple[str, ...] = Field(min_length=1)
     target_profile: str = Field(min_length=1)
     subject_scope: Literal["current_contact", "household", "service_area", "cohort"]
+    supported_domain: CatalogueSupportedDomain | None
+    rounding: Literal["none", "half_even"] | None
+    reference_data: CatalogueReferenceData | None
+    semantic_rules: tuple[CatalogueSemanticRule, ...]
+    local_read_contract: LocalReadContract | None
+    evidence_sources: tuple[CatalogueEvidenceSource, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def kind_fields_and_ordered_sets_are_valid(self) -> "RegistryMatchCatalogueEntry":
         if self.kind == "technical_calculation":
             if not self.family or not self.operation or self.semantic_name is not None:
                 raise ValueError("technical entries require family/operation and forbid semantic_name")
+            if self.supported_domain is None or self.rounding is None or self.local_read_contract is not None:
+                raise ValueError("technical entries require domain/rounding and forbid local-read contracts")
         else:
             if not self.semantic_name or self.family is not None or self.operation is not None:
                 raise ValueError("local-data entries require semantic_name and forbid family/operation")
             if self.inputs:
                 raise ValueError("local-data entries cannot declare invocation inputs")
+            if self.supported_domain is not None or self.rounding is not None or self.reference_data is not None:
+                raise ValueError("local-data entries forbid technical calculation fields")
+            if self.local_read_contract is None:
+                raise ValueError("local-data entries require a read contract")
+            if self.local_read_contract.freshness_policy == "immutable" and "stale" in self.statuses:
+                raise ValueError("immutable local-data entries cannot advertise a stale status")
+            if self.local_read_contract.freshness_policy == "max_age_days" and "stale" not in self.statuses:
+                raise ValueError("freshness-limited local-data entries require a stale status")
         for label, values in (
             ("input", [item.name for item in self.inputs]),
             ("output", [item.name for item in self.outputs]),
@@ -170,6 +262,12 @@ class RegistryMatchCatalogueEntry(_StrictModel):
         ):
             if len(values) != len(set(values)):
                 raise ValueError(f"duplicate catalogue {label} entries are forbidden")
+        rule_names = [item.name for item in self.semantic_rules]
+        source_ids = [item.source_id for item in self.evidence_sources]
+        if len(rule_names) != len(set(rule_names)):
+            raise ValueError("duplicate catalogue semantic-rule names are forbidden")
+        if len(source_ids) != len(set(source_ids)):
+            raise ValueError("duplicate catalogue evidence source IDs are forbidden")
         return self
 
 
@@ -205,6 +303,8 @@ class RegistryMatchProposal(_StrictModel):
     schema_version: Literal[PROPOSAL_SCHEMA_VERSION]
     source_candidate_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     catalogue_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    product_variables_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    product_binding_context_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     need_id: str = Field(pattern=r"^need_[a-z0-9_]+$")
     outcome: Literal["unique_match", "ambiguous", "no_match", "needs_clarification"]
     selected_entry_ref: str | None
@@ -214,6 +314,9 @@ class RegistryMatchProposal(_StrictModel):
     status_target_var: str | None = Field(default=None, pattern=r"^st_[a-z0-9_]+$")
     local_action_id: str | None = Field(default=None, pattern=r"^a_[a-z0-9_]+$")
     local_fail_mode: Literal["soft_missing", "ask_if_missing", "hard_error"] | None
+    local_recorded_at_target_var: str | None = Field(
+        default=None, pattern=r"^(v_|h_|st_)[a-z0-9_]+(?:_h)?$"
+    )
     unresolved_questions: tuple[str, ...]
     rationale: str = Field(min_length=1)
 
@@ -283,11 +386,13 @@ class ConfidenceThresholds(_StrictModel):
 
 
 class ModelAssessment(_StrictModel):
-    top_confidence_percent: float | None
-    second_confidence_percent: float | None
+    top_self_reported_confidence_percent: float | None
+    second_self_reported_confidence_percent: float | None
     margin_percentage_points: float | None
     example_display_thresholds: ConfidenceThresholds
-    example_threshold_result: Literal["pass", "flag_for_human_attention"]
+    self_reported_threshold_display: Literal[
+        "threshold_met", "flag_for_human_attention", "not_evaluable"
+    ]
     authoritative: Literal[False]
     note: str = Field(min_length=1)
 
@@ -303,6 +408,8 @@ class RegistryMatchReview(_StrictModel):
     content_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     source_candidate_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     catalogue_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    product_variables_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    product_binding_context_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     registry_set_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     proposal_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     need_id: str = Field(pattern=r"^need_[a-z0-9_]+$")
@@ -322,6 +429,13 @@ class RegistryMatchReview(_StrictModel):
             raise ValueError("unique_match requires a complete proposed binding")
         if self.outcome != "unique_match" and self.proposed_binding is not None:
             raise ValueError("non-unique outcomes cannot carry a proposed binding")
+        if self.outcome == "unique_match":
+            if self.selected_entry is None:
+                raise ValueError("unique_match requires the selected catalogue entry")
+            if any(item.status in {"fail", "needs_clarification"} for item in self.checks):
+                raise ValueError("unique_match cannot contain failing or unresolved checks")
+        if self.executable_eligible is not False or self.human_review.decision != "not_supplied":
+            raise ValueError("registry-match reviews are never executable or approved")
         return self
 
 
@@ -430,7 +544,7 @@ def build_registry_match_catalogue(
         raise RegistryMatchError("local-data registry target does not match the governed CHT target")
 
     approved = {
-        (item.capability_id, item.capability_version, item.capability_content_digest)
+        (item.capability_id, item.capability_version, item.capability_content_digest): item
         for item in registry.capability_governance.entries
         if item.lifecycle_state == "approved"
     }
@@ -438,11 +552,12 @@ def build_registry_match_catalogue(
     entries: list[dict[str, Any]] = []
     for capability in registry.capability_registry.capabilities:
         identity = (capability.id, capability.version, capability.content_digest)
-        if identity not in approved or target_ref not in capability.supported_target_profiles:
+        governance = approved.get(identity)
+        if governance is None or target_ref not in capability.supported_target_profiles:
             continue
-        entries.append({
+        entry = {
             "entry_ref": f"{capability.id}@{capability.version}",
-            "entry_digest": capability.content_digest,
+            "source_entry_digest": capability.content_digest,
             "kind": "technical_calculation",
             "family": capability.family,
             "operation": capability.operation,
@@ -459,15 +574,56 @@ def build_registry_match_catalogue(
             "statuses": list(capability.status_set),
             "target_profile": target_ref,
             "subject_scope": capability.subject_scope,
-        })
+            "supported_domain": capability.supported_domain.model_dump(mode="json"),
+            "rounding": capability.rounding,
+            "reference_data": None,
+            "semantic_rules": [
+                {"name": "determinism", "value": capability.determinism},
+                {
+                    "name": "side_effects",
+                    "value": "none" if not capability.side_effects else ",".join(capability.side_effects),
+                },
+            ],
+            "local_read_contract": None,
+            "evidence_sources": [
+                {
+                    "source_id": item.source_id,
+                    "title": item.source_id,
+                    "publisher": "deployment governance record",
+                    "locator": item.location,
+                    "retrieved_on": None,
+                    "source_version": None,
+                    "source_content_digest": None,
+                    "claim_supported": "The governed capability record cites this source; the match catalogue does not independently verify its contents.",
+                    "evidence_kind": "governance_reference",
+                    "claim_status": "not_verified_in_run",
+                }
+                for item in governance.evidence_sources
+            ],
+        }
+        entries.append({**entry, "projection_digest": _digest(entry)})
     for binding_id, binding in sorted(local_registry.bindings.items()):
         output = {
             "name": binding.semantic_name,
             "type": _local_conceptual_type(binding.value_type, binding.unit),
             "unit": binding.unit or "none",
         }
-        entry_without_digest = {
+        source_entry = {
             "entry_ref": binding_id,
+            "source_entry_digest": _digest({
+                "binding_id": binding_id,
+                "semantic_name": binding.semantic_name,
+                "description": binding.description,
+                "value_type": binding.value_type,
+                "unit": binding.unit,
+                "subject": binding.subject,
+                "adapter_kind": binding.adapter_kind,
+                "path": list(binding.path),
+                "available_contexts": list(binding.available_contexts),
+                "freshness_policy": binding.freshness_policy,
+                "recorded_at_path": list(binding.recorded_at_path) if binding.recorded_at_path else None,
+                "max_age_days": binding.max_age_days,
+            }),
             "kind": "local_data_read",
             "family": None,
             "operation": None,
@@ -475,11 +631,37 @@ def build_registry_match_catalogue(
             "description": binding.description,
             "inputs": [],
             "outputs": [output],
-            "statuses": ["available", "missing", "stale"],
+            "statuses": (
+                ["available", "missing", "stale"]
+                if binding.freshness_policy == "max_age_days"
+                else ["available", "missing"]
+            ),
             "target_profile": target_ref,
             "subject_scope": "current_contact",
+            "supported_domain": None,
+            "rounding": None,
+            "reference_data": None,
+            "semantic_rules": [],
+            "local_read_contract": {
+                "available_contexts": list(binding.available_contexts),
+                "freshness_policy": binding.freshness_policy,
+                "recorded_at_required": binding.recorded_at_path is not None,
+                "max_age_days": binding.max_age_days,
+            },
+            "evidence_sources": [{
+                "source_id": f"local-data-registry:{binding_id}",
+                "title": "Deployment-local CHT data binding",
+                "publisher": "deployment owner",
+                "locator": binding_id,
+                "retrieved_on": None,
+                "source_version": None,
+                "source_content_digest": None,
+                "claim_supported": "This deployment configuration declares the local field semantics, context, and freshness policy.",
+                "evidence_kind": "deployment_configuration",
+                "claim_status": "not_verified_in_run",
+            }],
         }
-        entries.append({**entry_without_digest, "entry_digest": _digest(entry_without_digest)})
+        entries.append({**source_entry, "projection_digest": _digest(source_entry)})
 
     raw = {
         "schema_version": CATALOGUE_SCHEMA_VERSION,
@@ -500,6 +682,13 @@ def parse_registry_match_catalogue(payload: Any) -> RegistryMatchCatalogue:
     expected = raw.pop("content_digest")
     if expected != _digest(raw):
         raise RegistryMatchError("registry-match catalogue content digest does not match")
+    for entry in parsed.entries:
+        projected = entry.model_dump(mode="json")
+        expected_projection = projected.pop("projection_digest")
+        if expected_projection != _digest(projected):
+            raise RegistryMatchError(
+                f"registry-match entry projection digest does not match: {entry.entry_ref}"
+            )
     return parsed
 
 
@@ -532,13 +721,21 @@ def build_registry_match_request(
     catalogue = parse_registry_match_catalogue(catalogue.model_dump(mode="json"))
     candidate = _candidate(source_candidate, need_id)
     variables = _product_variables(product_logic)
+    local_action_ids = _product_local_action_ids(product_logic)
+    product_context = {
+        "variables": list(variables.values()),
+        "local_action_ids": list(local_action_ids),
+    }
     return {
         "system_instructions": REGISTRY_MATCH_PROMPT,
         "output_schema": RegistryMatchProposal.model_json_schema(),
         "source_candidate_digest": _digest(source_candidate),
         "catalogue_digest": catalogue.content_digest,
+        "product_variables_digest": _digest(list(variables.values())),
+        "product_binding_context_digest": _digest(product_context),
         "need": deepcopy(candidate),
         "product_variables": list(variables.values()),
+        "product_local_action_ids": list(local_action_ids),
         "catalogue": catalogue.model_dump(mode="json"),
     }
 
@@ -602,6 +799,22 @@ def _product_variables(product_logic: Any) -> dict[str, dict[str, Any]]:
     return variables
 
 
+def _product_local_action_ids(product_logic: Any) -> tuple[str, ...]:
+    if not isinstance(product_logic, dict):
+        raise RegistryMatchError("Product logic must be an object")
+    raw = product_logic.get("local_action_ids", [])
+    if not isinstance(raw, list):
+        raise RegistryMatchError("Product local_action_ids must be an array")
+    actions: list[str] = []
+    for action_id in raw:
+        if not isinstance(action_id, str) or re.fullmatch(r"a_[a-z0-9_]+", action_id) is None:
+            raise RegistryMatchError("Product local action IDs must be canonical a_ identifiers")
+        if action_id in actions:
+            raise RegistryMatchError("Product local action IDs must be unique")
+        actions.append(action_id)
+    return tuple(actions)
+
+
 def _entry_signature(entry: RegistryMatchCatalogueEntry) -> tuple[Any, ...]:
     return (
         entry.kind,
@@ -613,6 +826,11 @@ def _entry_signature(entry: RegistryMatchCatalogueEntry) -> tuple[Any, ...]:
         tuple(sorted(entry.statuses)),
         entry.target_profile,
         entry.subject_scope,
+        entry.supported_domain.model_dump(mode="json") if entry.supported_domain else None,
+        entry.rounding,
+        entry.reference_data.model_dump(mode="json") if entry.reference_data else None,
+        tuple((item.name, item.value) for item in entry.semantic_rules),
+        entry.local_read_contract.model_dump(mode="json") if entry.local_read_contract else None,
     )
 
 
@@ -627,6 +845,7 @@ _TECHNICAL_STATUS_MAP: dict[str, frozenset[str]] = {
     "invalid_input": frozenset({"input_invalid"}),
     "out_of_range": frozenset({"outside_supported_domain"}),
     "missing_reference_data": frozenset({"reference_data_unavailable"}),
+    "version_mismatch": frozenset({"version_mismatch"}),
     "error": frozenset({"numeric_failure", "execution_failure"}),
 }
 _LOCAL_STATUS_MAP: dict[str, frozenset[str]] = {
@@ -638,19 +857,25 @@ _LOCAL_STATUS_MAP: dict[str, frozenset[str]] = {
 def _confidence_summary(proposal: RegistryMatchProposal) -> dict[str, Any]:
     second = max((item.confidence_percent for item in proposal.alternatives), default=None)
     margin = None if proposal.confidence_percent is None or second is None else round(proposal.confidence_percent - second, 4)
-    example_pass = (
+    threshold_met = (
         proposal.confidence_percent is not None
         and proposal.confidence_percent >= 90
-        and (second is None or second <= 5)
+        and second is not None
+        and second <= 5
+    )
+    display = (
+        "not_evaluable" if second is None
+        else "threshold_met" if threshold_met
+        else "flag_for_human_attention"
     )
     return {
-        "top_confidence_percent": proposal.confidence_percent,
-        "second_confidence_percent": second,
+        "top_self_reported_confidence_percent": proposal.confidence_percent,
+        "second_self_reported_confidence_percent": second,
         "margin_percentage_points": margin,
         "example_display_thresholds": {"top_at_least": 90, "second_at_most": 5},
-        "example_threshold_result": "pass" if example_pass else "flag_for_human_attention",
+        "self_reported_threshold_display": display,
         "authoritative": False,
-        "note": "Model confidence is advisory and never overrides deterministic checks or human review.",
+        "note": "Model self-reported confidence is uncalibrated, advisory, and never overrides deterministic checks or human review.",
     }
 
 
@@ -665,10 +890,20 @@ def evaluate_registry_match_proposal(
     catalogue = parse_registry_match_catalogue(catalogue.model_dump(mode="json"))
     candidate = _candidate(source_candidate, proposal.need_id)
     variables = _product_variables(product_logic)
+    local_action_ids = _product_local_action_ids(product_logic)
+    product_variables_digest = _digest(list(variables.values()))
+    product_binding_context_digest = _digest({
+        "variables": list(variables.values()),
+        "local_action_ids": list(local_action_ids),
+    })
     if proposal.source_candidate_digest != _digest(source_candidate):
         raise RegistryMatchError("proposal is not bound to the exact source candidate")
     if proposal.catalogue_digest != catalogue.content_digest:
         raise RegistryMatchError("proposal is not bound to the exact registry-match catalogue")
+    if proposal.product_variables_digest != product_variables_digest:
+        raise RegistryMatchError("proposal is not bound to the exact Product variable catalogue")
+    if proposal.product_binding_context_digest != product_binding_context_digest:
+        raise RegistryMatchError("proposal is not bound to the exact Product binding context")
 
     entries = {item.entry_ref: item for item in catalogue.entries}
     for alternative in proposal.alternatives:
@@ -747,6 +982,20 @@ def evaluate_registry_match_proposal(
                 check(f"{direction}_mapping_coverage", "fail", "Mappings must be one-to-one.")
                 mapping_failed = True
                 continue
+            variable_ids = [item.variable_id for item in mappings]
+            if len(variable_ids) != len(set(variable_ids)):
+                check(
+                    f"{direction}_variable_uniqueness",
+                    "fail",
+                    "Distinct registry parameters cannot reuse one Product variable.",
+                )
+                mapping_failed = True
+                continue
+            check(
+                f"{direction}_variable_uniqueness",
+                "pass",
+                "Each mapped parameter uses a distinct Product variable.",
+            )
             direction_ok = True
             for mapping in mappings:
                 source = candidate_parameters[direction][mapping.candidate_name]
@@ -816,12 +1065,12 @@ def evaluate_registry_match_proposal(
             if status_variable is None:
                 check("status_target", "fail", "A technical match requires an existing status target variable.")
                 mapping_failed = True
-            elif status_variable["data_type"] != "choice" or status_variable["unit"] != "none" or set(status_variable.get("domain") or []) != set(selected.statuses):
-                check("status_target", "fail", "Status target must be a choice variable with the complete registry status domain.")
+            elif status_variable["data_type"] != "choice" or status_variable["unit"] != "none" or list(status_variable.get("domain") or []) != list(selected.statuses):
+                check("status_target", "fail", "Status target must be a choice variable with the complete ordered registry status domain.")
                 mapping_failed = True
             else:
                 check("status_target", "pass", "Status target covers the complete registry status set.")
-            if proposal.local_action_id is not None or proposal.local_fail_mode is not None:
+            if proposal.local_action_id is not None or proposal.local_fail_mode is not None or proposal.local_recorded_at_target_var is not None:
                 check("binding_kind_fields", "fail", "Technical matches cannot carry local-data adapter fields.")
                 mapping_failed = True
             if not mapping_failed and not clarification and not ambiguous_signature:
@@ -852,20 +1101,46 @@ def evaluate_registry_match_proposal(
             if proposal.local_action_id is None or proposal.local_fail_mode is None:
                 check("local_adapter_fields", "fail", "A local-data match requires an action ID and fail mode.")
                 mapping_failed = True
-            elif expected_mode != proposal.local_fail_mode:
+            elif not local_action_ids:
+                check("local_action_available", "needs_clarification", "No Product local action IDs were supplied; an action ID may not be invented.")
+                clarification = True
+            elif proposal.local_action_id not in local_action_ids:
+                check("local_action_available", "fail", "The proposed local action ID is not in the supplied Product action list.")
+                mapping_failed = True
+            else:
+                check("local_action_available", "pass", "The proposed local action ID is copied from the supplied Product action list.")
+            if proposal.local_action_id is not None and proposal.local_fail_mode is not None and expected_mode != proposal.local_fail_mode:
                 check("local_fail_mode", "needs_clarification", "Proposed local fail mode does not follow the candidate failure behavior.")
                 clarification = True
-            else:
+            elif proposal.local_action_id is not None and proposal.local_fail_mode is not None:
                 check("local_fail_mode", "pass", "Local fail mode follows the candidate failure behavior.")
             if proposal.status_target_var is not None:
                 check("binding_kind_fields", "fail", "Local-data matches cannot carry a technical status target.")
                 mapping_failed = True
+            local_contract = selected.local_read_contract
+            assert local_contract is not None
+            recorded_at_target = proposal.local_recorded_at_target_var
+            if local_contract.recorded_at_required:
+                recorded_variable = variables.get(recorded_at_target or "")
+                if recorded_variable is None:
+                    check("local_recorded_at", "fail", "This freshness-limited read requires an existing recorded-at target variable.")
+                    mapping_failed = True
+                elif recorded_variable["data_type"] != "datetime" or recorded_variable["unit"] != "none":
+                    check("local_recorded_at", "fail", "Recorded-at targets must be datetime variables with unit none.")
+                    mapping_failed = True
+                else:
+                    check("local_recorded_at", "pass", "Freshness metadata is mapped to a datetime Product variable.")
+            elif recorded_at_target is not None:
+                check("local_recorded_at", "fail", "A non-expiring local read cannot carry a recorded-at target.")
+                mapping_failed = True
+            else:
+                check("local_recorded_at", "pass", "This local read does not require freshness metadata.")
             if not mapping_failed and not clarification and not ambiguous_signature:
                 proposed_binding = {
                     "action_id": proposal.local_action_id,
                     "binding_id": selected.entry_ref,
                     "target_var": mapped_binding_parameters["output"][selected.outputs[0].name]["variable_id"],
-                    "recorded_at_target_var": None,
+                    "recorded_at_target_var": recorded_at_target,
                     "fail_mode": proposal.local_fail_mode,
                 }
 
@@ -883,8 +1158,8 @@ def evaluate_registry_match_proposal(
     confidence = _confidence_summary(proposal)
     check(
         "model_confidence",
-        "warning" if confidence["example_threshold_result"] != "pass" else "pass",
-        "Confidence is shown to the reviewer but is never an authorization rule.",
+        "warning" if confidence["self_reported_threshold_display"] != "threshold_met" else "pass",
+        "Self-reported confidence is shown to the reviewer but is never an authorization rule.",
     )
     selected_copy = selected.model_dump(mode="json") if selected is not None else None
     package = {
@@ -892,6 +1167,8 @@ def evaluate_registry_match_proposal(
         "content_digest": "sha256:" + "0" * 64,
         "source_candidate_digest": _digest(source_candidate),
         "catalogue_digest": catalogue.content_digest,
+        "product_variables_digest": product_variables_digest,
+        "product_binding_context_digest": product_binding_context_digest,
         "registry_set_digest": catalogue.registry_set_digest,
         "proposal_digest": _digest(proposal.model_dump(mode="json")),
         "need_id": proposal.need_id,

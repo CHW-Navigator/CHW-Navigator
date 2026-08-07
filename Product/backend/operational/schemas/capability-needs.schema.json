@@ -79,7 +79,7 @@
           "items": {
             "enum": [
               "success", "missing_input", "invalid_input", "out_of_range",
-              "missing_reference_data", "ambiguous_input", "unsupported_scope", "error"
+              "missing_reference_data", "version_mismatch", "ambiguous_input", "unsupported_scope", "error"
             ]
           },
           "minItems": 1,
