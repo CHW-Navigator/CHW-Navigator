@@ -49,6 +49,7 @@ Supporting process docs:
 - reviewed CHT 4.22/5.2 special-function lowering with an isolated official harness
 - platform-owned person registration and mutable administrative-conflict contracts
 - bounded Product-to-canonical bridge with exact governed capability resolution
+- registry-visible AI match proposals with deterministic checks and non-executable human review packages
 - bounded Python-owned CHT production build, task composition, rollback, and stale-topology queue checks
 
 ## Validation layers
@@ -96,6 +97,7 @@ In short: invalid payload shape should fail in Pydantic first, semantic impossib
 - `src/chw_navigator/mutable_conflicts.py`: assertion-preserving mutable-field correction resolver
 - `src/chw_navigator/cht_tasks.py`: versioned CHT task bindings, form task-intent rows, and deterministic `tasks.js` generation
 - `src/chw_navigator/canonical_bridge.py`: WS5 Product adapter, reviewed-need binding, exact resolver, loss report, and resolution lock
+- `src/chw_navigator/registry_match.py`: optional second AI stage, read-only catalogue projection, strict proposal parsing, and human match-review package
 - `src/chw_navigator/cht_production.py`: WS6 governed CHT build, registry-selected capability lowering, runtime bindings, and evidence manifest
 - `src/chw_navigator/cht_task_composer.py`: Python-owned, content-aware `tasks.js` composition with trusted replacement state and exact rollback
 - `src/chw_navigator/queued_topology.py`: strict queued-operation and topology-snapshot contracts with boundary re-resolution
@@ -127,6 +129,22 @@ bound to a separately reviewed semantic contract, and the resolver compares
 only exact family/operation, ordered types and units, statuses, target, scope,
 governance, and release facts. See `docs/ws5-canonical-bridge.md` for the trust
 boundary and evidence limits.
+
+An optional registry-visible proposal stage may run before the human-reviewed
+WS5 binding. It can suggest an existing entry and variable mappings, but code
+copies registry fields and the resulting package is always non-executable. See
+`docs/registry-visible-match-review.md`.
+
+```powershell
+$env:PYTHONPATH='compiler/src'
+python -m chw_navigator.cli build-registry-match-review `
+  compiler/examples/ws5/candidate-capability-needs.json `
+  compiler/examples/ws5/registry-match-proposal.json `
+  compiler/examples/ws5/product-clinical-logic.json `
+  compiler/contracts/examples/governance/valid-registry-set-v2.json `
+  compiler/examples/tracer/local-data-bindings.json `
+  compiler/generated/ws5/registry-match-review.json
+```
 
 ```powershell
 $env:PYTHONPATH='compiler/src'
@@ -570,6 +588,23 @@ missing-value fallback when its browser and `xsltproc` prerequisites are present
 Arbitrary local report/PouchDB search remains deliberately unsupported. See
 [`docs/local-data-authoring-handoff.md`](docs/local-data-authoring-handoff.md) for
 the exact upstream LLM handoff and the Product-to-Clinical-IR boundary that remains.
+
+## Run the synthetic registry-matching pilot
+
+This is a non-clinical E2 software experiment. It replays a recorded
+registry-blind extraction and a separate recorded registry-visible match
+against a source-backed synthetic catalogue and emits
+only watermarked, non-production artifacts:
+
+```powershell
+$env:PYTHONPATH='compiler/src'
+.\.venv\Scripts\python -m chw_navigator.cli run-synthetic-registry-pilot `
+  compiler/examples/pilot/simulated-ministry-catalogue.json `
+  compiler/generated/synthetic-registry-pilot
+```
+
+See [the pilot limits and tests](docs/synthetic-registry-pilot.md) and the
+[plain-language Ministry/NGO catalogue request](docs/prompts/ministry-catalogue-completion-prompt.md).
 
 - Form structure is intentionally minimal today. Groups, repeats, and multivalue variables are not yet supported by the current validator/runtime path.
 - The XLSForm importer is intentionally narrow. It does not yet support general question `relevant`, general `constraint`, repeats, groups, or arbitrary legacy production forms.

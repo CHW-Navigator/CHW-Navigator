@@ -1,0 +1,490 @@
+{
+  "schema_version": "registry-match-catalogue@2.0.0",
+  "content_digest": "sha256:db4c509c904e81d99b5ef313409b180f55c54e363486071b264431ff86782981",
+  "registry_set_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "local_data_registry_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "entries": [
+    {
+      "entry_ref": "pilot.local.person.date-of-birth@1.0.0",
+      "source_entry_digest": "sha256:12890f6873de686bd28850f00e11bd5004adf100b02ae1b6001e1176dcdd9338",
+      "projection_digest": "sha256:f32c1fe4b194723ea8654c5ef9f5573f4481d12d6ccc0b721d37fbb0a609f1b5",
+      "kind": "local_data_read",
+      "family": null,
+      "operation": null,
+      "semantic_name": "date_of_birth",
+      "description": "Read the current person's Gregorian date_of_birth value from the CHT contact document.",
+      "inputs": [],
+      "outputs": [{"name": "date_of_birth", "type": "date", "unit": "gregorian_date"}],
+      "statuses": ["available", "missing"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": null,
+      "rounding": null,
+      "reference_data": null,
+      "semantic_rules": [
+        {"name": "calendar_system", "value": "proleptic_gregorian"},
+        {"name": "date_encoding", "value": "YYYY-MM-DD"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"}
+      ],
+      "local_read_contract": {
+        "available_contexts": ["contact", "task"],
+        "freshness_policy": "immutable",
+        "recorded_at_required": false,
+        "max_age_days": null
+      },
+      "evidence_sources": [
+        {
+          "source_id": "cht-form-inputs",
+          "title": "Input data available in forms",
+          "publisher": "Community Health Toolkit",
+          "locator": "https://docs.communityhealthtoolkit.org/building/forms/configuring/form-inputs/",
+          "retrieved_on": "2026-08-06",
+          "source_version": null,
+          "source_content_digest": null,
+          "claim_supported": "CHT app forms with a contact in context can access fields from that contact document.",
+          "evidence_kind": "platform_documentation",
+          "claim_status": "not_verified_in_run"
+        },
+        {
+          "source_id": "cht-date-of-birth-example",
+          "title": "Track Wealth Quintiles sample contact",
+          "publisher": "Community Health Toolkit",
+          "locator": "https://docs.communityhealthtoolkit.org/building/forms/configuring/wealth-quintiles/",
+          "retrieved_on": "2026-08-06",
+          "source_version": null,
+          "source_content_digest": null,
+          "claim_supported": "The official sample person contact contains a date_of_birth field.",
+          "evidence_kind": "platform_documentation",
+          "claim_status": "not_verified_in_run"
+        },
+        {
+          "source_id": "simulated-moh-dob-interface",
+          "title": "Simulated Ministry pilot response: date of birth read",
+          "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+          "locator": "compiler/examples/pilot/simulated-ministry-response.md#date-of-birth",
+          "retrieved_on": "2026-08-06",
+          "source_version": "2026-08-06-pilot",
+          "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+          "claim_supported": "For this software pilot only, the current contact field is treated as an immutable Gregorian date available in contact and task contexts.",
+          "evidence_kind": "synthetic_assumption",
+          "claim_status": "synthetic_assumption"
+        }
+      ]
+    },
+    {
+      "entry_ref": "pilot.local.person.registration-date@1.0.0",
+      "source_entry_digest": "sha256:e0e275ce3cae49d8cf4e38be34086481d41c3c20b6015592e3c1a5381c1184ea",
+      "projection_digest": "sha256:15eac4d7f8241c378dd746fa3a78c30937987204f843478a178369075d410d1a",
+      "kind": "local_data_read",
+      "family": null,
+      "operation": null,
+      "semantic_name": "registration_date",
+      "description": "Read the date on which the current person's contact document was registered.",
+      "inputs": [],
+      "outputs": [{"name": "registration_date", "type": "date", "unit": "gregorian_date"}],
+      "statuses": ["available", "missing"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": null,
+      "rounding": null,
+      "reference_data": null,
+      "semantic_rules": [
+        {"name": "calendar_system", "value": "proleptic_gregorian"},
+        {"name": "date_encoding", "value": "YYYY-MM-DD"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"}
+      ],
+      "local_read_contract": {
+        "available_contexts": ["contact"],
+        "freshness_policy": "immutable",
+        "recorded_at_required": false,
+        "max_age_days": null
+      },
+      "evidence_sources": [{
+        "source_id": "simulated-moh-registration-interface",
+        "title": "Simulated Ministry pilot response: registration date read",
+        "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+          "locator": "compiler/examples/pilot/simulated-ministry-response.md#deliberate-nearby-entries",
+        "retrieved_on": "2026-08-06",
+        "source_version": "2026-08-06-pilot",
+        "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+        "claim_supported": "A deliberately nearby but incorrect local-data entry used to test matching discrimination.",
+        "evidence_kind": "synthetic_assumption",
+        "claim_status": "synthetic_assumption"
+      }]
+    },
+    {
+      "entry_ref": "pilot.local.person.estimated-date-of-birth@1.0.0",
+      "source_entry_digest": "sha256:95430076db688ec33da21806a65bf5e402104acccbfbbb3b5d46d1fdfa1099cf",
+      "projection_digest": "sha256:810dc470661390638113d529930d9479d29f5fbbb434089e932b2b72285268aa",
+      "kind": "local_data_read",
+      "family": null,
+      "operation": null,
+      "semantic_name": "estimated_date_of_birth",
+      "description": "Read an estimated date of birth entered during enrollment; included as a same-shape wrong entry.",
+      "inputs": [],
+      "outputs": [{"name": "date_of_birth", "type": "date", "unit": "gregorian_date"}],
+      "statuses": ["available", "missing"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": null,
+      "rounding": null,
+      "reference_data": null,
+      "semantic_rules": [
+        {"name": "calendar_system", "value": "proleptic_gregorian"},
+        {"name": "date_encoding", "value": "YYYY-MM-DD"},
+        {"name": "estimate_kind", "value": "enrollment_estimate"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"}
+      ],
+      "local_read_contract": {
+        "available_contexts": ["contact", "task"],
+        "freshness_policy": "immutable",
+        "recorded_at_required": false,
+        "max_age_days": null
+      },
+      "evidence_sources": [{
+        "source_id": "simulated-moh-estimated-dob-decoy",
+        "title": "Simulated Ministry pilot response: estimated birth-date decoy",
+        "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+        "locator": "compiler/examples/pilot/simulated-ministry-response.md#deliberate-nearby-entries",
+        "retrieved_on": "2026-08-06",
+        "source_version": "2026-08-06-pilot",
+        "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+        "claim_supported": "A same-shape but semantically different estimated birth-date read used only as a hard pilot distractor.",
+        "evidence_kind": "synthetic_assumption",
+        "claim_status": "synthetic_assumption"
+      }]
+    },
+    {
+      "entry_ref": "pilot.technical.growth.who-hfa-standing-24-60m@0.1.0",
+      "source_entry_digest": "sha256:9c7e4fed316254b80e988d92bc011e69a2e63e1a3f0f4ae30d04911858be98c5",
+      "projection_digest": "sha256:7aa8ae035e61fa157150ea94c2006a0a1b1627cff7b424dba3dee2c911c6ab38",
+      "kind": "technical_calculation",
+      "family": "growth_reference",
+      "operation": "height_for_age_z_score_who_2006_standing_24_60_months",
+      "semantic_name": null,
+      "description": "Calculate a WHO 2006 standing-height-for-age z-score for a child aged from 24 months through under 60 months.",
+      "inputs": [
+        {"name": "sex", "type": "choice", "unit": "none"},
+        {"name": "birth_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "measurement_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "standing_height_cm", "type": "decimal", "unit": "cm"}
+      ],
+      "outputs": [{"name": "height_for_age_z_score", "type": "decimal", "unit": "z_score"}],
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": {"basis": "completed_age_days_at_measurement", "minimum": 730, "maximum": 1825, "unit": "days"},
+      "rounding": "none",
+      "reference_data": {
+        "standard_id": "WHO_CHILD_GROWTH_2006_HEIGHT_FOR_AGE",
+        "standard_version": "2006",
+        "data_version": "synthetic-pilot-placeholder-0.1",
+        "content_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "semantic_rules": [
+        {"name": "age_basis", "value": "measurement_date_minus_birth_date_completed_days"},
+        {"name": "clinical_equivalence", "value": "not_verified"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"},
+        {"name": "interpolation", "value": "lms_table_lookup"},
+        {"name": "measurement_mode", "value": "standing_height"},
+        {"name": "sex_coding", "value": "male_female"}
+      ],
+      "local_read_contract": null,
+      "evidence_sources": [
+        {
+          "source_id": "who-height-for-age",
+          "title": "Length/height-for-age",
+          "publisher": "World Health Organization",
+          "locator": "https://www.who.int/toolkits/child-growth-standards/standards/length-height-for-age",
+          "retrieved_on": "2026-08-06",
+          "source_version": "WHO Child Growth Standards 2006",
+          "source_content_digest": null,
+          "claim_supported": "WHO publishes sex-specific standing height-for-age z-score standards for children aged 2 to 5 years.",
+          "evidence_kind": "reference_standard",
+          "claim_status": "not_verified_in_run"
+        },
+        {
+          "source_id": "cht-extension-libs",
+          "title": "extension-libs",
+          "publisher": "Community Health Toolkit",
+          "locator": "https://docs.communityhealthtoolkit.org/building/reference/extension-libs/",
+          "retrieved_on": "2026-08-06",
+          "source_version": null,
+          "source_content_digest": null,
+          "claim_supported": "CHT supports offline-capable JavaScript extension functions callable from forms and configuration code.",
+          "evidence_kind": "platform_documentation",
+          "claim_status": "not_verified_in_run"
+        },
+        {
+          "source_id": "simulated-moh-who-interface",
+          "title": "Simulated Ministry pilot response: WHO height-for-age interface",
+          "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+          "locator": "compiler/examples/pilot/simulated-ministry-response.md#who-height-for-age",
+          "retrieved_on": "2026-08-06",
+          "source_version": "2026-08-06-pilot",
+          "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+          "claim_supported": "All exact interface fields, limits, codes, and the placeholder data digest are invented for this software pilot and are not clinically approved.",
+          "evidence_kind": "synthetic_assumption",
+          "claim_status": "synthetic_assumption"
+        }
+      ]
+    },
+    {
+      "entry_ref": "pilot.technical.growth.who-wfa-0-60m@0.1.0",
+      "source_entry_digest": "sha256:3495558e63dc48aa7b0f66ad892945dd2cf1ce91eb2512cbfacb17a7e12bf4fa",
+      "projection_digest": "sha256:6b7f630e0c1986787d8bacf424c4aec499fc7831625bdca13d7af1e2887eab04",
+      "kind": "technical_calculation",
+      "family": "growth_reference",
+      "operation": "weight_for_age_z_score_who_2006_0_60_months",
+      "semantic_name": null,
+      "description": "Calculate a WHO 2006 weight-for-age z-score; included as a nearby wrong entry.",
+      "inputs": [
+        {"name": "sex", "type": "choice", "unit": "none"},
+        {"name": "birth_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "measurement_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "weight_kg", "type": "decimal", "unit": "kg"}
+      ],
+      "outputs": [{"name": "weight_for_age_z_score", "type": "decimal", "unit": "z_score"}],
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": {"basis": "completed_age_days_at_measurement", "minimum": 0, "maximum": 1825, "unit": "days"},
+      "rounding": "none",
+      "reference_data": {
+        "standard_id": "WHO_CHILD_GROWTH_2006_WEIGHT_FOR_AGE",
+        "standard_version": "2006",
+        "data_version": "synthetic-pilot-placeholder-0.1",
+        "content_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      },
+      "semantic_rules": [
+        {"name": "age_basis", "value": "measurement_date_minus_birth_date_completed_days"},
+        {"name": "clinical_equivalence", "value": "not_verified"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"},
+        {"name": "interpolation", "value": "lms_table_lookup"},
+        {"name": "measurement_mode", "value": "weight"},
+        {"name": "sex_coding", "value": "male_female"}
+      ],
+      "local_read_contract": null,
+      "evidence_sources": [{
+        "source_id": "simulated-moh-wfa-decoy",
+        "title": "Simulated Ministry pilot response: WHO weight-for-age decoy",
+        "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+          "locator": "compiler/examples/pilot/simulated-ministry-response.md#deliberate-nearby-entries",
+        "retrieved_on": "2026-08-06",
+        "source_version": "2026-08-06-pilot",
+        "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+        "claim_supported": "A deliberately nearby but clinically different calculation used to test discrimination.",
+        "evidence_kind": "synthetic_assumption",
+        "claim_status": "synthetic_assumption"
+      }]
+    },
+    {
+      "entry_ref": "pilot.technical.growth.who-hfa-standing-0-23m-wrong-domain@0.1.0",
+      "source_entry_digest": "sha256:773821d0c6d6c48ad14d9d9f0a784d6b5df53b23a4002081d1d6068efab98917",
+      "projection_digest": "sha256:268f661d0c960e9546ed374c84fa82c79cab42de70c8f39b624454cbd7fb30e3",
+      "kind": "technical_calculation",
+      "family": "growth_reference",
+      "operation": "height_for_age_z_score_who_2006_standing_0_23_months",
+      "semantic_name": null,
+      "description": "A same-shape height-for-age entry with the wrong 0-729 completed-day domain; included as a hard distractor.",
+      "inputs": [
+        {"name": "sex", "type": "choice", "unit": "none"},
+        {"name": "birth_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "measurement_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "standing_height_cm", "type": "decimal", "unit": "cm"}
+      ],
+      "outputs": [{"name": "height_for_age_z_score", "type": "decimal", "unit": "z_score"}],
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": {"basis": "completed_age_days_at_measurement", "minimum": 0, "maximum": 729, "unit": "days"},
+      "rounding": "none",
+      "reference_data": {
+        "standard_id": "WHO_SHAPED_SYNTHETIC_STANDING_HEIGHT_FOR_AGE",
+        "standard_version": "wrong-domain-pilot-decoy",
+        "data_version": "synthetic-pilot-placeholder-0.1",
+        "content_digest": "sha256:abababababababababababababababababababababababababababababababab"
+      },
+      "semantic_rules": [
+        {"name": "age_basis", "value": "measurement_date_minus_birth_date_completed_days"},
+        {"name": "clinical_equivalence", "value": "not_verified"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"},
+        {"name": "interpolation", "value": "lms_table_lookup"},
+        {"name": "measurement_mode", "value": "standing_height"},
+        {"name": "sex_coding", "value": "male_female"}
+      ],
+      "local_read_contract": null,
+      "evidence_sources": [{
+        "source_id": "simulated-moh-hfa-wrong-domain-decoy",
+        "title": "Simulated Ministry pilot response: wrong-domain HFA decoy",
+        "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+        "locator": "compiler/examples/pilot/simulated-ministry-response.md#deliberate-nearby-entries",
+        "retrieved_on": "2026-08-06",
+        "source_version": "2026-08-06-pilot",
+        "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+        "claim_supported": "An interface-identical but wrong-age-domain entry used only as a hard pilot distractor.",
+        "evidence_kind": "synthetic_assumption",
+        "claim_status": "synthetic_assumption"
+      }]
+    },
+    {
+      "entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-exclusive@0.1.0",
+      "source_entry_digest": "sha256:6142bd30195199a957e6f78a6e219f40f1553bfb3c31d445035693012145a269",
+      "projection_digest": "sha256:16e3e7e96fc64b197f9d0dde669937d47deadc4829f41984c28ae52c98b9a905",
+      "kind": "technical_calculation",
+      "family": "calendar_arithmetic",
+      "operation": "elapsed_days_bikram_sambat_end_exclusive",
+      "semantic_name": null,
+      "description": "Return end date minus start date for two Bikram Sambat dates; the same date returns zero and reversed dates are invalid.",
+      "inputs": [
+        {"name": "start_date", "type": "date", "unit": "bikram_sambat_date"},
+        {"name": "end_date", "type": "date", "unit": "bikram_sambat_date"}
+      ],
+      "outputs": [{"name": "elapsed_days", "type": "integer", "unit": "days"}],
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": {"basis": "bikram_sambat_year", "minimum": 2000, "maximum": 2089, "unit": "year"},
+      "rounding": "none",
+      "reference_data": {
+        "standard_id": "MEDIC_BIKRAM_SAMBAT_TABLE",
+        "standard_version": "pilot-assumption",
+        "data_version": "synthetic-pilot-placeholder-0.1",
+        "content_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "semantic_rules": [
+        {"name": "boundary_convention", "value": "end_minus_start_end_exclusive"},
+        {"name": "calendar_system", "value": "bikram_sambat"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"},
+        {"name": "reversed_dates", "value": "invalid_input"},
+        {"name": "same_date", "value": "zero"}
+      ],
+      "local_read_contract": null,
+      "evidence_sources": [
+        {
+          "source_id": "medic-bikram-sambat",
+          "title": "bikram-sambat",
+          "publisher": "Medic",
+          "locator": "https://github.com/medic/bikram-sambat",
+          "retrieved_on": "2026-08-06",
+          "source_version": "repository state retrieved 2026-08-06",
+          "source_content_digest": null,
+          "claim_supported": "The library provides JavaScript utilities for Bikram Sambat month lengths and BS-to-Gregorian conversion.",
+          "evidence_kind": "library_documentation",
+          "claim_status": "not_verified_in_run"
+        },
+        {
+          "source_id": "cht-extension-libs-calendar",
+          "title": "extension-libs",
+          "publisher": "Community Health Toolkit",
+          "locator": "https://docs.communityhealthtoolkit.org/building/reference/extension-libs/",
+          "retrieved_on": "2026-08-06",
+          "source_version": null,
+          "source_content_digest": null,
+          "claim_supported": "CHT supports offline-capable JavaScript extension functions.",
+          "evidence_kind": "platform_documentation",
+          "claim_status": "not_verified_in_run"
+        },
+        {
+          "source_id": "simulated-moh-bs-interface",
+          "title": "Simulated Ministry pilot response: Bikram Sambat elapsed days",
+          "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+          "locator": "compiler/examples/pilot/simulated-ministry-response.md#bikram-sambat-elapsed-days",
+          "retrieved_on": "2026-08-06",
+          "source_version": "2026-08-06-pilot",
+          "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+          "claim_supported": "The exact elapsed-day wrapper, endpoint rule, range, version, and digest are invented for this software pilot.",
+          "evidence_kind": "synthetic_assumption",
+          "claim_status": "synthetic_assumption"
+        }
+      ]
+    },
+    {
+      "entry_ref": "pilot.technical.calendar.gregorian-elapsed-days-inclusive@0.1.0",
+      "source_entry_digest": "sha256:e1ddb42878a8b865046bea6a5c620a4d35d8af1db96379d1c2a655c43e12b7d5",
+      "projection_digest": "sha256:ffa6236a000c9f14bcf0a225357d591ee073e4ce89164057ed141299f1987cf1",
+      "kind": "technical_calculation",
+      "family": "calendar_arithmetic",
+      "operation": "elapsed_days_gregorian_both_endpoints_inclusive",
+      "semantic_name": null,
+      "description": "Count Gregorian calendar days including both endpoints; included as a nearby wrong entry.",
+      "inputs": [
+        {"name": "start_date", "type": "date", "unit": "gregorian_date"},
+        {"name": "end_date", "type": "date", "unit": "gregorian_date"}
+      ],
+      "outputs": [{"name": "elapsed_days", "type": "integer", "unit": "days"}],
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": {"basis": "gregorian_year", "minimum": 1900, "maximum": 2100, "unit": "year"},
+      "rounding": "none",
+      "reference_data": null,
+      "semantic_rules": [
+        {"name": "boundary_convention", "value": "both_endpoints_inclusive"},
+        {"name": "calendar_system", "value": "proleptic_gregorian"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"},
+        {"name": "reversed_dates", "value": "invalid_input"},
+        {"name": "same_date", "value": "one"}
+      ],
+      "local_read_contract": null,
+      "evidence_sources": [{
+        "source_id": "simulated-moh-gregorian-decoy",
+        "title": "Simulated Ministry pilot response: Gregorian inclusive-day decoy",
+        "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+          "locator": "compiler/examples/pilot/simulated-ministry-response.md#deliberate-nearby-entries",
+        "retrieved_on": "2026-08-06",
+        "source_version": "2026-08-06-pilot",
+        "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+        "claim_supported": "A deliberately nearby but wrong calendar and endpoint convention used to test discrimination.",
+        "evidence_kind": "synthetic_assumption",
+        "claim_status": "synthetic_assumption"
+      }]
+    },
+    {
+      "entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-inclusive@0.1.0",
+      "source_entry_digest": "sha256:f90b92244bcac5f4764ec72ee315db7dd24ddac1e2cdb5f997fb399d27d520aa",
+      "projection_digest": "sha256:7d0239d2ed25b49792becfcc3ec621b2481496cdcb045066f4bc6c36988f209f",
+      "kind": "technical_calculation",
+      "family": "calendar_arithmetic",
+      "operation": "elapsed_days_bikram_sambat_both_endpoints_inclusive",
+      "semantic_name": null,
+      "description": "Count Bikram Sambat days including both endpoints; included as a same-shape wrong-boundary entry.",
+      "inputs": [
+        {"name": "start_date", "type": "date", "unit": "bikram_sambat_date"},
+        {"name": "end_date", "type": "date", "unit": "bikram_sambat_date"}
+      ],
+      "outputs": [{"name": "elapsed_days", "type": "integer", "unit": "days"}],
+      "statuses": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"],
+      "target_profile": "cht-core-5.2@1.0.0",
+      "subject_scope": "current_contact",
+      "supported_domain": {"basis": "bikram_sambat_year", "minimum": 2000, "maximum": 2089, "unit": "year"},
+      "rounding": "none",
+      "reference_data": {
+        "standard_id": "MEDIC_BIKRAM_SAMBAT_TABLE",
+        "standard_version": "pilot-assumption",
+        "data_version": "synthetic-pilot-placeholder-0.1",
+        "content_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "semantic_rules": [
+        {"name": "boundary_convention", "value": "both_endpoints_inclusive"},
+        {"name": "calendar_system", "value": "bikram_sambat"},
+        {"name": "implementation_existence", "value": "simulated_for_pilot"},
+        {"name": "reversed_dates", "value": "invalid_input"},
+        {"name": "same_date", "value": "one"}
+      ],
+      "local_read_contract": null,
+      "evidence_sources": [{
+        "source_id": "simulated-moh-bs-inclusive-decoy",
+        "title": "Simulated Ministry pilot response: Bikram Sambat inclusive-day decoy",
+        "publisher": "SYNTHETIC MINISTRY ROLE-PLAY",
+        "locator": "compiler/examples/pilot/simulated-ministry-response.md#deliberate-nearby-entries",
+        "retrieved_on": "2026-08-06",
+        "source_version": "2026-08-06-pilot",
+        "source_content_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+        "claim_supported": "An interface-identical but wrong endpoint convention used only as a hard pilot distractor.",
+        "evidence_kind": "synthetic_assumption",
+        "claim_status": "synthetic_assumption"
+      }]
+    }
+  ]
+}

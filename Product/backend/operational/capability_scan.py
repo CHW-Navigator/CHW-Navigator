@@ -33,7 +33,7 @@ _DATA_TYPES = {"boolean", "code", "date", "datetime", "decimal", "integer", "ref
 _NEED_KINDS = {"technical_calculation", "local_data_read"}
 _STATUSES = {
     "success", "missing_input", "invalid_input", "out_of_range",
-    "missing_reference_data", "ambiguous_input", "unsupported_scope", "error",
+    "missing_reference_data", "version_mismatch", "ambiguous_input", "unsupported_scope", "error",
 }
 _FAILURE_BEHAVIORS = {"return_status", "block", "flag_for_review"}
 _SUBJECT_SCOPES = {"current_contact", "individual", "household", "group", "facility", "unknown"}

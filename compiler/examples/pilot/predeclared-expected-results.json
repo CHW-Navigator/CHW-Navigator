@@ -1,0 +1,64 @@
+{
+  "schema_version": "synthetic-registry-pilot-expected@1.0.0",
+  "content_digest": "sha256:b68f60f340634cb86513f7ffab506b56a38533cb8c0be2a5599fd2ea3e15426e",
+  "watermark": "SYNTHETIC SOFTWARE PILOT ONLY \u2014 NOT FOR PATIENT CARE OR DEPLOYMENT",
+  "authoring_kind": "synthetic_predeclared_test_oracle",
+  "frozen_before_registry_match_run": true,
+  "clinical_use_permitted": false,
+  "deployment_permitted": false,
+  "expected_catalogue_digest": "sha256:db4c509c904e81d99b5ef313409b180f55c54e363486071b264431ff86782981",
+  "expected_manual_digest": "ff9bef3887ac5ed98af30531ae27844800b19e9e19a583eac77e60e8fece7103",
+  "expected_ministry_response_digest": "sha256:5f3f24bc0e708b42caadf777dc44c5551882c29af9cbad802c46451c3806d365",
+  "expected_match_prompt_digest": "sha256:fb3f18f0068bd736362d5f7318c00f9cacef20ced7fd021aff1a213567c35870",
+  "expected_blind_artifacts_digest": "sha256:f1ca5ee55f4d722deeaf8baeeae8a4386d3439aa8601977c3ed94332fcc6b770",
+  "cases": [
+    {
+      "case_digest": "sha256:18d1dacd5e974636779673bad7afe42992a49f5d64623f8d7b752b2904be7ab8",
+      "case_id": "dob_local_read",
+      "expected_outcome": "unique_match",
+      "expected_entry_ref": "pilot.local.person.date-of-birth@1.0.0",
+      "expected_entry_projection_digest": "sha256:f32c1fe4b194723ea8654c5ef9f5573f4481d12d6ccc0b721d37fbb0a609f1b5",
+      "expected_product_variables_digest": "sha256:1fc8d4a5cb6fe72d80de1ff8802e7dc4cb4c21a6a2ec6427b4a26f458297ab1c",
+      "expected_product_logic_digest": "sha256:44673a62985b54d03401a22949de5673b9a34e8f44a59420f500b999407f40a2",
+      "expected_source_candidate_digest": "sha256:53b6303381c5b033265b2e5522f01067d02101720e0bae7f9ec4a4a360de87ae",
+      "expected_proposed_binding_digest": "sha256:eb12ac12464e70c03f30f235d0b2c566cbaf991c79be408521c84e82186558c3",
+      "expected_parameter_mappings": [
+        {"direction": "output", "candidate_name": "date_of_birth", "registry_name": "date_of_birth", "variable_id": "v_date_of_birth"}
+      ]
+    },
+    {
+      "case_digest": "sha256:981a6810b55934284075cebe4ff8c678246c30c2347e48f49f664519c9400b1f",
+      "case_id": "who_height_for_age",
+      "expected_outcome": "unique_match",
+      "expected_entry_ref": "pilot.technical.growth.who-hfa-standing-24-60m@0.1.0",
+      "expected_entry_projection_digest": "sha256:7aa8ae035e61fa157150ea94c2006a0a1b1627cff7b424dba3dee2c911c6ab38",
+      "expected_product_variables_digest": "sha256:dfcc1714165a88ddbe7374ce487a31aa20b8449750e9e08e731c808d520c2024",
+      "expected_product_logic_digest": "sha256:5cd7d739dbca1edafc7c6a80f0a874f5211169dd9f1496e8b6efbcc383a3ef01",
+      "expected_source_candidate_digest": "sha256:28266e12f5a105d0a865f490c0e2fbddc9908e873c729f9ec43e56b46b03b69e",
+      "expected_proposed_binding_digest": "sha256:2b2695c930c8c6356b92ff481c6d0bcf5411c45ada89ea28c4866449cd03b1f3",
+      "expected_parameter_mappings": [
+        {"direction": "input", "candidate_name": "sex", "registry_name": "sex", "variable_id": "v_sex"},
+        {"direction": "input", "candidate_name": "birth_date", "registry_name": "birth_date", "variable_id": "v_birth_date"},
+        {"direction": "input", "candidate_name": "measurement_date", "registry_name": "measurement_date", "variable_id": "v_measurement_date"},
+        {"direction": "input", "candidate_name": "standing_height", "registry_name": "standing_height_cm", "variable_id": "v_standing_height_cm"},
+        {"direction": "output", "candidate_name": "standing_height_for_age_z_score", "registry_name": "height_for_age_z_score", "variable_id": "v_height_for_age_z_score"}
+      ]
+    },
+    {
+      "case_digest": "sha256:9f3963a167d4ea6f66eb8db3a8538ec59b5d1af0cdcf3cbfa35ae9cef932834c",
+      "case_id": "nepali_elapsed_days",
+      "expected_outcome": "unique_match",
+      "expected_entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-exclusive@0.1.0",
+      "expected_entry_projection_digest": "sha256:16e3e7e96fc64b197f9d0dde669937d47deadc4829f41984c28ae52c98b9a905",
+      "expected_product_variables_digest": "sha256:d9fc482af11d106388de6b69c93ae73d21b78168db34c6f3425d0678dae32dfd",
+      "expected_product_logic_digest": "sha256:4aa32ec7da44f06db6720c13b7e9b6ac5fab6042cc59920f332cfefd8c28e756",
+      "expected_source_candidate_digest": "sha256:24fd87d2fc6be768dd89c3347c7a845021ab523d3e9dd4cfbde76a4fcc26c252",
+      "expected_proposed_binding_digest": "sha256:fdfefe3d5f691fce8ef7904be4e835c3512f232cd0d5cbf4d115f221b432d1cd",
+      "expected_parameter_mappings": [
+        {"direction": "input", "candidate_name": "start_date", "registry_name": "start_date", "variable_id": "v_bs_start_date"},
+        {"direction": "input", "candidate_name": "end_date", "registry_name": "end_date", "variable_id": "v_bs_end_date"},
+        {"direction": "output", "candidate_name": "elapsed_days", "registry_name": "elapsed_days", "variable_id": "v_elapsed_days"}
+      ]
+    }
+  ]
+}

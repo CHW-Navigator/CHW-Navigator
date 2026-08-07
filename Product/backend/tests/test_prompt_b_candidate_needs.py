@@ -74,6 +74,21 @@ class TestPromptConstruction(unittest.TestCase):
         self.assertEqual(captured[0]["system_instructions"], CAPABILITY_SCAN_PROMPT)
         self.assertEqual(result["candidates"][0]["local_id"], "need_estimated_delivery_date")
 
+    def test_prompt_defines_high_risk_scope_unit_and_missingness_normalizations(self):
+        for required in (
+            "current_contact` means the current person's/contact's record",
+            "unit `gregorian_date`",
+            "unit `bikram_sambat_date`",
+            "unit `z_score`",
+            "centimeters has unit `cm`",
+            "An absent required local value is `missing_input`",
+            "Missing lookup/chart data\n  is `missing_reference_data`; lookup/chart data with the wrong required\n  version is `version_mismatch`",
+            "Keep the source's concept name",
+            "Subject scope is not an invocation input",
+            "reference-data version is a contract constraint",
+        ):
+            self.assertIn(required, CAPABILITY_SCAN_PROMPT)
+
 
 class TestRecordedMiniManuals(unittest.TestCase):
     def test_all_required_cases_reach_builder_and_strict_parser(self):

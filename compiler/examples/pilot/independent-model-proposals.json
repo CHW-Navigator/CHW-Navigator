@@ -1,0 +1,504 @@
+{
+  "pilot_watermark": {
+    "classification": "SYNTHETIC_SOFTWARE_PILOT_ONLY",
+    "clinical_use": "PROHIBITED",
+    "deployment_authorization": "NONE"
+  },
+  "model_run": {
+    "agent_identity": "OpenAI Codex registry-visible matching agent",
+    "provider_surface": "Codex",
+    "exact_serving_model_available": false,
+    "exact_serving_model": null
+  },
+  "request_payload_retained": false,
+  "catalogue_digest": "sha256:db4c509c904e81d99b5ef313409b180f55c54e363486071b264431ff86782981",
+  "cases": [
+    {
+      "case_id": "dob_local_read",
+      "source_candidate": {
+        "schema_version": "capability-needs@1.0.0",
+        "candidates": [
+          {
+            "local_id": "need_current_contact_date_of_birth",
+            "need_kind": "local_data_read",
+            "problem": "Read date_of_birth from the current person's CHT contact document before assessment.",
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "date_of_birth",
+                "data_type": "date",
+                "unit": "gregorian_date"
+              }
+            ],
+            "required_statuses": [
+              "success",
+              "missing_input"
+            ],
+            "failure_behavior": "return_status",
+            "subject_scope": "current_contact",
+            "uncertainty": {
+              "status": "none",
+              "details": null
+            },
+            "source": {
+              "document_id": "clarified-mini-manuals.md",
+              "page": "1",
+              "section": "Prior information",
+              "quote": "Before assessment, read `date_of_birth` from the current person's CHT contact\ndocument in either contact or task context. It is an immutable Gregorian\n`YYYY-MM-DD` date. If it is absent, stop and report `missing`."
+            },
+            "provenance": {
+              "origin": "manual",
+              "source_digest": "01a19e7372a9fd5e28c93be8b5847cb12e9d920ce8e09ab71101c42c500141ec"
+            }
+          }
+        ]
+      },
+      "product_logic": {
+        "variables": [
+          {
+            "id": "v_date_of_birth",
+            "data_type": "date",
+            "unit": "gregorian_date",
+            "domain": null
+          }
+        ],
+        "local_action_ids": ["a_date_of_birth_read"]
+      },
+      "request_digest": "sha256:80b0d7e2b848ac800eeba8bd1c0df9c76985cf1e1f561694abe0f2489747825a",
+      "response_digest": "sha256:91915196119db29091ccf1a4fd43d07c1a61db08267addba8f4f3a537c73b839",
+      "proposal": {
+        "schema_version": "registry-match-proposal@2.0.0",
+        "source_candidate_digest": "sha256:53b6303381c5b033265b2e5522f01067d02101720e0bae7f9ec4a4a360de87ae",
+        "catalogue_digest": "sha256:db4c509c904e81d99b5ef313409b180f55c54e363486071b264431ff86782981",
+        "product_variables_digest": "sha256:1fc8d4a5cb6fe72d80de1ff8802e7dc4cb4c21a6a2ec6427b4a26f458297ab1c",
+        "product_binding_context_digest": "sha256:44673a62985b54d03401a22949de5673b9a34e8f44a59420f500b999407f40a2",
+        "need_id": "need_current_contact_date_of_birth",
+        "outcome": "unique_match",
+        "selected_entry_ref": "pilot.local.person.date-of-birth@1.0.0",
+        "confidence_percent": 99,
+        "alternatives": [
+          {
+            "entry_ref": "pilot.local.person.registration-date@1.0.0",
+            "confidence_percent": 1,
+            "reason": "It returns a registration date, not the explicitly requested date of birth, and is available only in contact context rather than contact or task context."
+          },
+          {
+            "entry_ref": "pilot.local.person.estimated-date-of-birth@1.0.0",
+            "confidence_percent": 4,
+            "reason": "This hard same-shape decoy returns an enrollment estimate; the need explicitly requests the person's date_of_birth, not an estimated substitute."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-hfa-standing-24-60m@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This is a four-input technical growth calculation rather than a local current-contact data read."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-wfa-0-60m@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This is a weight-for-age technical calculation and does not read date_of_birth from local contact data."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-hfa-standing-0-23m-wrong-domain@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This is a wrong-domain technical growth calculation, not an immutable local-data read."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-exclusive@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This calculates elapsed days between two Bikram Sambat dates and does not expose a Gregorian date-of-birth field."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.gregorian-elapsed-days-inclusive@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This counts Gregorian days between two inputs rather than reading a stored date of birth."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-inclusive@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This is an inclusive Bikram Sambat day-count calculation rather than a local person-data read."
+          }
+        ],
+        "parameter_mappings": [
+          {
+            "direction": "output",
+            "candidate_name": "date_of_birth",
+            "registry_name": "date_of_birth",
+            "variable_id": "v_date_of_birth"
+          }
+        ],
+        "status_target_var": null,
+        "local_action_id": "a_date_of_birth_read",
+        "local_fail_mode": "soft_missing",
+        "local_recorded_at_target_var": null,
+        "unresolved_questions": [],
+        "rationale": "The selected immutable local-data entry exactly matches the requested date_of_birth semantics, Gregorian date type and unit, current-contact scope, contact/task availability, and available/missing behavior. The same-shape estimated-date entry is semantically different and therefore rejected."
+      }
+    },
+    {
+      "case_id": "who_height_for_age",
+      "source_candidate": {
+        "schema_version": "capability-needs@1.0.0",
+        "candidates": [
+          {
+            "local_id": "need_height_for_age_z_score",
+            "need_kind": "technical_calculation",
+            "problem": "Calculate the WHO 2006 standing-height-for-age z-score for the current person using the stated fixed reference-data contract.",
+            "inputs": [
+              {
+                "name": "sex",
+                "data_type": "code",
+                "unit": "none"
+              },
+              {
+                "name": "birth_date",
+                "data_type": "date",
+                "unit": "gregorian_date"
+              },
+              {
+                "name": "measurement_date",
+                "data_type": "date",
+                "unit": "gregorian_date"
+              },
+              {
+                "name": "standing_height",
+                "data_type": "decimal",
+                "unit": "cm"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "standing_height_for_age_z_score",
+                "data_type": "decimal",
+                "unit": "z_score"
+              }
+            ],
+            "required_statuses": [
+              "success",
+              "missing_input",
+              "invalid_input",
+              "out_of_range",
+              "missing_reference_data",
+              "version_mismatch"
+            ],
+            "failure_behavior": "return_status",
+            "subject_scope": "current_contact",
+            "uncertainty": {
+              "status": "none",
+              "details": null
+            },
+            "source": {
+              "document_id": "clarified-mini-manuals.md",
+              "page": "1",
+              "section": "Growth assessment",
+              "quote": "For the current person in a CHT form or task, calculate the WHO 2006\nstanding-height-for-age z-score at 730 through 1825 completed days from sex\n(`male` or `female`), Gregorian birth date, Gregorian measurement date, and\nstanding height in centimeters. Use synthetic pilot reference table\n`WHO_CHILD_GROWTH_2006_HEIGHT_FOR_AGE`, standard version `2006`, data version\n`synthetic-pilot-placeholder-0.1`, SHA-256\n`cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc`.\nPerform no additional rounding, and do not classify when an input or reference\ntable is missing, invalid, outside the supported range, or has the wrong version."
+            },
+            "provenance": {
+              "origin": "manual",
+              "source_digest": "01a19e7372a9fd5e28c93be8b5847cb12e9d920ce8e09ab71101c42c500141ec"
+            }
+          }
+        ]
+      },
+      "product_logic": {
+        "variables": [
+          {
+            "id": "v_sex",
+            "data_type": "choice",
+            "unit": "none",
+            "domain": ["male", "female"]
+          },
+          {
+            "id": "v_birth_date",
+            "data_type": "date",
+            "unit": "gregorian_date",
+            "domain": null
+          },
+          {
+            "id": "v_measurement_date",
+            "data_type": "date",
+            "unit": "gregorian_date",
+            "domain": null
+          },
+          {
+            "id": "v_standing_height_cm",
+            "data_type": "decimal",
+            "unit": "cm",
+            "domain": null
+          },
+          {
+            "id": "v_height_for_age_z_score",
+            "data_type": "decimal",
+            "unit": "z_score",
+            "domain": null
+          },
+          {
+            "id": "st_height_for_age_z_score",
+            "data_type": "choice",
+            "unit": "none",
+            "domain": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"]
+          }
+        ],
+        "local_action_ids": []
+      },
+      "request_digest": "sha256:0deec1ed2e5a9161630661789dcf4ab09a3737078bba922a7558cae63476c91b",
+      "response_digest": "sha256:edfb9257836ddd22411bc243a50e11c557e04ec0a6e12f6d44e3b5120a647af2",
+      "proposal": {
+        "schema_version": "registry-match-proposal@2.0.0",
+        "source_candidate_digest": "sha256:28266e12f5a105d0a865f490c0e2fbddc9908e873c729f9ec43e56b46b03b69e",
+        "catalogue_digest": "sha256:db4c509c904e81d99b5ef313409b180f55c54e363486071b264431ff86782981",
+        "product_variables_digest": "sha256:dfcc1714165a88ddbe7374ce487a31aa20b8449750e9e08e731c808d520c2024",
+        "product_binding_context_digest": "sha256:5cd7d739dbca1edafc7c6a80f0a874f5211169dd9f1496e8b6efbcc383a3ef01",
+        "need_id": "need_height_for_age_z_score",
+        "outcome": "unique_match",
+        "selected_entry_ref": "pilot.technical.growth.who-hfa-standing-24-60m@0.1.0",
+        "confidence_percent": 99,
+        "alternatives": [
+          {
+            "entry_ref": "pilot.local.person.date-of-birth@1.0.0",
+            "confidence_percent": 0,
+            "reason": "This local read supplies only a birth date and does not perform the requested WHO z-score calculation."
+          },
+          {
+            "entry_ref": "pilot.local.person.registration-date@1.0.0",
+            "confidence_percent": 0,
+            "reason": "This is a registration-date read, not a standing-height-for-age calculation."
+          },
+          {
+            "entry_ref": "pilot.local.person.estimated-date-of-birth@1.0.0",
+            "confidence_percent": 0,
+            "reason": "This local read returns an estimated birth date and has no growth-reference calculation contract."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-wfa-0-60m@0.1.0",
+            "confidence_percent": 2,
+            "reason": "This nearby growth entry calculates weight-for-age from weight_kg, not standing height-for-age from standing_height_cm."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-hfa-standing-0-23m-wrong-domain@0.1.0",
+            "confidence_percent": 4,
+            "reason": "This hard same-shape decoy has the wrong 0-729-day domain and a different synthetic standard, while the need explicitly requires 730-1825 completed days and the WHO 2006 reference contract."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-exclusive@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This performs Bikram Sambat calendar arithmetic rather than a WHO growth-reference calculation."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.gregorian-elapsed-days-inclusive@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This counts Gregorian days and has neither standing-height inputs nor a z-score output."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-inclusive@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This is an inclusive Bikram Sambat day-count operation, not the requested height-for-age operation."
+          }
+        ],
+        "parameter_mappings": [
+          {
+            "direction": "input",
+            "candidate_name": "sex",
+            "registry_name": "sex",
+            "variable_id": "v_sex"
+          },
+          {
+            "direction": "input",
+            "candidate_name": "birth_date",
+            "registry_name": "birth_date",
+            "variable_id": "v_birth_date"
+          },
+          {
+            "direction": "input",
+            "candidate_name": "measurement_date",
+            "registry_name": "measurement_date",
+            "variable_id": "v_measurement_date"
+          },
+          {
+            "direction": "input",
+            "candidate_name": "standing_height",
+            "registry_name": "standing_height_cm",
+            "variable_id": "v_standing_height_cm"
+          },
+          {
+            "direction": "output",
+            "candidate_name": "standing_height_for_age_z_score",
+            "registry_name": "height_for_age_z_score",
+            "variable_id": "v_height_for_age_z_score"
+          }
+        ],
+        "status_target_var": "st_height_for_age_z_score",
+        "local_action_id": null,
+        "local_fail_mode": null,
+        "local_recorded_at_target_var": null,
+        "unresolved_questions": [],
+        "rationale": "The selected entry exactly matches the WHO 2006 standing-height-for-age operation, 730-1825 completed-day domain, four input meanings and units, z-score output, reference-data identity and digest, no-rounding rule, current-contact scope, and required failure statuses. The interface-identical 0-729-day entry is rejected on its incompatible domain and reference standard."
+      }
+    },
+    {
+      "case_id": "nepali_elapsed_days",
+      "source_candidate": {
+        "schema_version": "capability-needs@1.0.0",
+        "candidates": [
+          {
+            "local_id": "need_bikram_sambat_elapsed_days",
+            "need_kind": "technical_calculation",
+            "problem": "Calculate integer elapsed days between two Bikram Sambat dates for the current person's workflow using the stated fixed conversion-table contract.",
+            "inputs": [
+              {
+                "name": "start_date",
+                "data_type": "date",
+                "unit": "bikram_sambat_date"
+              },
+              {
+                "name": "end_date",
+                "data_type": "date",
+                "unit": "bikram_sambat_date"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "elapsed_days",
+                "data_type": "integer",
+                "unit": "days"
+              }
+            ],
+            "required_statuses": [
+              "success",
+              "missing_input",
+              "invalid_input",
+              "out_of_range",
+              "missing_reference_data",
+              "version_mismatch"
+            ],
+            "failure_behavior": "return_status",
+            "subject_scope": "current_contact",
+            "uncertainty": {
+              "status": "none",
+              "details": null
+            },
+            "source": {
+              "document_id": "clarified-mini-manuals.md",
+              "page": "1",
+              "section": "Calendar calculation",
+              "quote": "In the current person's workflow, calculate integer elapsed days between two\nBikram Sambat dates for BS years 2000 through 2089 as end minus start, excluding\nthe end date from any additional count. The same date returns zero; reversed\ndates are invalid. Use synthetic pilot conversion table\n`MEDIC_BIKRAM_SAMBAT_TABLE`, standard version `pilot-assumption`, data version\n`synthetic-pilot-placeholder-0.1`, SHA-256\n`eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`, without\nrounding. Stop for missing, invalid, out-of-range, or wrong-version input or\nreference data."
+            },
+            "provenance": {
+              "origin": "manual",
+              "source_digest": "01a19e7372a9fd5e28c93be8b5847cb12e9d920ce8e09ab71101c42c500141ec"
+            }
+          }
+        ]
+      },
+      "product_logic": {
+        "variables": [
+          {
+            "id": "v_bs_start_date",
+            "data_type": "date",
+            "unit": "bikram_sambat_date",
+            "domain": null
+          },
+          {
+            "id": "v_bs_end_date",
+            "data_type": "date",
+            "unit": "bikram_sambat_date",
+            "domain": null
+          },
+          {
+            "id": "v_elapsed_days",
+            "data_type": "integer",
+            "unit": "days",
+            "domain": null
+          },
+          {
+            "id": "st_elapsed_days",
+            "data_type": "choice",
+            "unit": "none",
+            "domain": ["ok", "input_missing", "input_invalid", "outside_supported_domain", "reference_data_unavailable", "numeric_failure", "version_mismatch", "execution_failure"]
+          }
+        ],
+        "local_action_ids": []
+      },
+      "request_digest": "sha256:278b80a4ddbd2fc9bdbf6e064f48ad2b40ec090d12177b4531889fc317eadc58",
+      "response_digest": "sha256:4aa456b0feef3e641b6b761a16a79a5256fb14670d66a80df91ef2ceaf2b7e37",
+      "proposal": {
+        "schema_version": "registry-match-proposal@2.0.0",
+        "source_candidate_digest": "sha256:24fd87d2fc6be768dd89c3347c7a845021ab523d3e9dd4cfbde76a4fcc26c252",
+        "catalogue_digest": "sha256:db4c509c904e81d99b5ef313409b180f55c54e363486071b264431ff86782981",
+        "product_variables_digest": "sha256:d9fc482af11d106388de6b69c93ae73d21b78168db34c6f3425d0678dae32dfd",
+        "product_binding_context_digest": "sha256:4aa32ec7da44f06db6720c13b7e9b6ac5fab6042cc59920f332cfefd8c28e756",
+        "need_id": "need_bikram_sambat_elapsed_days",
+        "outcome": "unique_match",
+        "selected_entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-exclusive@0.1.0",
+        "confidence_percent": 99,
+        "alternatives": [
+          {
+            "entry_ref": "pilot.local.person.date-of-birth@1.0.0",
+            "confidence_percent": 0,
+            "reason": "This is a single local Gregorian date read and does not calculate elapsed days between Bikram Sambat dates."
+          },
+          {
+            "entry_ref": "pilot.local.person.registration-date@1.0.0",
+            "confidence_percent": 0,
+            "reason": "This local registration-date read has neither two Bikram Sambat inputs nor an elapsed-days output."
+          },
+          {
+            "entry_ref": "pilot.local.person.estimated-date-of-birth@1.0.0",
+            "confidence_percent": 0,
+            "reason": "This returns an estimated Gregorian birth date rather than performing calendar arithmetic."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-hfa-standing-24-60m@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This is a WHO height-for-age calculation with unrelated inputs, output, and reference data."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-wfa-0-60m@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This is a WHO weight-for-age calculation, not Bikram Sambat elapsed-day arithmetic."
+          },
+          {
+            "entry_ref": "pilot.technical.growth.who-hfa-standing-0-23m-wrong-domain@0.1.0",
+            "confidence_percent": 0,
+            "reason": "This wrong-domain growth entry has no Bikram Sambat date parameters or elapsed-days semantics."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.gregorian-elapsed-days-inclusive@0.1.0",
+            "confidence_percent": 1,
+            "reason": "This nearby calendar entry uses Gregorian dates and counts both endpoints, conflicting with the required Bikram Sambat calendar and end-minus-start convention."
+          },
+          {
+            "entry_ref": "pilot.technical.calendar.bikram-sambat-elapsed-days-inclusive@0.1.0",
+            "confidence_percent": 4,
+            "reason": "This hard same-shape decoy uses the correct calendar, parameters, range, and table but counts both endpoints and returns one for the same date; the need requires end minus start and zero for the same date."
+          }
+        ],
+        "parameter_mappings": [
+          {
+            "direction": "input",
+            "candidate_name": "start_date",
+            "registry_name": "start_date",
+            "variable_id": "v_bs_start_date"
+          },
+          {
+            "direction": "input",
+            "candidate_name": "end_date",
+            "registry_name": "end_date",
+            "variable_id": "v_bs_end_date"
+          },
+          {
+            "direction": "output",
+            "candidate_name": "elapsed_days",
+            "registry_name": "elapsed_days",
+            "variable_id": "v_elapsed_days"
+          }
+        ],
+        "status_target_var": "st_elapsed_days",
+        "local_action_id": null,
+        "local_fail_mode": null,
+        "local_recorded_at_target_var": null,
+        "unresolved_questions": [],
+        "rationale": "The selected entry exactly matches Bikram Sambat inputs, the 2000-2089 domain, integer elapsed-days output, end-minus-start/end-exclusive convention, same-date-zero and reversed-date-invalid rules, conversion-table identity and digest, no rounding, current-contact scope, and required failure statuses. The same-shape inclusive entry is rejected because its endpoint convention changes every result."
+      }
+    }
+  ]
+}
