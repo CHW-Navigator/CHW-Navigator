@@ -223,6 +223,36 @@ _PROMPT_REPETITION_N = int(os.environ.get("CATCHER_PROMPT_REPETITION", "3"))
 # deterministic ordering.
 _ARTIFACT_CACHE_MIN_CHARS = int(os.environ.get("CATCHER_ARTIFACT_CACHE_MIN_CHARS", "20000"))
 
+
+def _should_cache_artifact(artifact_text: str, has_guide_block: bool) -> bool:
+    """Decide whether the ARTIFACT system block gets a `cache_control` marker.
+
+    Correction (2026-08-06 cost audit): the note above applies the minimum to
+    the artifact block *in isolation*. Anthropic's minimum applies to the
+    cumulative prompt prefix up to and including the breakpoint, not to the
+    bytes of the individual block. The block layout is:
+
+        system[0]  catcher prompt            ~700 tok    (cached 1h)
+        system[1]  GUIDE chunk x N repeats   ~37K tok    (cached 1h)  <- when guide present
+        system[2]  ARTIFACT                              (this decision)
+
+    So whenever system[1] is present the prefix is already ~37.7K tokens by the
+    time we reach the artifact breakpoint, and the marker fires regardless of
+    how small the artifact itself is. Gating on the artifact's own length there
+    sent every small artifact fresh, x N voters x chunks - the `run_75d338cd`
+    audit measured the Haiku catcher path at a 0.9% cache-hit rate.
+
+    For artifact-only catchers (guide_json is None, e.g. clinical_review) the
+    prefix really is just system[0] + the artifact, so a small artifact can
+    genuinely fall under the floor and the length guard still applies.
+
+    Failure mode is asymmetric and cheap: if a prefix does fall short, Anthropic
+    ignores the marker (no extra charge, just no hit). Marking more content
+    cacheable never costs more than leaving it unmarked.
+    """
+    if has_guide_block:
+        return True
+    return len(artifact_text) >= _ARTIFACT_CACHE_MIN_CHARS
 # ---------------------------------------------------------------------------
 # Strict catcher mode (gen 2.4, 2026-04-11)
 # ---------------------------------------------------------------------------
@@ -792,7 +822,7 @@ async def _call_catcher(
             "cache_control": {"type": "ephemeral", "ttl": "1h"},
         })
 
-    cache_artifact = len(artifact_text) >= _ARTIFACT_CACHE_MIN_CHARS
+    cache_artifact = _should_cache_artifact(artifact_text, guide_json is not None)
     if cache_artifact:
         system_blocks.append({
             "type": "text",
